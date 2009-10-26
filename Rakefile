@@ -4,10 +4,12 @@ require 'rubygems'
 require 'couchrest'
 require 'spec'
 require 'tmpdir'
+require 'ftools'
 
 %w{chef}.each do |inc_dir|
   $: << File.join(File.dirname(__FILE__), '..', 'opscode-chef', inc_dir, 'lib')
 end
+
 require 'chef'
 require 'chef/config'
 require 'chef/client'
@@ -29,7 +31,7 @@ require 'mixlib/authorization/models'
 class Chef
   class Config
     test_org_name "clownco"
-    test_org_request_uri_base "http://localhost:4000/organizations/#{Chef::Config[:test_org_name]}"
+    test_org_request_uri_base "http://localhost/organizations/#{Chef::Config[:test_org_name]}"
   end 
 end
 
@@ -197,8 +199,9 @@ def create_local_test
   Dir.chdir(path) do
     system("./account-whacker -c /tmp/local-test-user.pem -D opscode_account -d local-test-user -e local-test-user@opscode.com -f local -l user  -m test -u local-test-user")
     system("./global-containers local-test-user")
-    system("./bootstraptool -a http://127.0.0.1 -K /tmp/local-test-validator.pem -d local-test-org -e local-test@opscode.com -f local -k /tmp/local-test-user.pem -l user -m test  -n local-test-org -t Business -g local-test-org -u local-test-user -p /tmp/local-test-user.pem -o local-test-user")
+    system("./bootstraptool -a http://localhost -K /tmp/local-test-validator.pem -d local-test-org -e local-test@opscode.com -f local -k /tmp/local-test-user.pem -l user -m test  -n local-test-org -t Business -g local-test-org -u local-test-user -p /tmp/local-test-user.pem -o local-test-user")
   end
+  File.copy("local-test-client.rb","/etc/chef/client.rb")
 end
 
 def cleanup_replicas
@@ -279,6 +282,8 @@ def delete_databases
     rescue
     end
   end
+  cleanup_replicas
+  cleanup_chefs
 end
 
 def get_db_list
@@ -305,9 +310,7 @@ def create_chef_databases
   Chef::Role.create_design_document(cdb)
   Chef::DataBag.create_design_document(cdb)
   Chef::Role.sync_from_disk_to_couchdb(cdb)
-  
   guid.downcase
-  
 end 
 
 def create_test_harness_setup_database(guid)
@@ -372,7 +375,8 @@ def prepare_feature_cookbooks
       Chef::Log.debug("Creating tarball for #{cookbook_name}")
       output = `tar zcvf #{cookbook_name}.tar.gz ./#{cookbook_name}`
       Chef::Log.debug(output)
-      Chef::StreamingCookbookUploader.post("#{Chef::Config[:chef_server_url]}/cookbooks", "clownco", "#{Dir.tmpdir}/clownco.pem", { "name" => cookbook_name, "file" => File.new("#{cookbook_name}.tar.gz") })
+      Chef::Log.debug("url: #{Chef::Config[:chef_server_url]}")
+      Chef::StreamingCookbookUploader.post("http://localhost/organizations/clownco/cookbooks", "clownco", "#{Dir.tmpdir}/clownco.pem", { "name" => cookbook_name, "file" => File.new("#{cookbook_name}.tar.gz") })
       Chef::Log.debug("Uploaded #{cookbook_name} tarball")
     end
   end
@@ -617,23 +621,27 @@ end
 namespace :setup do
   
   desc "Setup the test environment, including creating the organization, users, and uploading the fixture cookbooks"
-  task :test_setup do
+  task :test do
     setup_test_harness
   end
   
-  desc "Remove all replica databases (any database with 'replica' in its name)"
+  task :cleanup do
+    delete_databases
+  end
+
+  task :cookbooks do
+    prepare_feature_cookbooks
+  end
+
   task :cleanup_replicas do
     cleanup_replicas
   end
   
-  desc "Remove all organization databases (any database startingwith 'chef_'"
   task :cleanup_chefs do
     cleanup_chefs
   end
   
-  task :cleanup =>  [:cleanup_replicas, :cleanup_chefs]
-
-  task :platform_setup do
+  task :platform do
     cleanup_replicas
     cleanup_chefs
     delete_databases
