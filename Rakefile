@@ -204,6 +204,19 @@ def create_local_test
   File.copy("local-test-client.rb","/etc/chef/client.rb")
 end
 
+def replace_platform_client
+  STDERR.puts "Copying platform-client.rb to /etc/chef/client.rb"
+  File.copy("platform-client.rb", "/etc/chef/client.rb")
+end
+
+def backup_platform_client
+  if File.exists?("platform-client.rb")
+    STDERR.puts "platform-client.rb already exists.  Doing nothing"
+  else
+    File.copy("/etc/chef/client.rb", "platform-client.rb")
+  end
+end
+
 def cleanup_replicas
   c = Chef::REST.new(Chef::Config[:couchdb_url], nil, nil)
   c.get_rest('_all_dbs').each { |db| c.delete_rest("#{db}/") if db =~ /replica/ }
@@ -321,6 +334,7 @@ end
 
 def create_organization
   Chef::Log.info("Creating bootstrap user")
+  Chef::Log.debug "Tmpdir: #{Dir.tmpdir}"
   oapath = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-account"))
   Dir.chdir(oapath) do
     begin
@@ -379,6 +393,13 @@ def prepare_feature_cookbooks
       Chef::StreamingCookbookUploader.post("http://localhost/organizations/clownco/cookbooks", "clownco", "#{Dir.tmpdir}/clownco.pem", { "name" => cookbook_name, "file" => File.new("#{cookbook_name}.tar.gz") })
       Chef::Log.debug("Uploaded #{cookbook_name} tarball")
     end
+  end
+end
+
+def check_platform_files
+  if !File.exists?("platform-client.rb")
+    STDERR.puts "Please run the 'setup:from_platform' task once before testing to backup platform client files"
+    exit -1
   end
 end
 
@@ -618,30 +639,50 @@ namespace :dev do
   end
 end
 
-namespace :setup do
-  
-  desc "Setup the test environment, including creating the organization, users, and uploading the fixture cookbooks"
-  task :test do
-    setup_test_harness
-  end
-  
+task :check_platform_files do
+  check_platform_files
+end
+
+namespace :cleanup do
+  desc "Delete all chef integration & replica databases"
   task :cleanup do
     delete_databases
   end
 
+  desc "Delete all replica databases"
+  task :replicas do
+    cleanup_replicas
+  end
+
+  desc "Delete all chef databases"
+  task :chefs do
+    cleanup_chefs
+  end
+end
+
+namespace :setup do
+  desc "Setup the test environment, including creating the organization, users, and uploading the fixture cookbooks"
+  task :test =>[:check_platform_files] do
+    setup_test_harness
+  end
+  
+  desc "Prepare local testing by uploading feature cookbooks to ParkPlace"
   task :cookbooks do
     prepare_feature_cookbooks
   end
-
-  task :cleanup_replicas do
-    cleanup_replicas
+  
+  desc "Backup production platform files so we can safely test locally"
+  task :from_platform do
+    backup_platform_client
   end
   
-  task :cleanup_chefs do
-    cleanup_chefs
+  desc "Return production platform files to their places"
+  task :to_platform =>[:check_platform_files] do
+    replace_platform_client
   end
   
-  task :platform do
+  desc "Setup for local platform testing"
+  task :local_platform=>[:check_platform_files] do
     cleanup_replicas
     cleanup_chefs
     delete_databases
