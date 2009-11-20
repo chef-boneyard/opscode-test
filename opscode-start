@@ -7,8 +7,11 @@ include Appscript
 
 SRCDIR = File.expand_path(File.dirname(__FILE__))
 DELAY  = 1
+
 BASE_CMD = "cd #{SRCDIR} && sudo rake dev:features:start:"
 SERVICES = ["couchdb","rabbitmq", "parkplace","chef_solr","certificate","opscode_authz","opscode_audit","opscode_account","chef_solr_indexer","chef_server","nginx"]
+
+
 
 def auth_up
   system("sudo echo")  
@@ -24,8 +27,15 @@ def activate_terminal
   app('Terminal')  
 end
 
+
 def start_service_in_last_tab(window,service)
-  app('Terminal').do_script(BASE_CMD+service, :in => window.tabs.last.get)
+  # use xterm escape codes to set the tab title to the service running in the tab.
+  cmd = 
+    "unset PROMPT_COMMAND; echo -e \"\\033]0;#{service}\\007\"; " + 
+    BASE_CMD +
+    service
+
+  app('Terminal').do_script(cmd, :in => window.tabs.last.get)
   sleep DELAY  
 end
 
