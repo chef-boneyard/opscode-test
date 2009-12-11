@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# Note: This script relies on the relevant directories being at the same level, as well as properly configured tracking branches
+
+# TODO: Make these smarter, meaning if git pull doesn't result in any changes, don't install gems, run rake/make, or ./build.sh
+
+cd ..
+
+# update non-gem dirs
+for DIR in 'opscode-chef' 'opscode-account' 'opscode-certificate' 'opscode-test' 'opscode-usermgmt'
+do
+    (echo $DIR ; cd $DIR && git pull)
+done
+
+# update and install gems
+for DIR in 'mixlib-authentication' 'mixlib-authorization' 'mixlib-cli' 'mixlib-log' 'mixlib-config' 'opscode-rest' 'opscode-audit' 'ohai'
+do
+    (echo $DIR ; cd $DIR && git pull && sudo rake install)
+done
+
+# update authorization service
+(export DIR='opscode-authz-internal' ; echo $DIR ; cd $DIR && git pull && rake)
+(export DIR='opscode-authz' ; echo $DIR ; cd $DIR && git pull && make)
+
+# update and install nginx
+(export DIR='nginx-sysoev' ; echo $DIR ; cd $DIR && git pull && sudo ./build.sh)
