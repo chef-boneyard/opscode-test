@@ -135,6 +135,19 @@ def start_certificate(type="normal")
   end
 end
 
+def start_certgen(type="normal")
+  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-cert-gen"))
+  @certgen_pid = nil
+  cid = fork
+  if cid # parent
+    @certgen_pid = cid
+  else # child
+    Dir.chdir(path) do
+      exec("./start.sh")
+    end
+  end
+end
+
 def start_opscode_audit(type="normal")
   path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-audit"))
   @opscode_audit_pid = nil
@@ -409,7 +422,8 @@ def start_dev_environment(type="normal")
   start_parkplace(type)
   start_chef_solr(type)
   start_chef_solr_indexer(type)
-  start_certificate(type)
+  #start_certificate(type)
+  start_certgen(type)
   start_opscode_audit(type)
   start_opscode_authz(type)
   start_opscode_account(type)
@@ -420,7 +434,8 @@ def start_dev_environment(type="normal")
   puts "Running ParkPlace at #{@parkplace_pid}"
   puts "Running Chef Solr at #{@chef_solr_pid}"
   puts "Running Chef Solr Indexer at #{@chef_solr_indexer_pid}"
-  puts "Running Certificate at #{@certificate_pid}"
+  #puts "Running Certificate at #{@certificate_pid}"
+  puts "Running Certgen at #{@certgen_pid}"
   puts "Running Opscode Audit at #{@opscode_audit_pid}"
   puts "Running Opscode Authz at #{@opscode_authz_pid}"
   puts "Running Opscode Account at #{@opscode_account_pid}"
@@ -436,6 +451,10 @@ def stop_dev_environment
   if @certificate_pid
     puts "Stopping Certificate"
     Process.kill("KILL", @certificate_pid)
+  end
+  if @certgen_pid
+    puts "Stopping Certgen"
+    Process.kill("KILL", @certgen_pid)
   end
   if @opscode_audit_pid
     puts "Stopping Opscode Audit"
@@ -542,6 +561,12 @@ namespace :dev do
         wait_for_ctrlc
       end
 
+      desc "Start Certgen for testing"
+      task :certgen do
+        start_certgen("features")
+        wait_for_ctrlc
+      end
+
       desc "Start Opscode Audit for testing"
       task :opscode_audit do
         start_opscode_audit("features")
@@ -609,6 +634,12 @@ namespace :dev do
     desc "Start Certificate"
     task :certificate do
       start_certificate
+      wait_for_ctrlc
+    end
+
+    desc "Start Certgen"
+    task :certgen do
+      start_certgen
       wait_for_ctrlc
     end
 
