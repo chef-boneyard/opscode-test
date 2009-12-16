@@ -135,12 +135,12 @@ def start_certificate(type="normal")
   end
 end
 
-def start_certgen(type="normal")
-  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-cert-gen"))
-  @certgen_pid = nil
+def start_cert_erlang(type="normal")
+  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-cert-erlang"))
+  @cert_erlang_pid = nil
   cid = fork
   if cid # parent
-    @certgen_pid = cid
+    @cert_erlang_pid = cid
   else # child
     Dir.chdir(path) do
       exec("./start.sh")
@@ -423,7 +423,7 @@ def start_dev_environment(type="normal")
   start_chef_solr(type)
   start_chef_solr_indexer(type)
   #start_certificate(type)
-  start_certgen(type)
+  start_cert_erlang(type)
   start_opscode_audit(type)
   start_opscode_authz(type)
   start_opscode_account(type)
@@ -435,7 +435,7 @@ def start_dev_environment(type="normal")
   puts "Running Chef Solr at #{@chef_solr_pid}"
   puts "Running Chef Solr Indexer at #{@chef_solr_indexer_pid}"
   #puts "Running Certificate at #{@certificate_pid}"
-  puts "Running Certgen at #{@certgen_pid}"
+  puts "Running Cert(Erlang) at #{@cert_erlang_pid}"
   puts "Running Opscode Audit at #{@opscode_audit_pid}"
   puts "Running Opscode Authz at #{@opscode_authz_pid}"
   puts "Running Opscode Account at #{@opscode_account_pid}"
@@ -452,9 +452,9 @@ def stop_dev_environment
     puts "Stopping Certificate"
     Process.kill("KILL", @certificate_pid)
   end
-  if @certgen_pid
-    puts "Stopping Certgen"
-    Process.kill("KILL", @certgen_pid)
+  if @cert_erlang_pid
+    puts "Stopping Certgen(Erlang)"
+    Process.kill("KILL", @cert_erlang_pid)
   end
   if @opscode_audit_pid
     puts "Stopping Opscode Audit"
@@ -561,9 +561,9 @@ namespace :dev do
         wait_for_ctrlc
       end
 
-      desc "Start Certgen for testing"
-      task :certgen do
-        start_certgen("features")
+      desc "Start Certgen(Erlang) for testing"
+      task :cert_erlang do
+        start_cert_erlang("features")
         wait_for_ctrlc
       end
 
@@ -637,9 +637,9 @@ namespace :dev do
       wait_for_ctrlc
     end
 
-    desc "Start Certgen"
-    task :certgen do
-      start_certgen
+    desc "Start Certgen(Erlang)"
+    task :cert_erlang do
+      start_cert_erlang
       wait_for_ctrlc
     end
 

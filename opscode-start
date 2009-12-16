@@ -10,7 +10,7 @@ DELAY  = 1
 
 BASE_CMD = "cd #{SRCDIR} && sudo rake dev:features:start:"
 #SERVICES = ["couchdb","rabbitmq", "parkplace","chef_solr","certificate","opscode_authz","opscode_audit","opscode_account","chef_solr_indexer","chef_server","nginx"]
-SERVICES = ["couchdb","rabbitmq", "parkplace","chef_solr","certgen","opscode_authz","opscode_audit","opscode_account","chef_solr_indexer","chef_server","nginx"]
+SERVICES = ["couchdb","rabbitmq", "parkplace","chef_solr","cert_erlang","opscode_authz","opscode_audit","opscode_account","chef_solr_indexer","chef_server","nginx"]
 
 
 
