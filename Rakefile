@@ -15,6 +15,8 @@ require 'chef/config'
 require 'chef/client'
 require 'chef/streaming_cookbook_uploader'
 
+Chef::Log.level = :debug
+
 couchrest = CouchRest.new(Chef::Config[:couchdb_url])
 couchrest.database!('opscode_account')
 couchrest.default_database = 'opscode_account'
@@ -78,9 +80,9 @@ def start_chef_solr(type="normal")
     Dir.chdir(path) do
       case type
       when "normal"
-        exec("./chef-solr/bin/chef-solr -l debug")
+        exec("chef-solr -l debug")
       when "features"
-        exec("./chef-solr/bin/chef-solr -c #{File.join(File.dirname(__FILE__), "features", "data", "config", "server.rb")} -l debug")
+        exec("chef-solr -c #{File.join(File.dirname(__FILE__), "features", "data", "config", "server.rb")} -l debug")
       end
     end
   end
@@ -96,9 +98,9 @@ def start_chef_solr_indexer(type="normal")
     Dir.chdir(path) do
       case type
       when "normal"
-        exec("./chef-solr/bin/chef-solr-indexer -l debug")
+        exec("chef-solr-indexer -l debug")
       when "features"
-        exec("./chef-solr/bin/chef-solr-indexer -c #{File.join(File.dirname(__FILE__), "features", "data", "config", "server.rb")} -l debug")
+        exec("chef-solr-indexer -c #{File.join(File.dirname(__FILE__), "features", "data", "config", "server.rb")} -l debug")
       end
     end
   end
@@ -256,6 +258,22 @@ def setup_test_harness
   replicate_dbs(replication_specs, true)
 end
 
+def configure_rabbitmq(type="normal")
+  # hack. wait for rabbit to come up.
+  sleep 2
+  
+  puts `rabbitmqctl add_vhost /chef`
+
+  # create 'chef' user, give it the password 'testing'
+  puts `rabbitmqctl add_user chef testing`
+
+  # the three regexes map to config, write, read permissions respectively
+  puts `rabbitmqctl set_permissions -p /chef chef ".*" ".*" ".*"`
+
+  puts `rabbitmqctl list_users`
+  puts `rabbitmqctl list_vhosts`
+  puts `rabbitmqctl list_permissions -p /chef`
+end
 
 def replicate_dbs(replication_specs, delete_source_dbs = false)
   replication_specs = [replication_specs].flatten
@@ -419,6 +437,7 @@ end
 def start_dev_environment(type="normal")
   start_couchdb(type)
   start_rabbitmq(type)
+  configure_rabbitmq(type)
   start_parkplace(type)
   start_chef_solr(type)
   start_chef_solr_indexer(type)
@@ -528,6 +547,7 @@ namespace :dev do
       desc "Start RabbitMQ for testing"
       task :rabbitmq do
         start_rabbitmq("features")
+        configure_rabbitmq("features")
         wait_for_ctrlc
       end
       
@@ -604,6 +624,7 @@ namespace :dev do
     desc "Start RabbitMQ"
     task :rabbitmq do
       start_rabbitmq
+      configure_rabbitmq
       wait_for_ctrlc
     end
     
