@@ -353,7 +353,6 @@ def create_chef_databases
   Chef::Node.create_design_document(cdb)
   Chef::Role.create_design_document(cdb)
   Chef::DataBag.create_design_document(cdb)
-  Chef::Role.sync_from_disk_to_couchdb(cdb)
   guid.downcase
 end 
 
