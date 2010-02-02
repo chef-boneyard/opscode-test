@@ -31,7 +31,6 @@ end
 # the tests
 features = features_available.find_all { |feature| feature =~ /#{features_pattern}/ }
 puts "matching features: #{features.join(' ')}"
-exit 0
 
 
 puts
