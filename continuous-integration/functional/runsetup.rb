@@ -9,6 +9,11 @@ class << @self
   require "#{File.dirname(__FILE__)}/cmdutil"
 end
 
+# make logs directory if it doesn't exist.
+if !File.directory("logs")
+  run "mkdir logs"
+end
+
 branchname = "master"
 ARGV.each do |arg|
   if arg =~ /-.*/
@@ -39,16 +44,17 @@ make_install "otp"
 #   in already has a apache-couchdb-0.10.1 directory --? does it?
 puts
 puts "---- CouchDB ----"
-if !File.exists? "apache-couchdb-0.10.1/Makefile"
-  if !File.directory?("apache-couchdb-0.10.1")
-    run "tar zxvf apache-couchdb-0.10.1.tar.gz"
+COUCHDB_DIR = "apache-couchdb-0.10.1"
+if !File.exists? "#{COUCHDB_DIR}/Makefile"
+  if !File.directory?(COUCHDB_DIR)
+    run "tar zxvf #{COUCHDB_DIR}.tar.gz"
   end
-  Dir.chdir("apache-couchdb-0.10.1") do |dir|
+  Dir.chdir(COUCHDB_DIR) do |dir|
     run "./configure"
   end
-  make "apache-couchdb-0.10.1"
+  make COUCHDB_DIR
 end
-make_install "apache-couchdb-0.10.1"
+make_install COUCHDB_DIR
 run_server "couchdb"
 sleep 5
 run "ruby #{File.dirname(__FILE__)}/setup_couchdb.rb"
