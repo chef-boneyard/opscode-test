@@ -10,7 +10,7 @@ class << @self
 end
 
 # make logs directory if it doesn't exist.
-if !File.directory("logs")
+if !File.directory?("logs")
   run "mkdir logs"
 end
 
@@ -57,7 +57,7 @@ end
 make_install COUCHDB_DIR
 run_server "couchdb"
 sleep 5
-run "ruby #{File.dirname(__FILE__)}/setup_couchdb.rb"
+run "ruby #{File.dirname(__FILE__)}/bootstrap_couchdb.rb opscode-test/continuous-integration/functional/authorization_design_documents.couchdb-dump"
 
 
 ############ ruby projects to checkout and rake install
@@ -91,6 +91,15 @@ git "git@github.com:opscode/opscode-chef", branchname
 ############ RabbitMQ
 puts
 puts "---- RabbitMQ ----"
+RABBITMQ_DIR = "rabbitmq-server-1.7.0"
+if !File.directory?(RABBITMQ_DIR)
+  run "tar zxvf #{RABBITMQ_DIR}.tar.gz"
+end
+if !File.exists?("#{RABBITMQ_DIR}/Makefile")
+  Dir.chdir(RABBITMQ_DIR) do |dir|
+    run "./configure"
+  end
+end
 make "rabbitmq-server-1.7.0"
 run_server "rabbitmq-server-1.7.0", "scripts/rabbitmq-server"
 sleep 5
