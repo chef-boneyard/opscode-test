@@ -13,6 +13,10 @@ end
 if !File.directory?("logs")
   run "mkdir logs"
 end
+if !File.directory?("/var/chef")
+  run "sudo mkdir /var/chef"
+  run "sudo chown bamboo:bamboo /var/chef"
+end
 
 branchname = "master"
 ARGV.each do |arg|
