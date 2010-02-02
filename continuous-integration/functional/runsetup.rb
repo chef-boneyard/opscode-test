@@ -40,7 +40,7 @@ make_install "otp"
 puts
 puts "---- CouchDB ----"
 if !File.exists? "apache-couchdb-0.10.1/Makefile"
-  if !Dir.exists?("apache-couchdb-0.10.1")
+  if !File.directory?("apache-couchdb-0.10.1")
     run "tar zxvf apache-couchdb-0.10.1.tar.gz"
   end
   Dir.chdir("apache-couchdb-0.10.1") do |dir|
