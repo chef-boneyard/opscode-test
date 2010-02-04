@@ -3,45 +3,57 @@
 # TODO:
 # how do i give ruby capability to my remote servers?
 
+require "yaml"
+
 class << @self
   require "#{File.dirname(__FILE__)}/cmdutil"
 end
 
-features_available = []
-Dir.chdir("opscode-chef") do |dir|
-  File.popen("rake -T", "r") do |rake|
-    rake.each_line do |line|
-      #rake features:api                              # Run Features with Cucumber
-      if line =~ /rake (features:[\S]+)\s+\#.*/
-        features_available << $1
-      end
-    end
-  end
-end
+# cucumber.yml holds the mapping of cucumber aliases to cucumber 
+# invocation arguments. "rake features:api:search:list", e.g., refers 
+# to alias "api_search_list". This script invokes "cucumber" directly
+# instead of using the "rake features:api..." wrappers as we need
+# to explicitly change the cucumber formatter for JUNIT output.
+features_available = YAML::load(File::read('opscode-chef/cucumber.yml'))
 
+puts "ALL FEATURES:"
+puts "    #{features_available.keys.join(' ')}"
+puts
 features_pattern = ARGV[0]
 if features_pattern.nil?
   $stderr.puts "runplatformtests.rb <pattern>"
-  $stderr.puts "  Pattern is a regex specifying which 'features' tests to run."
-  $stderr.puts "  Features available = #{features_available.join(' ')}"
+  $stderr.puts "  Pattern is a regex specifying which 'features' tests to run. These"
+  $stderr.puts "  are pulled from cucumber.yml."
   exit 1
 end
   
 
-# the tests
-features = features_available.find_all { |feature| feature =~ /#{features_pattern}/ }
-puts "matching features: #{features.join(' ')}"
-if features.length == 0
+# the tests that will be run.
+feature_names_to_run = features_available.keys.find_all { |feature_name| feature_name =~ /#{features_pattern}/ }
+puts "MATCHING FEATURES (going to run):"
+puts "    #{feature_names_to_run.join(' ')}"
+puts
+if feature_names_to_run.length == 0
   raise ArgumentError, "No features match your pattern, exiting."
 end
 
+# If JUNIT XML output was specified, build a command line.
+cucumber_options = "--format pretty"
+if ARGV.length == 3 && ARGV[1] == "--junit-out"
+  cucumber_options = "--format junit --out '#{ARGV[2]}'"
+end
 
-puts
-puts
-puts "********************"
-puts "       TESTS        "
-puts "********************"
-puts "**** TEST: opscode-test ****"
+# Determine the path for cucumber binary
+gem_path = `gem env gemdir`.chomp
+cucumber_path = "#{gem_path}/bin/cucumber"
+if !File.exists?(cucumber_path)
+  cucumber_path = "cucumber"
+end
+
+puts "CUCUMBER PATH: #{cucumber_path}"
+puts "CUCUMBER OPTIONS: #{cucumber_options}"
+
+puts "**** TEST SETUP: opscode-test: setup:from_platform, setup:test ****"
 Dir.chdir("opscode-test") do |dir|
   run "sudo mkdir /etc/chef", true   # it's ok if this fails, in case the directory already exists
   run "sudo cp local-test-client.rb /etc/chef/client.rb"
@@ -49,10 +61,23 @@ Dir.chdir("opscode-test") do |dir|
   run "rake setup:test"
 end
 
-features.each do |feature|
+puts
+puts
+puts "********************"
+puts "       TESTS        "
+puts "********************"
+
+# Run each feature test, 
+feature_names_to_run.each do |feature_name|
+  feature_arg = features_available[feature_name]
+
+  # strip any pretty formatting that was specified in the config.
+  feature_arg = feature_arg.gsub /--format pretty/, ""
+  feature_arg = feature_arg.gsub /-f pretty/, ""
+
   Dir.chdir("opscode-chef") do |dir|
-    puts "**** FEATURE TEST: opscode-chef/#{feature} ****"
-    run "sudo rake #{feature}"
+    puts "**** FEATURE TEST: opscode-chef/#{feature_name}: cucumber #{feature_arg} ****"
+    run "sudo #{cucumber_path} #{feature_arg} #{cucumber_options}", true  # ignore errors and keep going
     puts
   end
   Dir.chdir("opscode-test") do |dir|
