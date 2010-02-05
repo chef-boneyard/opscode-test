@@ -26,9 +26,9 @@ else
 end
 
 Dir.chdir("/mnt/bamboo-ebs") do |dir|
-  cmd = "couchdb >> logs/couchdb.log 2>&1 &"
-  puts "CMD: #{cmd}"
-  system cmd
+  # third argument is true so that we append to the couchdb log instead
+  # of overwriting it.
+  run_server "couchdb", nil, true
 end
 
 

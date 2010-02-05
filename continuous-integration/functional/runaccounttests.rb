@@ -32,10 +32,7 @@ def kill_opscode_account
 end
 
 def start_opscode_account
-  cmd = "slice -a thin -N -p 4042 -l debug"
-  Dir.chdir("opscode-account") do |dir|
-    run cmd
-  end
+  run_server "opscode-account", "bin/opscode-account -p 4042 -l debug"
 end
 
 puts "** Test setup: Bootstrapping CouchDB..."
