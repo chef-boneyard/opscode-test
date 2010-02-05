@@ -32,7 +32,7 @@ def run(cmd, ignore_error = false)
   pid
 end
 
-def run_server(dirname_or_cmd, cmd_or_nil = nil)
+def run_server(dirname_or_cmd, cmd_or_nil = nil, append_to_log = false)
   if cmd_or_nil.nil?
     dirname = "."
     cmd = dirname_or_cmd
@@ -44,7 +44,9 @@ def run_server(dirname_or_cmd, cmd_or_nil = nil)
     shortcmd = dirname.split('/')[-1]
     log_filename = "logs/#{shortcmd}.log"
   end
-  log_file = File.open(log_filename, "w")
+  
+  file_open_mode = (append_to_log && "a") || "w"
+  log_file = File.open(log_filename, file_open_mode)
   log_file.sync = true
 
   puts "RUN SERVER: (cd #{dirname}; #{cmd}) >& #{log_filename}"
