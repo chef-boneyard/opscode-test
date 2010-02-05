@@ -50,10 +50,7 @@ if !File.exists?(cucumber_path)
   cucumber_path = "cucumber"
 end
 
-puts "CUCUMBER PATH: #{cucumber_path}"
-puts "CUCUMBER OPTIONS: #{cucumber_options}"
-
-puts "**** TEST SETUP: opscode-test: setup:from_platform, setup:test ****"
+puts "**** TEST SETUP: opscode-test: setup:from_platform; setup:test ****"
 Dir.chdir("opscode-test") do |dir|
   run "sudo mkdir /etc/chef", true   # it's ok if this fails, in case the directory already exists
   run "sudo cp local-test-client.rb /etc/chef/client.rb"
@@ -64,7 +61,7 @@ end
 puts
 puts
 puts "********************"
-puts "       TESTS        "
+puts "*      TESTS       *"
 puts "********************"
 
 # Run each feature test, 
@@ -76,10 +73,17 @@ feature_names_to_run.each do |feature_name|
   feature_arg = feature_arg.gsub /-f pretty/, ""
 
   Dir.chdir("opscode-chef") do |dir|
-    puts "**** FEATURE TEST: opscode-chef/#{feature_name}: cucumber #{feature_arg} ****"
+    puts "****"
+    puts "**** FEATURE TEST: opscode-chef:#{feature_name} ****"
+    puts "****"
     run "sudo #{cucumber_path} #{feature_arg} #{cucumber_options}", true  # ignore errors and keep going
     puts
   end
+
+  puts "** Restarting CouchDB"
+  run "ruby opscode-test/continuous-integration/functional/restart_couchdb.rb"
+
+  puts "** Cleanup Replicas"
   Dir.chdir("opscode-test") do |dir|
     run "sudo rake cleanup:replicas"
   end
