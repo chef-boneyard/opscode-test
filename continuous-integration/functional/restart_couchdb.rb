@@ -5,12 +5,13 @@
 
 pid = nil
 File.popen("ps uxaw|grep /couchdb/|grep -v grep|grep beam", "r") do |ps|
-  line = ps.readline
-  fields = line.split(/\s+/)
-  pid_str = fields[1]
-  if pid_str =~ /\d+/
-    pid = pid_str.to_i
-    puts line
+  ps.each_line do |line|
+    fields = line.split(/\s+/)
+    pid_str = fields[1]
+    if pid_str =~ /\d+/
+      pid = pid_str.to_i
+      puts line
+    end
   end
 end
 
