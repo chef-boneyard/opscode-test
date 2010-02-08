@@ -37,6 +37,10 @@ class Chef
   end 
 end
 
+if ENV["DEBUG"]=="true"
+  Chef::Log.level = :debug
+end
+
 def start_couchdb(type="normal")
   @couchdb_server_pid  = nil
   cid = fork
@@ -417,9 +421,7 @@ def prepare_feature_cookbooks
       next unless File.directory?(dir)
       cookbook_name = File.basename(dir)
       Chef::Log.debug("Creating tarball for #{cookbook_name}")
-      output = `tar zcvf #{cookbook_name}.tar.gz ./#{cookbook_name}`
-      Chef::Log.debug(output)
-      Chef::Log.debug("url: #{Chef::Config[:chef_server_url]}")
+      `tar zcvf #{cookbook_name}.tar.gz ./#{cookbook_name}`
       Chef::StreamingCookbookUploader.post("http://localhost/organizations/clownco/cookbooks", "clownco", "#{Dir.tmpdir}/clownco.pem", { "name" => cookbook_name, "file" => File.new("#{cookbook_name}.tar.gz") })
       Chef::Log.debug("Uploaded #{cookbook_name} tarball")
     end
