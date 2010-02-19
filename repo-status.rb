@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-%w{opscode-chef opscode-authz mixlib-authorization mixlib-authentication opscode-account mixlib-cli mixlib-log mixlib-config chef opscode-rest couchrest rest-client}.each do |proj|
+%w{chef couchrest mixlib-authentication mixlib-authorization mixlib-cli mixlib-config mixlib-log nginx-sysoev opscode-account opscode-audit opscode-authz opscode-authz-internal opscode-cert-erlang opscode-chef opscode-rest opscode-test opscode-usermgmt rest-client}.each do |proj|
   Dir.chdir(proj) do
     puts "-----------------------------------"
     system("echo $(pwd); git branch; git status; ruby ../opscode-test/git-wtf")
