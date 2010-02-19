@@ -218,7 +218,7 @@ def create_local_test
   Dir.chdir(path) do
     system("./account-whacker -c /tmp/local-test-user.pem -D opscode_account -d local-test-user -e local-test-user@opscode.com -f local -l user  -m test -u local-test-user")
     system("./global-containers local-test-user")
-    system("./bootstraptool -a http://localhost -K /tmp/local-test-validator.pem -d local-test-org -e local-test@opscode.com -f local -k /tmp/local-test-user.pem -l user -m test  -n local-test-org -t Business -g local-test-org -u local-test-user -p /tmp/local-test-user.pem -o local-test-user")
+    system("./bootstraptool -a http://localhost -K /tmp/local-test-validator.pem -n local-test-org -t Business -g local-test-org -u local-test-user -p /tmp/local-test-user.pem -o local-test-user")
   end
   File.copy("local-test-client.rb","/etc/chef/client.rb")
 end
