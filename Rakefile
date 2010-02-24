@@ -250,6 +250,15 @@ def cleanup_chefs
   end
 end
 
+def cleanup_cookbooks
+  c = Chef::REST.new("http://localhost/organizations/clownco", "clownco", "#{Dir.tmpdir}/clownco.pem")
+  cookbooks = c.get_rest("cookbooks").keys
+  cookbooks.each do |cookbook|
+    STDERR.puts c.delete_rest("cookbooks/#{cookbook}").inspect
+  end
+  cleanup_cookbook_tarballs
+end
+
 def setup_test_harness
   delete_databases
   cleanup_after_naughty_run
@@ -314,6 +323,10 @@ def cleanup_after_naughty_run
   if File.exists?(File.join(Dir.tmpdir, "clownco.pem"))
     File.unlink(File.join(Dir.tmpdir, "clownco.pem"))
   end
+  cleanup_cookbook_tarballs
+end
+
+def cleanup_cookbook_tarballs
   fcpath = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-chef", "features", "data", "cookbooks"))
   Dir.chdir(fcpath) do
     Dir[File.join(fcpath, '*.tar.gz')].each do |file|
@@ -710,6 +723,11 @@ namespace :cleanup do
   desc "Delete all chef databases"
   task :chefs do
     cleanup_chefs
+  end
+
+  desc "Delete cookbooks"
+  task :cookbooks do
+    cleanup_cookbooks
   end
 end
 
