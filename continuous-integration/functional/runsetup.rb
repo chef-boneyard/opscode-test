@@ -82,13 +82,18 @@ ruby_projs.each do |proj|
 end
 
 
-#### 
-
 
 ############ Checkout (only) of opscode-chef
 puts
 puts "---- Checkout opscode-chef ----"
 git "git@github.com:opscode/opscode-chef", branchname
+
+
+############ Checkout and install of chef
+puts
+puts "---- Checkout and install chef ----"
+git "git@github.com:opscode/chef", branchname
+rake_install "chef"
 
 
 
@@ -127,19 +132,6 @@ git "git://github.com/nuoyan/parkplace.git", branchname
 #   ruby setup.rb
 #   chmod +x bin/parkplace
 run_server "parkplace", "bin/parkplace"
-
-
-############ chef_solr
-# need to update 'chef' directory with git
-puts
-puts "---- Chef_solr ----"
-run_server "opscode-chef/chef-solr", "bin/chef-solr -c ../features/data/config/server.rb -l debug"
-
-
-############ chef_solr_indexer
-puts
-puts "---- chef_solr_indexer ----"
-run_server "opscode-chef/chef-solr", "bin/chef-solr-indexer -c ../features/data/config/server.rb -l debug"
 
 
 ############ opscode-cert-erlang
@@ -190,6 +182,19 @@ git "git@github.com:opscode/opscode-account", branchname
 run "sudo mkdir /etc/opscode", true # ignore failure in making the directory, in case it's already there.
 run "sudo cp -av opscode-account/lib/opscode-account/azs.pem /etc/opscode"
 run_server "opscode-account", "bin/opscode-account -p 4042 -l debug"
+
+
+############ chef_solr
+# need to update 'chef' directory with git
+puts
+puts "---- chef_solr ----"
+run_server "chef/chef-solr", "bin/chef-solr -c ../features/data/config/server.rb -l debug"
+
+
+############ chef_solr_indexer
+puts
+puts "---- chef_solr_indexer ----"
+run_server "chef/chef-solr", "bin/chef-solr-indexer -c ../features/data/config/server.rb -l debug"
 
 
 ############ chef_server
