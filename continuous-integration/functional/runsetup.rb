@@ -92,7 +92,7 @@ git "git@github.com:opscode/opscode-chef", branchname
 ############ Checkout and install of chef
 puts
 puts "---- Checkout and install chef ----"
-git "git@github.com:opscode/chef", branchname
+git "git://github.com/opscode/chef", branchname
 rake_install "chef"
 
 
