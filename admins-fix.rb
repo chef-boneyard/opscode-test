@@ -24,20 +24,26 @@ Chef::Log.level = :fatal
 
 include Mixlib::Authorization::AuthHelper
 
-orgname = ARGV[2]
-org_database = database_from_orgname(orgname)
+orgs = Mixlib::Authorization::Models::Organization.all
 
-puts "========================="
-group = Mixlib::Authorization::Models::Group.on(org_database).by_groupname(:key=>"admins").first
-puts group.inspect
-user = group["actor_and_group_names"]["users"].first
-acl = Mixlib::Authorization::AuthAcl.new(group.fetch_join_acl)
-puts acl.inspect
-["read","delete","update"].each do |ace|
-  user_ace = acl.aces[ace].to_user(org_database)
-  user_ace.add_actor(user)
-  group.update_join_ace(ace, user_ace.to_auth(org_database).ace)
+orgs.each do |org|
+  orgname = org["name"]
+
+  org_database = database_from_orgname(orgname)
+
+  puts "========================="
+  group = Mixlib::Authorization::Models::Group.on(org_database).by_groupname(:key=>"admins").first
+  
+  puts group.inspect
+  user = group["actor_and_group_names"]["users"].first
+  acl = Mixlib::Authorization::AuthAcl.new(group.fetch_join_acl)
+  puts acl.inspect
+#   ["read","delete","update"].each do |ace|
+#     user_ace = acl.aces[ace].to_user(org_database)
+#     user_ace.add_actor(user)
+#     group.update_join_ace(ace, user_ace.to_auth(org_database).ace)
+#   end
+#   puts Mixlib::Authorization::Models::Group.on(org_database).new(group).save
+  puts "========================="
 end
-puts Mixlib::Authorization::Models::Group.on(org_database).new(group).save
-puts "========================="
 
