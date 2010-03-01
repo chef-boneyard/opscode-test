@@ -24,65 +24,72 @@ Chef::Log.level = :fatal
 
 include Mixlib::Authorization::AuthHelper
 
-orgname = ARGV[0]
-org_database = database_from_orgname(orgname)
-admin_name = ARGV[1] || Mixlib::Authorization::Models::Group.on(org_database).by_groupname(:key=>"admins").first["actor_and_group_names"]["users"].first
 
-user_id = Mixlib::Authorization::Models::User.by_username(:key=>admin_name).first["_id"]
-admin_id =  Mixlib::Authorization::AuthJoin.by_user_object_id(:key=>user_id).first.auth_object_id
-STDERR.puts "Organization is #{orgname} and the admin user #{admin_name} with user id #{user_id} and auth id #{admin_id}"
+orgs = Mixlib::Authorization::Models::Organization.all
 
-o_nodes_query = "curl -s http://#{couchdb_uri}/#{org_database.name}/_design/nodes/_view/all_id"
-nodes = JSON.parse(`#{o_nodes_query}`)
-STDERR.puts nodes["total_rows"].to_i
-if nodes["rows"]
-  nodenames = nodes["rows"].map { |node| node["value"]}
-  
-  nodenames.each do |nodename|
-    node_exists = !Mixlib::Authorization::Models::Node.on(org_database).by_name(:key=>nodename).first.nil?
-    Mixlib::Authorization::Models::Node.on(org_database).new(:name=>nodename,:requester_id => admin_id, :orgname=>orgname).save unless node_exists
+orgs.each do |org|
+
+
+  orgname = org["name"]
+  org_database = database_from_orgname(orgname)
+  admin_name = Mixlib::Authorization::Models::Group.on(org_database).by_groupname(:key=>"admins").first["actor_and_group_names"]["users"].first
+
+  user_id = Mixlib::Authorization::Models::User.by_username(:key=>admin_name).first["_id"]
+  admin_id =  Mixlib::Authorization::AuthJoin.by_user_object_id(:key=>user_id).first.auth_object_id
+  STDERR.puts "Organization is #{orgname} and the admin user #{admin_name} with user id #{user_id} and auth id #{admin_id}"
+
+  o_nodes_query = "curl -s http://#{couchdb_uri}/#{org_database.name}/_design/nodes/_view/all_id"
+  nodes = JSON.parse(`#{o_nodes_query}`)
+  STDERR.puts nodes["total_rows"].to_i
+  if nodes["rows"]
+    nodenames = nodes["rows"].map { |node| node["value"]}
+    
+    nodenames.each do |nodename|
+      node_exists = !Mixlib::Authorization::Models::Node.on(org_database).by_name(:key=>nodename).first.nil?
+      Mixlib::Authorization::Models::Node.on(org_database).new(:name=>nodename,:requester_id => admin_id, :orgname=>orgname).save unless node_exists
+      STDERR.putc('.')
+    end
+    STDERR.puts "\nnodes done"
+  end
+
+  o_roles_query = "curl -s http://#{couchdb_uri}/#{org_database.name}/_design/roles/_view/all_id"
+  roles = JSON.parse(`#{o_roles_query}`)
+  STDERR.puts roles["total_rows"].to_i
+  if roles["rows"]
+    rolenames = roles["rows"].map { |role| role["value"]}
+    
+    rolenames.each do |rolename|
+      role_exists = !Mixlib::Authorization::Models::Role.on(org_database).by_name(:key=>rolename).first.nil?  
+      Mixlib::Authorization::Models::Role.on(org_database).new(:name=>rolename,:requester_id => admin_id, :orgname=>orgname).save unless role_exists
+      STDERR.putc('.')  
+    end
+    STDERR.puts "\nroles done"
+  end
+
+  o_data_bags_query = "curl -s http://#{couchdb_uri}/#{org_database.name}/_design/data_bags/_view/all_id"
+  data_bags = JSON.parse(`#{o_data_bags_query}`)
+  STDERR.puts data_bags["total_rows"].to_i
+  if data_bags["rows"]
+    data_bagnames = data_bags["rows"].map { |data_bag| data_bag["value"]}
+    
+    data_bagnames.each do |data_bagname|
+      data_bag_exists = !Mixlib::Authorization::Models::DataBag.on(org_database).by_name(:key=>data_bagname).first.nil?  
+      Mixlib::Authorization::Models::DataBag.on(org_database).new(:name=>data_bagname,:requester_id => admin_id, :orgname=>orgname).save unless data_bag_exists
+      STDERR.putc('.')  
+    end
+    STDERR.puts "\ndata_bags done"
+  end
+
+  Mixlib::Authorization::Models::Cookbook.on(org_database).by_latest_revision(:reduce=>true, :group=>true)["rows"].each do |cookbook_hash|
+    cookbook_name = cookbook_hash["key"]
+    cookbook_exists = !Mixlib::Authorization::Models::Cookbook.on(org_database).by_display_name(:key=>cookbook_name).first.nil?
+    Mixlib::Authorization::Models::Cookbook.on(org_database).new(:name=>cookbook_name,:requester_id => admin_id, :orgname=>orgname).save unless cookbook_exists
     STDERR.putc('.')
   end
-  STDERR.puts "\nnodes done"
+
+  STDERR.puts "\ncookbooks done"
+
 end
-
-o_roles_query = "curl -s http://#{couchdb_uri}/#{org_database.name}/_design/roles/_view/all_id"
-roles = JSON.parse(`#{o_roles_query}`)
-STDERR.puts roles["total_rows"].to_i
-if roles["rows"]
-  rolenames = roles["rows"].map { |role| role["value"]}
-  
-  rolenames.each do |rolename|
-    role_exists = !Mixlib::Authorization::Models::Role.on(org_database).by_name(:key=>rolename).first.nil?  
-    Mixlib::Authorization::Models::Role.on(org_database).new(:name=>rolename,:requester_id => admin_id, :orgname=>orgname).save unless role_exists
-    STDERR.putc('.')  
-  end
-  STDERR.puts "\nroles done"
-end
-
-o_data_bags_query = "curl -s http://#{couchdb_uri}/#{org_database.name}/_design/data_bags/_view/all_id"
-data_bags = JSON.parse(`#{o_data_bags_query}`)
-STDERR.puts data_bags["total_rows"].to_i
-if data_bags["rows"]
-  data_bagnames = data_bags["rows"].map { |data_bag| data_bag["value"]}
-  
-  data_bagnames.each do |data_bagname|
-    data_bag_exists = !Mixlib::Authorization::Models::DataBag.on(org_database).by_name(:key=>data_bagname).first.nil?  
-    Mixlib::Authorization::Models::DataBag.on(org_database).new(:name=>data_bagname,:requester_id => admin_id, :orgname=>orgname).save unless data_bag_exists
-    STDERR.putc('.')  
-  end
-  STDERR.puts "\ndata_bags done"
-end
-
-Mixlib::Authorization::Models::Cookbook.on(org_database).by_latest_revision(:reduce=>true, :group=>true)["rows"].each do |cookbook_hash|
-  cookbook_name = cookbook_hash["key"]
-  cookbook_exists = !Mixlib::Authorization::Models::Cookbook.on(org_database).by_display_name(:key=>cookbook_name).first.nil?
-  Mixlib::Authorization::Models::Cookbook.on(org_database).new(:name=>cookbook_name,:requester_id => admin_id, :orgname=>orgname).save unless cookbook_exists
-  STDERR.putc('.')
-end
-
-STDERR.puts "\ncookbooks done"
-
 
 
 
