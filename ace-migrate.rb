@@ -24,13 +24,12 @@ Chef::Log.level = :fatal
 
 include Mixlib::Authorization::AuthHelper
 
-#orgname = ARGV[0]
-#admin = ARGV[1]
-orgname = "local-test-org"
-admin_id = "46ed92a7c593dcb073c8d5ec7c740d24"
-#admin_id = Mixlib::Authorization::Models::User.by_username(:key=>"local-test-user").first.fetch_join.auth_object_id
-STDERR.puts "admin id: #{admin_id}"
+orgname = ARGV[0]
 org_database = database_from_orgname(orgname)
+admin_name = ARGV[1] || Mixlib::Authorization::Models::Group.on(org_database).by_groupname(:key=>"admins").first["actor_and_group_names"]["users"].first
+
+user_id = Mixlib::Authorization::Models::User.by_username(:key=>admin_name).first["_id"]
+admin_id =  Mixlib::Authorization::AuthJoin.by_user_object_id(:key=>user_id).first.auth_object_id
 
 o_nodes_query = "curl -s http://#{couchdb_uri}/#{org_database.name}/_design/nodes/_view/all_id"
 nodes = JSON.parse(`#{o_nodes_query}`)
