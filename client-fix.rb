@@ -31,5 +31,8 @@ org_database = database_from_orgname(orgname)
 Mixlib::Authorization::Models::Client.on(org_database).all.each do |client|
   client = Mixlib::Authorization::Models::Client.on(org_database).new(client)
   acl = Mixlib::Authorization::AuthAcl.new(client.fetch_join_acl).to_user(org_database)
+  puts "========================="
+  puts "client: #{client["clientname"]}"
   puts acl.inspect
+  puts "========================="  
 end
