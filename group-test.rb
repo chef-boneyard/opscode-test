@@ -56,7 +56,7 @@ group_auth_ids.each do |group_auth_id|
   begin
     auth_join_group = Mixlib::Authorization::AuthJoin.by_auth_object_id(:key=>group_auth_id).first
     if auth_join_group
-      Mixlib::Authorization::Models::Group.on(org_database).get(auth_join_group.user_object_id)["groupname"]
+      puts "group: #{Mixlib::Authorization::Models::Group.on(org_database).get(auth_join_group.user_object_id)["groupname"]}"
     end
   rescue Exception => e
     STDERR.puts "FUCK"    
@@ -67,7 +67,7 @@ actor_auth_ids.each do |actor_auth_id|
   begin
     auth_join_actor = Mixlib::Authorization::AuthJoin.by_auth_object_id(:key=>actor_auth_id).first
     if auth_join_actor
-      puts Mixlib::Authorization::Models::Client.on(org_database).get(auth_join_actor.user_object_id)["clientname"]
+      puts "client: #{Mixlib::Authorization::Models::Client.on(org_database).get(auth_join_actor.user_object_id)["clientname"]}"
     end
   rescue Exception=>e
     STDERR.puts "FUCK: #{e.inspect}"
