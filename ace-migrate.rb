@@ -30,6 +30,7 @@ admin_name = ARGV[1] || Mixlib::Authorization::Models::Group.on(org_database).by
 
 user_id = Mixlib::Authorization::Models::User.by_username(:key=>admin_name).first["_id"]
 admin_id =  Mixlib::Authorization::AuthJoin.by_user_object_id(:key=>user_id).first.auth_object_id
+STDERR.puts "Organization is #{orgname} and the admin user #{admin_name} with user id #{user_id} and auth id #{admin_id}"
 
 o_nodes_query = "curl -s http://#{couchdb_uri}/#{org_database.name}/_design/nodes/_view/all_id"
 nodes = JSON.parse(`#{o_nodes_query}`)
