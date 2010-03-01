@@ -26,17 +26,17 @@ include Mixlib::Authorization::AuthHelper
 
 orgname = ARGV[0]
 org_database = database_from_orgname(orgname)
-client_name = ARGV[1]
+# client_name = ARGV[1]
 
-client_obj = Mixlib::Authorization::Models::Client.on(org_database).by_clientname(:key=>client_name).first
-unless client_obj
-  STDERR.puts "failed to find client #{client_name}"
-  exit 42
-end
+# client_obj = Mixlib::Authorization::Models::Client.on(org_database).by_clientname(:key=>client_name).first
+# unless client_obj
+#   STDERR.puts "failed to find client #{client_name}"
+#   exit 42
+# end
 
-client_id = client_obj["_id"]
-client_auth_id =  Mixlib::Authorization::AuthJoin.by_user_object_id(:key=>client_id).first.auth_object_id
-STDERR.puts "Organization is #{orgname} and the client #{client_name} with client id #{client_id} and auth id #{client_auth_id}"
+# client_id = client_obj["_id"]
+# client_auth_id =  Mixlib::Authorization::AuthJoin.by_user_object_id(:key=>client_id).first.auth_object_id
+# STDERR.puts "Organization is #{orgname} and the client #{client_name} with client id #{client_id} and auth id #{client_auth_id}"
 
 group_id = Mixlib::Authorization::Models::Group.on(org_database).by_groupname(:key=>"clients").first["_id"]
 group_auth_id =  Mixlib::Authorization::AuthJoin.by_user_object_id(:key=>group_id).first.auth_object_id
