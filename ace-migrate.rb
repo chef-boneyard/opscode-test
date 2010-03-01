@@ -67,7 +67,7 @@ if data_bags["rows"]
   data_bagnames = data_bags["rows"].map { |data_bag| data_bag["value"]}
   
   data_bagnames.each do |data_bagname|
-    data_bag_exists = !Mixlib::Authorization::Models::Data_Bag.on(org_database).by_name(:key=>data_bagname).first.nil?  
+    data_bag_exists = !Mixlib::Authorization::Models::DataBag.on(org_database).by_name(:key=>data_bagname).first.nil?  
     Mixlib::Authorization::Models::DataBag.on(org_database).new(:name=>data_bagname,:requester_id => admin_id, :orgname=>orgname).save unless data_bag_exists
     STDERR.putc('.')  
   end
