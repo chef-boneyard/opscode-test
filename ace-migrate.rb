@@ -60,19 +60,23 @@ if roles["rows"]
   STDERR.puts "\nroles done"
 end
 
-o_cookbooks_query = "curl -s http://#{couchdb_uri}/#{org_database.name}/_design/cookbooks/_view/all_id"
-cookbooks = JSON.parse(`#{o_cookbooks_query}`)
-STDERR.puts cookbooks["total_rows"].to_i
-if cookbooks["rows"]
-  cookbooknames = cookbooks["rows"].map { |cookbook| cookbook["value"]}
+o_data_bags_query = "curl -s http://#{couchdb_uri}/#{org_database.name}/_design/data_bags/_view/all_id"
+data_bags = JSON.parse(`#{o_data_bags_query}`)
+STDERR.puts data_bags["total_rows"].to_i
+if data_bags["rows"]
+  data_bagnames = data_bags["rows"].map { |data_bag| data_bag["value"]}
   
-  cookbooknames.each do |cookbookname|
-    cookbook_exists = !Mixlib::Authorization::Models::Cookbook.on(org_database).by_name(:key=>cookbookname).first.nil?  
-    Mixlib::Authorization::Models::Cookbook.on(org_database).new(:name=>cookbookname,:requester_id => admin_id, :orgname=>orgname).save unless cookbook_exists
+  data_bagnames.each do |data_bagname|
+    data_bag_exists = !Mixlib::Authorization::Models::Data_Bag.on(org_database).by_name(:key=>data_bagname).first.nil?  
+    Mixlib::Authorization::Models::DataBag.on(org_database).new(:name=>data_bagname,:requester_id => admin_id, :orgname=>orgname).save unless data_bag_exists
     STDERR.putc('.')  
   end
-  STDERR.puts "\cookbooks done"
+  STDERR.puts "\ndata_bags done"
 end
+
+puts Mixlib::Authorization::Models::Cookbook.on(org_database).by_latest_revision(:reduce=>true).inspect
+
+
 
 
 
