@@ -64,6 +64,13 @@ sleep 5
 run "ruby #{File.dirname(__FILE__)}/bootstrap_couchdb.rb opscode-test/continuous-integration/functional/authorization_design_documents.couchdb-dump"
 
 
+############ Checkout and install couchrest
+puts
+puts "---- opscode/couchrest ----"
+git "git@github.com:opscode/couchrest", branchname
+rake_install "couchrest"
+
+
 ############ ruby projects to checkout and rake install
 # TODO: don't forget that opscode-account's Rakefile has a typo wrt 
 # 'opscode-account' vs. 'opscode_account'
