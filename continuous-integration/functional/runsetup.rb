@@ -152,14 +152,6 @@ run_server "opscode-cert-erlang", "./start.sh"
 puts
 puts "---- opscode-authz ----"
 git "git@github.com:opscode/opscode-authz", branchname
-Dir.chdir("opscode-authz") do |dir|
-  run "git submodule update --init"
-end
-Dir.chdir("opscode-authz/deps/opscode-authz-internal") do |dir|
-  # the Rakefile in here depends on Cucumber, but doesn't explicitly
-  # include 'rubygems', so the cucumber fails without it.
-  run "rake -rubygems"
-end
 make "opscode-authz"
 run_server "opscode-authz", "./start.sh"
 
