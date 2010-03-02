@@ -123,7 +123,12 @@ rabbitmq_cmds =
   ['add_vhost /nanite', 
    'add_user mapper testing', 'add_user nanite testing',
    'set_permissions -p /nanite mapper ".*" ".*" ".*"',
-   'set_permissions -p /nanite nanite ".*" ".*" ".*"']
+   'set_permissions -p /nanite nanite ".*" ".*" ".*"',
+   'add_vhost /chef',
+   'add_user chef testing',
+   'set_permissions -p /chef chef ".*" ".*" ".*"'
+  ]
+
 rabbitmq_cmds.each do |cmd|
   # ignore errors, in case the user/permission/vhost already exists
   # sudo, in case the erlang cookie isn't readable
