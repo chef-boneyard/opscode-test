@@ -185,6 +185,7 @@ puts "---- opscode-account ----"
 git "git@github.com:opscode/opscode-account", branchname
 run "sudo mkdir /etc/opscode", true # ignore failure in making the directory, in case it's already there.
 run "sudo cp -av opscode-account/lib/opscode-account/azs.pem /etc/opscode"
+run "sudo cp -av opscode-account/lib/opscode-account/webui_pub.pem /etc/opscode"
 run_server "opscode-account", "bin/opscode-account -p 4042 -l debug"
 
 
