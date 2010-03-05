@@ -9,43 +9,8 @@ class << @self
   require "#{File.dirname(__FILE__)}/cmdutil"
 end
 
-def kill_opscode_account
-  pid = nil
-  File.popen("ps uxaw|grep merb|grep 4042|grep -v grep", "r") do |ps|
-    ps.each_line do |line|
-      fields = line.split(/\s+/)
-      pid_str = fields[1]
-      if pid_str =~ /\d+/
-        pid = pid_str.to_i
-        puts line
-      end
-    end
-  end
-
-  if pid
-    cmd = "sudo kill -TERM #{pid}"
-    puts "Killing opscode-account process at #{pid} with SIGTERM"
-    run cmd
-  else
-    puts "No opscode-account process found, skipping.."
-  end
-end
-
-def start_opscode_account
-  run_server "opscode-account", "bin/opscode-account -p 4042 -l debug"
-end
-
-# No matter what happens start opscode-account back up when we exit.
-at_exit do
-  puts "** Starting opscode-account back up.."
-  start_opscode_account
-end
-  
 puts "** Test setup: Bootstrapping CouchDB..."
 run "ruby #{File.dirname(__FILE__)}/bootstrap_couchdb.rb opscode-test/continuous-integration/functional/authorization_design_documents.couchdb-dump"
-
-puts "** Test setup: Killing current opscode-account.."
-kill_opscode_account
 
 
 # Determine the path for cucumber binary
