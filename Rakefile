@@ -128,6 +128,24 @@ def start_chef_server(type="normal")
   end
 end
 
+def start_chef_server_webui(type="normal")
+  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-chef", "chef-server-webui"))
+  @chef_server_webui_pid = nil
+  mcid = fork
+  if mcid # parent
+    @chef_server_webui_pid = mcid
+  else # child
+    Dir.chdir(path) do
+      case type
+      when "normal"
+        exec("slice -a thin -N -p 4500")
+      when "features"
+        exec("slice -a thin -N -p 4500 -C #{File.join(path, "..", "features", "data", "config", "server.rb")}")
+      end
+    end
+  end
+end
+
 def start_certificate(type="normal")
   path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-certificate"))
   @certificate_pid = nil
@@ -216,7 +234,7 @@ end
 def create_local_test
   path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-account", "bin"))
   Dir.chdir(path) do
-    system("./account-whacker -c /tmp/local-test-user.pem -D opscode_account -d local-test-user -e local-test-user@opscode.com -f local -l user  -m test -u local-test-user")
+    system("./account-whacker -c /tmp/local-test-user.pem -D opscode_account -d local-test-user -e local-test-user@opscode.com -f local -l user  -m test -u local-test-user -p p@ssw0rd1")
     system("./global-containers local-test-user")
     system("./bootstraptool -a http://localhost -K /tmp/local-test-validator.pem -n local-test-org -t Business -g local-test-org -u local-test-user -p /tmp/local-test-user.pem -o local-test-user")
   end
@@ -385,7 +403,7 @@ def create_organization
   oapath = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-account"))
   Dir.chdir(oapath) do
     begin
-      output = `./bin/account-whacker -c #{Dir.tmpdir}/clownco.pem -d Clownco -e clownco@opscode.com -f Clown -l co -m Esquire -u clownco`
+      output = `./bin/account-whacker -c #{Dir.tmpdir}/clownco.pem -d Clownco -e clownco@opscode.com -f Clown -l co -m Esquire -u clownco -p p@ssw0rd1`
       Chef::Log.debug(output)
     rescue
       Chef::Log.fatal("I caught #{$!} #{$!.backtrace.join("\n")}")
@@ -409,7 +427,7 @@ def create_organization
   oapath = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-account"))
   Dir.chdir(oapath) do
     begin
-      output = `./bin/account-whacker -c #{Dir.tmpdir}/cooky.pem -d Cooky -e cooky@opscode.com -f Cooky -l Monkey -m the -u cooky`
+      output = `./bin/account-whacker -c #{Dir.tmpdir}/cooky.pem -d Cooky -e cooky@opscode.com -f Cooky -l Monkey -m the -u cooky -p p@ssw0rd1`
       Chef::Log.debug(output)
     rescue
       Chef::Log.fatal("I caught #{$!} #{$!.backtrace.join("\n")}")
@@ -461,6 +479,7 @@ def start_dev_environment(type="normal")
   start_opscode_authz(type)
   start_opscode_account(type)
   start_chef_server(type)
+  start_chef_server_webui(type)
   start_nginx(type)
   puts "Running CouchDB at #{@couchdb_server_pid}"
   puts "Running RabbitMQ at #{@rabbitmq_server_pid}"
@@ -588,6 +607,12 @@ namespace :dev do
         start_chef_server("features")
         wait_for_ctrlc
       end
+      
+      desc "Start Chef Server Webui for testing"
+      task :chef_server_webui do
+        start_chef_server_webui("features")
+        wait_for_ctrlc
+      end
 
       desc "Start Certificate for testing"
       task :certificate do
@@ -663,6 +688,12 @@ namespace :dev do
     desc "Start Chef Server"
     task :chef_server do
       start_chef_server
+      wait_for_ctrlc
+    end
+    
+    desc "Start Chef Server Webui"
+    task :chef_server_webui do
+      start_chef_server_webui
       wait_for_ctrlc
     end
 
