@@ -5,10 +5,12 @@ require 'rubygems'
 require 'chef/log'
 require 'mixlib/authorization'
 
+ACCOUNT_DB_NAME = 'opscode_account'
+
 Mixlib::Authorization::Config.couchdb_uri = 'localhost:5984'
 couchrest = CouchRest.new(Mixlib::Authorization::Config.couchdb_uri)
-db = couchrest.database!('opscode_account')
-couchrest.default_database = 'opscode_account'
+db = couchrest.database!(ACCOUNT_DB_NAME)
+couchrest.default_database = ACCOUNT_DB_NAME
 Mixlib::Authorization::Config.default_database = db
 
 Mixlib::Authorization::Config.authorization_service_uri ||= 'http://localhost:5959'
@@ -32,6 +34,17 @@ def print_usage_and_exit
   exit(1)
 end
 
+def find_user_by_name(user_id)
+  begin
+    # Find it 
+    raise ArgumentError unless u = Mixlib::Authorization::Models::User.by_username(:key => user_id).first
+    u
+  rescue ArgumentError
+    STDERR.puts "FAIL! Could not find a user named '#{user_id}'"
+    raise "Failed to find user '#{user_id}'"
+  end
+end
+
 mode = ARGV.shift
 operation = ARGV.shift
 
@@ -40,15 +53,8 @@ when 'user'
   print_usage_and_exit unless user_id = ARGV.shift
   case operation
   when 'regen-key'
-    begin
-      # Find it 
-      user = Mixlib::Authorization::Models::User.by_username(:key => user_id).first
-    rescue ArgumentError
-      STDERR.puts "FAIL! Could not find a user named '#{user_id}'"
-      raise NotFound, "Failed to find user '#{user_id}'"
-    end
     certificate, key = gen_cert("guid")
-    
+    user = find_user_by_name(user_id)
     user.delete(:public_key) # remove old public key field in favor of new certificate [cb]
     user[:certificate] = certificate
     
@@ -59,7 +65,10 @@ when 'user'
     print key
     
   when 'reset-password'
-    #
+    user = find_user_by_name(user_id)
+    user.set_password("opscoderules")
+    user.save
+    puts "user #{user_id}'s password set to 'opscoderules'"
   else
     print_usage_and_exit
   end
