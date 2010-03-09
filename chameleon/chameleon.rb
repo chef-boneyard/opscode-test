@@ -44,6 +44,7 @@ when 'user'
       # Find it 
       user = Mixlib::Authorization::Models::User.by_username(:key => user_id).first
     rescue ArgumentError
+      STDERR.puts "FAIL! Could not find a user named '#{user_id}'"
       raise NotFound, "Failed to find user '#{user_id}'"
     end
     certificate, key = gen_cert("guid")
@@ -63,7 +64,28 @@ when 'user'
     print_usage_and_exit
   end
 when 'org'
-  #
+  STDERR.puts "Generating a new client key"
+  print_usage_and_exit unless operation == "regen-key"
+  # Get org and client CLI opts
+  print_usage_and_exit unless orgname = ARGV.shift
+  STDERR.puts "orgname: #{orgname}"
+  print_usage_and_exit unless clientname = ARGV.shift
+  STDERR.puts "clientname: #{clientname}"
+  
+  # Get the ORGDB object and client object
+  orgdb = database_from_orgname(orgname)
+  raise ArgumentError unless client = Mixlib::Authorization::Models::Client.on(orgdb).by_clientname(:key => clientname).first
+  
+  certificate, key = gen_cert("guid")
+  client[:certificate] = certificate
+  
+  # SRSLY why do we have to create it again and then save it? can't client remember what its database is?
+  client = Mixlib::Authorization::Models::Client.on(orgdb).new(client)
+  client.save
+  
+  client.save
+  
+  print key
 else
   print_usage_and_exit
 end
