@@ -66,9 +66,9 @@ when 'user'
     
   when 'reset-password'
     user = find_user_by_name(user_id)
-    user.set_password("opscoderules")
+    user.set_password("foo")
     user.save
-    puts "user #{user_id}'s password set to 'opscoderules'"
+    puts "user #{user_id}'s password set to 'foo'"
   else
     print_usage_and_exit
   end
