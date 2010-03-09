@@ -9,17 +9,17 @@ cd ..
 # update non-gem dirs
 for DIR in 'opscode-chef' 'opscode-account' 'opscode-certificate' 'opscode-test' 'opscode-usermgmt'
 do
-    (echo $DIR ; cd $DIR && git fetch && git fetch --tags && git pull --rebase)
+    (echo "\n\n$DIR\n" ; cd $DIR && ../opscode-test/git-wtf && git status && git fetch && git fetch --tags && git pull --rebase)
 done
 
 # update and install gems
 for DIR in 'chef' 'mixlib-authentication' 'mixlib-authorization' 'mixlib-cli' 'mixlib-log' 'mixlib-config' 'opscode-rest' 'opscode-audit' 'ohai' 'couchrest'
 do
-    (echo $DIR ; cd $DIR && git fetch && git fetch --tags && git pull --rebase && sudo rake install)
+    (echo "\n\n$DIR\n" ; cd $DIR && ../opscode-test/git-wtf && git status && git fetch && git fetch --tags && git pull --rebase && sudo rake install)
 done
 
 # update authorization service
-(export DIR='opscode-authz' ; echo $DIR ; cd $DIR && git fetch && git fetch --tags && git pull --rebase && make)
+(export DIR='opscode-authz' ; echo "\n\n$DIR\n" ; cd $DIR && git status && ../opscode-test/git-wtf && git fetch && git fetch --tags && git pull --rebase && make)
 
 # update and install nginx
-(export DIR='nginx-sysoev' ; echo $DIR ; cd $DIR && git fetch && git fetch --tags && git pull --rebase && sudo ./build.sh)
+(export DIR='nginx-sysoev' ; echo "\n\n$DIR\n" ; cd $DIR && ../opscode-test/git-wtf && git status && git fetch && git fetch --tags && git pull --rebase && sudo ./build.sh)
