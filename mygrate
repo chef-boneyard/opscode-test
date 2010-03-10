@@ -1,8 +1,10 @@
 #!/usr/bin/env ruby
 
-# LEFT TODO:
-# - clean up the running of the script to use ruby conventions (last 3 lines)
-# - usage message with description of "okay" failures.
+# Mygrate copies data from the Community Site MySQL database instance into
+# Platform CouchDB User objects. This includes identifying information such 
+# as email address, twitter account and image, as well as information that is
+# currently not used by the platform, such as passwords. Run with --help for 
+# usage.
 
 require 'rubygems'
 require 'mysql'
@@ -44,6 +46,108 @@ class Mygrate
     :default => 'opscode_community_prod',
     :description => 'The MySQL database to migrate from'
 
+  option :verbose,
+    :short => '-v',
+    :long => '--verbose',
+    :boolean => true,
+    :description => 'Turn on verbose logging, showing users that exist in Couch(Platform) but not MySQL(Community), and vice versa.'
+
+  # given the objects from each database and the fieldname, determine
+  # what should be put into the new object.
+  def platform_field_value(community_user, platform_user, community_fieldname, platform_fieldname)
+    username = community_user['unique_name']
+    community_value = community_user[community_fieldname]
+    platform_value = platform_user[platform_fieldname]
+    
+    if community_user.nil? && !platform_value.nil?
+      # no-op, keep couch
+      # NOTE: we never get here when we iterate over community users, because they are never nil...
+      platform_value
+      
+    elsif !community_value.nil? && platform_value.nil?
+      # use mysql, since couch is null.
+      puts "-- update platform #{username}: #{platform_fieldname} -> #{community_value} (was: #{platform_value})"
+      community_value
+      
+    elsif community_value == platform_value
+      # irrelevant as they're the same.
+      platform_value
+      
+    else
+      # they're different. let's figure out what to do.
+      case platform_fieldname
+      when "first_name", "last_name"
+        if platform_value == "CommunitySite"
+          # created on community site; canned data in platform. use the
+          # value from community.
+          if community_value
+            puts "-- update platform #{username}: #{platform_fieldname} -> #{community_value} (was: #{platform_value})"
+            community_value
+          else
+            # ... unless it was blank on the community site. Leave it as
+            # "CommunitySite" on platform.
+            platform_value
+          end
+        elsif community_value.nil?
+          # created on the platform
+          platform_value
+        end
+        
+      else
+        puts "**** WARN: field #{fieldname}: couch = #{platform_value}, mysql = #{community_value}; picking mysql version #{community_value}"
+        community_value
+      end
+    end
+  end
+  
+  # update the given field in platform_user based on what's in community_user;
+  # return true if it was updated, false otherwise.
+  def update_platform_field_value(community_user, platform_user, community_fieldname, platform_fieldname = nil)
+    platform_fieldname ||= community_fieldname
+    
+    old_value = platform_user[platform_fieldname]
+    new_value = platform_field_value(community_user, platform_user, community_fieldname, platform_fieldname)
+    
+    if old_value != new_value
+      platform_user[platform_fieldname] = new_value
+      true
+    else
+      false
+    end
+  end
+  
+  def update_platform_image(community_user, platform_user)
+    old_value = platform_user['profile_image_url']
+    
+    base_url = "https://s3.amazonaws.com/opscode-community/users/images"
+    image_name = community_user['image_file_name']
+    
+    if image_name.nil?
+      platform_user['profile_image_url'] = 
+        [
+         "/images/users/default_thirty.jpg",
+         "/images/users/default_forty.jpg",
+         "/images/users/default_fifty.jpg"
+        ]
+    else
+      platform_user['profile_image_url'] =
+        [
+         "#{base_url}/#{community_user['id']}/thirty/#{image_name}",
+         "#{base_url}/#{community_user['id']}/forty/#{image_name}",
+         "#{base_url}/#{community_user['id']}/fifty/#{image_name}"
+        ]
+    end
+    
+    new_value = platform_user['profile_image_url']
+    
+    if old_value != new_value
+      puts "-- update platform #{community_user['unique_name']}: profile_image_url -> #{new_value} (was: #{old_value})"
+      true
+    else 
+      false
+    end
+  end
+  
   def run
     # CouchRest GRR! We need to set up the CouchRest database object before
     # we include mixlib/authorization/auth_join and models. Otherwise "modelobj.save"
@@ -56,6 +160,23 @@ class Mygrate
     
     require 'mixlib/authorization/auth_join'
     require 'mixlib/authorization/models'
+
+    puts <<EOM
+
+Mygrate copies data from the Community Site MySQL database instance into
+Platform CouchDB User objects. This includes identifying information such 
+as email address, twitter account and image, as well as information that is
+currently not used by the platform, such as passwords. Run with --help for 
+usage.
+
+Some user migrations for internal customers may fail because their data is 
+invalid according to our current validation configuration. You can safely 
+ignore these user fails.
+
+Running this tool multiple times is safe as the second and further invocations 
+will be no-ops.
+
+EOM
     
     # ---
     # prompt the user for a password
@@ -89,118 +210,24 @@ class Mygrate
     community_usernames = community_users.keys.sort
     platform_usernames = platform_users.keys.sort
     
-    puts
-    puts "community_users: #{community_usernames.join ' '}"
-    puts
-    puts "platform_users: #{platform_usernames.join ' '}"
-    puts
-    puts "names in Community but NOT Platform: " + (community_usernames - platform_usernames).join(' ').to_s
-    puts
-    puts "names in Platform but NOT Community: " + (platform_usernames - community_usernames).join(' ').to_s
-    puts
-    puts "intersection: " + (platform_usernames & community_usernames).join(' ').to_s
-    puts
+    if config[:verbose]
+      puts
+      puts "community_users: #{community_usernames.join ' '}"
+      puts
+      puts "platform_users: #{platform_usernames.join ' '}"
+      puts
+      puts "names in Community but NOT Platform: " + (community_usernames - platform_usernames).join(' ').to_s
+      puts
+      puts "names in Platform but NOT Community: " + (platform_usernames - community_usernames).join(' ').to_s
+      puts
+      puts "names in Platform AND Community: " + (platform_usernames & community_usernames).join(' ').to_s
+      puts
+    end
+
     puts "---------------------------------------------"
     puts "Migrate users from Community Site to Platform"
     puts "---------------------------------------------"
     puts
-    
-    # given the objects from each database and the fieldname, determine
-    # what should be put into the new object.
-    def platform_field_value(community_user, platform_user, community_fieldname, platform_fieldname)
-      username = community_user['unique_name']
-      community_value = community_user[community_fieldname]
-      platform_value = platform_user[platform_fieldname]
-      
-      if community_user.nil? && !platform_value.nil?
-        # no-op, keep couch
-        # NOTE: we never get here when we iterate over community users, because they are never nil...
-        platform_value
-        
-      elsif !community_value.nil? && platform_value.nil?
-        # use mysql, since couch is null.
-        puts "-- update platform #{username}: #{platform_fieldname} -> #{community_value} (was: #{platform_value})"
-        community_value
-        
-      elsif community_value == platform_value
-        # irrelevant as they're the same.
-        platform_value
-        
-      else
-        # they're different. let's figure out what to do.
-        case platform_fieldname
-        when "first_name", "last_name"
-          if platform_value == "CommunitySite"
-            # created on community site; canned data in platform. use the
-            # value from community.
-            if community_value
-              puts "-- update platform #{username}: #{platform_fieldname} -> #{community_value} (was: #{platform_value})"
-              community_value
-            else
-              # ... unless it was blank on the community site. Leave it as
-              # "CommunitySite" on platform.
-              platform_value
-            end
-          elsif community_value.nil?
-            # created on the platform
-            platform_value
-          end
-          
-        else
-          puts "**** WARN: field #{fieldname}: couch = #{platform_value}, mysql = #{community_value}; picking mysql version #{community_value}"
-          community_value
-        end
-      end
-    end
-    
-    # update the given field in platform_user based on what's in community_user;
-    # return true if it was updated, false otherwise.
-    def update_platform_field_value(community_user, platform_user, community_fieldname, platform_fieldname = nil)
-      platform_fieldname ||= community_fieldname
-      
-      old_value = platform_user[platform_fieldname]
-      new_value = platform_field_value(community_user, platform_user, community_fieldname, platform_fieldname)
-      
-      if old_value != new_value
-        platform_user[platform_fieldname] = new_value
-        true
-      else
-        false
-      end
-    end
-    
-    
-    def update_platform_image(community_user, platform_user)
-      old_value = platform_user['profile_image_url']
-      
-      base_url = "https://s3.amazonaws.com/opscode-community/users/images"
-      image_name = community_user['image_file_name']
-      
-      if image_name.nil?
-        platform_user['profile_image_url'] = 
-          [
-           "/images/users/default_thirty.jpg",
-           "/images/users/default_forty.jpg",
-           "/images/users/default_fifty.jpg"
-          ]
-      else
-        platform_user['profile_image_url'] =
-          [
-           "#{base_url}/#{community_user['id']}/thirty/#{image_name}",
-           "#{base_url}/#{community_user['id']}/forty/#{image_name}",
-           "#{base_url}/#{community_user['id']}/fifty/#{image_name}"
-          ]
-      end
-      
-      new_value = platform_user['profile_image_url']
-      
-      if old_value != new_value
-        puts "-- update platform #{community_user['unique_name']}: profile_image_url -> #{new_value} (was: #{old_value})"
-        true
-      else 
-        false
-      end
-    end
     
     # -- do the work
     community_usernames.each do |username|
