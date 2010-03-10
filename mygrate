@@ -52,6 +52,11 @@ class Mygrate
     :boolean => true,
     :description => 'Turn on verbose logging, showing users that exist in Couch(Platform) but not MySQL(Community), and vice versa.'
 
+  option :dry_run,
+    :long => '--dry-run',
+    :boolean => true,
+    :description => "Do a dry run; don't save modified objects to CouchDB/Platform"
+
   # given the objects from each database and the fieldname, determine
   # what should be put into the new object.
   def platform_field_value(community_user, platform_user, community_fieldname, platform_fieldname)
@@ -255,17 +260,24 @@ EOM
       if !changed_field
         next
       end
-      
-      puts "save #{username} to platform..."
-      #pp({:new_platform_user => new_platform_user})
-      begin
-        save_res = new_platform_user.save
-        if save_res == false
-          # by making this red, I am oficially a nerd like Tim
-          puts "\033[0;31m    **** save failed: #{username}\033[m"
+
+      if config[:dry_run]
+        puts "not saving #{username} to platform, as --dry-run was specified."
+        if config[:verbose]
+          puts "...would have saved:"
+          pp({:new_platform_user => new_platform_user})
         end
-      rescue
-        puts "!!!! Error saving new_platform_user to Platform/CouchDB: #{$!}; " + $!.backtrace.join("\n")
+      else
+        puts "save #{username} to platform..."
+        begin
+          save_res = new_platform_user.save
+          if save_res == false
+            # by making this red, I am oficially a nerd like Tim
+            puts "\033[0;31m    **** save failed: #{username}\033[m"
+          end
+        rescue
+          puts "!!!! Error saving new_platform_user to Platform/CouchDB: #{$!}; " + $!.backtrace.join("\n")
+        end
       end
       puts
     end
