@@ -1,0 +1,1 @@
+require File.dirname(__FILE__) + "/opscode_cucumber/opscode_world"
