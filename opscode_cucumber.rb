@@ -1,1 +1,2 @@
-require File.dirname(__FILE__) + "/opscode_cucumber/opscode_world"
+$:.unshift File.dirname(__FILE__)
+require "opscode_cucumber/opscode_world"

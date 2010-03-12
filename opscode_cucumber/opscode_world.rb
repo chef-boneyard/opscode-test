@@ -1,5 +1,7 @@
 require 'fileutils'
-require File.dirname(__FILE__) + "/couchdb_steps"
+require "opscode_cucumber/couchdb"
+require "opscode_cucumber/rest"
+require "opscode_cucumber/tempfiles"
 
 module Opscode
   extend self
@@ -28,30 +30,6 @@ module OpscodeWorld
   def stash
     @stash ||= Hash.new
   end
-  
-  def rest
-    @rest ||= Chef::REST.new(Chef::Config[:test_org_request_uri_base], nil, nil)
-  end
-
-  def tmpdir
-    @tmpdir ||= begin
-      dir = File.join(Dir.tmpdir, "chef_integration")
-      FileUtils.rm_rf(dir) if File.exist?(dir)
-      
-      FileUtils.mkdir_p(dir)
-      cleanup_dirs << dir
-      dir
-    end
-  end
-  
-  def cleanup_files
-    @cleanup_files ||= Array.new
-  end
-
-  def cleanup_dirs
-    @cleanup_dirs ||= Array.new
-  end
-  
 end
 
 World(OpscodeWorld)
