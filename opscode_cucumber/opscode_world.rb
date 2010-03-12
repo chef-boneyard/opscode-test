@@ -1,7 +1,5 @@
 require 'fileutils'
-require "opscode_cucumber/couchdb"
-require "opscode_cucumber/rest"
-require "opscode_cucumber/tempfiles"
+require 'pp'
 
 module Opscode
   extend self
