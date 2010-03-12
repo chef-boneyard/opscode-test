@@ -1,0 +1,292 @@
+#!/usr/bin/env ruby
+
+# Mygrate copies data from the Community Site MySQL database instance into
+# Platform CouchDB User objects. This includes identifying information such 
+# as email address, twitter account and image, as well as information that is
+# currently not used by the platform, such as passwords. Run with --help for 
+# usage.
+
+require 'rubygems'
+require 'mysql'
+require 'mixlib/authorization'
+require 'couchrest'
+require 'pp'
+require 'mixlib/cli'
+
+class Mygrate
+  include Mixlib::CLI
+  
+  option :couchdb_uri,
+    :short => '-c URI',
+    :long => '--couchdb-uri URI',
+    :default => 'localhost:5984',
+    :description => 'The URI where the CouchDB database is located'
+  
+  option :couchdb_dbname,
+    :short => '-d DBNAME',
+    :long => '--couchdb-dbname',
+    :default => 'opscode_account',
+    :description => 'The name of the database in CouchDB to migrate data into'
+  
+  option :mysql_host,
+    :short => '-h HOST',
+    :long => '--mysql-host HOST',
+    :default => '127.0.0.1',
+    :description => 'The hostname of the MySQL database'
+  
+  option :mysql_user,
+    :short => '-u USER',
+    :long => '--user USER',
+    :default => 'root',
+    :description => 'The MySQL user'
+  
+  option :mysql_db,
+    :short => '-m DATABASE',
+    :long => '--mysql-database DATABASE',
+    :default => 'opscode_community_prod',
+    :description => 'The MySQL database to migrate from'
+
+  option :verbose,
+    :short => '-v',
+    :long => '--verbose',
+    :boolean => true,
+    :description => 'Turn on verbose logging, showing users that exist in Couch(Platform) but not MySQL(Community), and vice versa.'
+
+  option :dry_run,
+    :long => '--dry-run',
+    :boolean => true,
+    :description => "Do a dry run; don't save modified objects to CouchDB/Platform"
+
+  # given the objects from each database and the fieldname, determine
+  # what should be put into the new object.
+  def platform_field_value(community_user, platform_user, community_fieldname, platform_fieldname)
+    username = community_user['unique_name']
+    community_value = community_user[community_fieldname]
+    platform_value = platform_user[platform_fieldname]
+    
+    if community_user.nil? && !platform_value.nil?
+      # no-op, keep couch
+      # NOTE: we never get here when we iterate over community users, because they are never nil...
+      platform_value
+      
+    elsif !community_value.nil? && platform_value.nil?
+      # use mysql, since couch is null.
+      puts "-- update platform #{username}: #{platform_fieldname} -> #{community_value} (was: #{platform_value})"
+      community_value
+      
+    elsif community_value == platform_value
+      # irrelevant as they're the same.
+      platform_value
+      
+    else
+      # they're different. let's figure out what to do.
+      case platform_fieldname
+      when "first_name", "last_name"
+        if platform_value == "CommunitySite"
+          # created on community site; canned data in platform. use the
+          # value from community.
+          if community_value
+            puts "-- update platform #{username}: #{platform_fieldname} -> #{community_value} (was: #{platform_value})"
+            community_value
+          else
+            # ... unless it was blank on the community site. Leave it as
+            # "CommunitySite" on platform.
+            platform_value
+          end
+        elsif community_value.nil?
+          # created on the platform
+          platform_value
+        end
+        
+      else
+        puts "**** WARN: field #{fieldname}: couch = #{platform_value}, mysql = #{community_value}; picking mysql version #{community_value}"
+        community_value
+      end
+    end
+  end
+  
+  # update the given field in platform_user based on what's in community_user;
+  # return true if it was updated, false otherwise.
+  def update_platform_field_value(community_user, platform_user, community_fieldname, platform_fieldname = nil)
+    platform_fieldname ||= community_fieldname
+    
+    old_value = platform_user[platform_fieldname]
+    new_value = platform_field_value(community_user, platform_user, community_fieldname, platform_fieldname)
+    
+    if old_value != new_value
+      platform_user[platform_fieldname] = new_value
+      true
+    else
+      false
+    end
+  end
+  
+  def update_platform_image(community_user, platform_user)
+    old_value = platform_user['profile_image_url']
+    
+    base_url = "https://s3.amazonaws.com/opscode-community/users/images"
+    image_name = community_user['image_file_name']
+    
+    if image_name.nil?
+      platform_user['profile_image_url'] = 
+        [
+         "/images/users/default_thirty.jpg",
+         "/images/users/default_forty.jpg",
+         "/images/users/default_fifty.jpg"
+        ]
+    else
+      platform_user['profile_image_url'] =
+        [
+         "#{base_url}/#{community_user['id']}/thirty/#{image_name}",
+         "#{base_url}/#{community_user['id']}/forty/#{image_name}",
+         "#{base_url}/#{community_user['id']}/fifty/#{image_name}"
+        ]
+    end
+    
+    new_value = platform_user['profile_image_url']
+    
+    if old_value != new_value
+      puts "-- update platform #{community_user['unique_name']}: profile_image_url -> #{new_value} (was: #{old_value})"
+      true
+    else 
+      false
+    end
+  end
+  
+  def run
+    # CouchRest GRR! We need to set up the CouchRest database object before
+    # we include mixlib/authorization/auth_join and models. Otherwise "modelobj.save"
+    # will complain that it doesn't have a database defined.
+    Mixlib::Authorization::Config.couchdb_uri = config[:couchdb_uri]
+    couchrest = CouchRest.new(config[:couchdb_uri])
+    couchrest.default_database = config[:couchdb_dbname]
+    platform_db = couchrest.database!(config[:couchdb_dbname])
+    Mixlib::Authorization::Config.default_database = platform_db
+    
+    require 'mixlib/authorization/auth_join'
+    require 'mixlib/authorization/models'
+
+    puts <<EOM
+
+Mygrate copies data from the Community Site MySQL database instance into
+Platform CouchDB User objects. This includes identifying information such 
+as email address, twitter account and image, as well as information that is
+currently not used by the platform, such as passwords. Run with --help for 
+usage.
+
+Some user migrations for internal customers may fail because their data is 
+invalid according to our current validation configuration. You can safely 
+ignore these user fails.
+
+Running this tool multiple times is safe as the second and further invocations 
+will be no-ops.
+
+EOM
+    
+    # ---
+    # prompt the user for a password
+    print "MySQL Password: "
+    mysql_pass = gets
+    mysql_pass.chomp!
+    
+    # ---
+    # gather users based on username from Community Site - MySQL.
+    community_dbh = Mysql.connect(config[:mysql_host], config[:mysql_user], mysql_pass, config[:mysql_db])
+    community_users = {}
+    query_res = community_dbh.query "SELECT * FROM users"
+    query_res.each_hash do |row|
+      community_users[row['unique_name']] = row
+    end
+    
+    # ---
+    # gather users based on username from Platform - CouchDB.
+    platform_users_list = Mixlib::Authorization::Models::User.on(platform_db).by_username
+    platform_users = {}
+    platform_users_list.each do |user|
+      username = user['username']
+      if username.nil?
+        puts "username is nil for Platform/CouchDB user:"
+        pp({:platform_user => user})
+      else
+        platform_users[username] = user
+      end
+    end
+    
+    community_usernames = community_users.keys.sort
+    platform_usernames = platform_users.keys.sort
+    
+    if config[:verbose]
+      puts
+      puts "community_users: #{community_usernames.join ' '}"
+      puts
+      puts "platform_users: #{platform_usernames.join ' '}"
+      puts
+      puts "names in Community but NOT Platform: " + (community_usernames - platform_usernames).join(' ').to_s
+      puts
+      puts "names in Platform but NOT Community: " + (platform_usernames - community_usernames).join(' ').to_s
+      puts
+      puts "names in Platform AND Community: " + (platform_usernames & community_usernames).join(' ').to_s
+      puts
+    end
+
+    puts "---------------------------------------------"
+    puts "Migrate users from Community Site to Platform"
+    puts "---------------------------------------------"
+    puts
+    
+    # -- do the work
+    community_usernames.each do |username|
+      community_user = community_users[username]
+      platform_user = platform_users[username]
+      
+      if !platform_users[username]
+        puts "skipping user #{username}; doesn't exist in couch -- mysql created_at #{community_user['created_at']}"
+        puts
+        next
+      end
+      
+      # build a new user object.
+      # Mixlib::Authorization::Models::User.on(couch_db).by_username(:key => username)
+      new_platform_user = Mixlib::Authorization::Models::User.on(platform_db).new(platform_user)
+      #new_platform_user = platform_user
+      
+      changed_field = false
+      ['first_name', 'last_name', 'twitter_account', 'city', 'country', 'salt'].each do |fieldname|
+        changed_field |= update_platform_field_value(community_user, new_platform_user, fieldname)
+      end
+      changed_field |= update_platform_field_value(community_user, new_platform_user, 'encrypted_password', 'password')
+      changed_field |= update_platform_image(community_user, new_platform_user)
+      
+      if !changed_field
+        next
+      end
+
+      if config[:dry_run]
+        puts "not saving #{username} to platform, as --dry-run was specified."
+        if config[:verbose]
+          puts "...would have saved:"
+          pp({:new_platform_user => new_platform_user})
+        end
+      else
+        puts "save #{username} to platform..."
+        begin
+          save_res = new_platform_user.save
+          if save_res == false
+            # by making this red, I am oficially a nerd like Tim
+            puts "\033[0;31m    **** save failed: #{username}\033[m"
+          end
+        rescue
+          puts "!!!! Error saving new_platform_user to Platform/CouchDB: #{$!}; " + $!.backtrace.join("\n")
+        end
+      end
+      puts
+    end
+  end
+end
+
+# run run run!
+if __FILE__ == $0
+  m = Mygrate.new
+  m.parse_options
+  m.run
+end
