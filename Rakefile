@@ -10,6 +10,8 @@ require 'ftools'
   $: << File.join(File.dirname(__FILE__), '..', 'opscode-chef', inc_dir, 'lib')
 end
 
+OPCODE_COMMUNITY_PATH = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-community-site"))
+
 require 'chef'
 require 'chef/config'
 require 'chef/client'
@@ -39,6 +41,38 @@ end
 
 if ENV["DEBUG"]=="true"
   Chef::Log.level = :debug
+end
+
+def start_mysqld_safe
+  @mysqld_pid = fork do
+    exec "mysqld_safe"
+  end
+end
+
+def start_community_solr
+  @community_solr_pid = fork do
+    Dir.chdir(OPCODE_COMMUNITY_PATH) do
+      exec "rake solr:start:foreground"
+    end
+  end
+end
+
+def start_delayed_job
+  @delayed_job_pid = fork do
+    Dir.chdir(OPCODE_COMMUNITY_PATH) do
+      exec 'rake jobs:work'
+    end
+  end
+end
+
+def start_community_webui(type="normal")
+  rails_env = (type == 'features' ? 'cucumber' : (ENV['RAILS_ENV'] || 'development'))
+  ENV['RAILS_ENV'] = rails_env
+  @community_webui_pid = fork do
+    Dir.chdir(OPCODE_COMMUNITY_PATH) do
+      exec "script/server thin"
+    end
+  end
 end
 
 def start_couchdb(type="normal")
@@ -226,7 +260,7 @@ def start_nginx(type="normal")
     exit(-1) unless @nginx_pid
   else # child
     Dir.chdir(path) do
-      exec("./objs/nginx -c #{path}/conf/platform.conf")
+      exec("sudo ./objs/nginx -c #{path}/conf/platform.conf")
     end
   end
 end
@@ -571,6 +605,30 @@ namespace :dev do
   namespace :features do
     
     namespace :start do
+      namespace :community do
+        task :mysql do
+          ## :TODO: BUGBUG ## 
+          # does not reliably kill mysqld when ctrl-C is received
+          start_mysqld_safe
+          wait_for_ctrlc
+        end
+        
+        task :solr do
+          start_community_solr
+          wait_for_ctrlc
+        end
+        
+        task :delayed_job do
+          start_delayed_job
+          wait_for_ctrlc
+        end
+        
+        task :webui do
+          start_community_webui("features")
+          wait_for_ctrlc
+        end
+      end
+      
       desc "Start CouchDB for testing"
       task :couchdb do
         start_couchdb("features")

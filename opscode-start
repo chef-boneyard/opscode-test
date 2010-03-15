@@ -1,16 +1,18 @@
 #!/usr/bin/env ruby
 
 require 'rubygems'
-
+require 'pp'
 require 'appscript'
 include Appscript
 
 SRCDIR = File.expand_path(File.dirname(__FILE__))
 DELAY  = 1
 
-BASE_CMD = "cd #{SRCDIR} && sudo rake dev:features:start:"
-SERVICES = ["couchdb","rabbitmq", "parkplace","chef_solr","cert_erlang","opscode_authz","opscode_audit","opscode_account","chef_solr_indexer","chef_server", "chef_server_webui","nginx"]
+BASE_CMD = "cd #{SRCDIR} && rake dev:features:start:"
 
+TASKS = {}
+TASKS['platform'] = %w{couchdb rabbitmq parkplace chef_solr cert_erlang opscode_authz opscode_audit opscode_account chef_solr_indexer chef_server chef_server_webui nginx}
+TASKS['community']= TASKS['platform'] + %w{community:mysql community:solr community:delayed_job community:webui}
 
 
 def auth_up
@@ -39,18 +41,22 @@ def start_service_in_last_tab(window,service)
   sleep DELAY  
 end
 
-def start_services
+def start_services(services)
   auth_up
   term = activate_terminal
   window = term.windows.first.get
   
-  SERVICES.each do |service|
+  services.each do |service|
     create_tab
     start_service_in_last_tab(window,service)
   end
 end
 
 if __FILE__ == $0
-  start_services
+  services = (ARGV.shift || "platform").downcase
+  raise "Invalid option: '#{services}', legal options are: #{TASKS.keys.join(', ')}" unless TASKS.has_key?(services)
+  STDOUT.puts "Starting services:"
+  pp service_list = TASKS[services]
+  start_services(service_list)
 end
 
