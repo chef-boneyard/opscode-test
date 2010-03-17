@@ -121,38 +121,6 @@ class Mygrate
     end
   end
   
-  def update_platform_image(community_user, platform_user)
-    old_value = platform_user['profile_image_url']
-    
-    base_url = "https://s3.amazonaws.com/opscode-community/users/images"
-    image_name = community_user['image_file_name']
-    
-    if image_name.nil?
-      platform_user['profile_image_url'] = 
-        [
-         "/images/users/default_thirty.jpg",
-         "/images/users/default_forty.jpg",
-         "/images/users/default_fifty.jpg"
-        ]
-    else
-      platform_user['profile_image_url'] =
-        [
-         "#{base_url}/#{community_user['id']}/thirty/#{image_name}",
-         "#{base_url}/#{community_user['id']}/forty/#{image_name}",
-         "#{base_url}/#{community_user['id']}/fifty/#{image_name}"
-        ]
-    end
-    
-    new_value = platform_user['profile_image_url']
-    
-    if old_value != new_value
-      puts "-- update platform #{community_user['unique_name']}: profile_image_url -> #{new_value} (was: #{old_value})"
-      true
-    else 
-      false
-    end
-  end
-  
   def run
     # CouchRest GRR! We need to set up the CouchRest database object before
     # we include mixlib/authorization/auth_join and models. Otherwise "modelobj.save"
@@ -251,12 +219,11 @@ EOM
       #new_platform_user = platform_user
       
       changed_field = false
-      ['first_name', 'last_name', 'twitter_account', 'city', 'country', 'salt'].each do |fieldname|
+      ['first_name', 'last_name', 'twitter_account', 'city', 'country', 'salt', 'image_file_name'].each do |fieldname|
         changed_field |= update_platform_field_value(community_user, new_platform_user, fieldname)
       end
       changed_field |= update_platform_field_value(community_user, new_platform_user, 'encrypted_password', 'password')
-      changed_field |= update_platform_image(community_user, new_platform_user)
-      
+            
       if !changed_field
         next
       end
