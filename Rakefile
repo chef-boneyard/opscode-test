@@ -43,6 +43,11 @@ if ENV["DEBUG"]=="true"
   Chef::Log.level = :debug
 end
 
+def set_rails_env_for_type(type)
+  rails_env = (type == 'features' ? 'cucumber' : (ENV['RAILS_ENV'] || 'development'))
+  ENV['RAILS_ENV'] = rails_env
+end
+
 def start_mysqld_safe
   @mysqld_pid = fork do
     exec "mysqld_safe"
@@ -57,7 +62,8 @@ def start_community_solr
   end
 end
 
-def start_delayed_job
+def start_delayed_job(type="normal")
+  set_rails_env_for_type(type)
   @delayed_job_pid = fork do
     Dir.chdir(OPCODE_COMMUNITY_PATH) do
       exec 'rake jobs:work'
@@ -66,8 +72,7 @@ def start_delayed_job
 end
 
 def start_community_webui(type="normal")
-  rails_env = (type == 'features' ? 'cucumber' : (ENV['RAILS_ENV'] || 'development'))
-  ENV['RAILS_ENV'] = rails_env
+  set_rails_env_for_type(type)
   @community_webui_pid = fork do
     Dir.chdir(OPCODE_COMMUNITY_PATH) do
       exec "script/server thin"
@@ -163,7 +168,7 @@ def start_chef_server(type="normal")
 end
 
 def start_chef_server_webui(type="normal")
-  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-chef", "chef-server-webui"))
+  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-chef", "chef-server"))
   @chef_server_webui_pid = nil
   mcid = fork
   if mcid # parent
@@ -172,9 +177,11 @@ def start_chef_server_webui(type="normal")
     Dir.chdir(path) do
       case type
       when "normal"
-        exec("slice -a thin -N -p 4500")
+        ENV["MERB_ENV"] = "development"
+        exec "bin/chef-server-webui"
       when "features"
-        exec("slice -a thin -N -p 4500 -C #{File.join(path, "..", "features", "data", "config", "server.rb")}")
+        ENV["MERB_ENV"] = "cucumber"
+        exec "bin/chef-server-webui"
       end
     end
   end
@@ -260,7 +267,7 @@ def start_nginx(type="normal")
     exit(-1) unless @nginx_pid
   else # child
     Dir.chdir(path) do
-      exec("sudo ./objs/nginx -c #{path}/conf/platform.conf")
+      exec("sudo", "./objs/nginx", "-c", "#{path}/conf/platform.conf")
     end
   end
 end
