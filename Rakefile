@@ -439,12 +439,12 @@ def create_test_harness_setup_database(guid)
 end 
 
 def create_organization
-  Chef::Log.info("Creating bootstrap user")
+  Chef::Log.info("Creating bootstrap user 'platform-superuser'")
   Chef::Log.debug "Tmpdir: #{Dir.tmpdir}"
   oapath = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-account"))
   Dir.chdir(oapath) do
     begin
-      output = `./bin/account-whacker -c #{Dir.tmpdir}/clownco.pem -d Clownco -e clownco@opscode.com -f Clown -l co -m Esquire -u clownco -p p@ssw0rd1`
+      output = `./bin/account-whacker -c #{Dir.tmpdir}/superuser.pem -d platform-superuser -e platform-cukes-superuser@opscode.com -f PlatformSuperuser -l PlatformCukeSuperuser -m cuker -u platform-superuser -p p@ssw0rd1`
       Chef::Log.debug(output)
     rescue
       Chef::Log.fatal("I caught #{$!} #{$!.backtrace.join("\n")}")
@@ -456,7 +456,7 @@ def create_organization
   oapath = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-account"))
   Dir.chdir(oapath) do
     begin
-      output = `./bin/global-containers clownco`
+      output = `./bin/global-containers platform-superuser`
       Chef::Log.debug(output)
     rescue
       Chef::Log.fatal("I caught #{$!} #{$!.backtrace.join("\n")}")
@@ -464,9 +464,9 @@ def create_organization
     end
   end
   
-  Chef::Log.info("Creating user Cooky")
   oapath = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-account"))
   Dir.chdir(oapath) do
+    Chef::Log.info("Creating user Cooky")
     begin
       output = `./bin/account-whacker -c #{Dir.tmpdir}/cooky.pem -d Cooky -e cooky@opscode.com -f Cooky -l Monkey -m the -u cooky -p p@ssw0rd1`
       Chef::Log.debug(output)
@@ -474,14 +474,24 @@ def create_organization
       Chef::Log.fatal("I caught #{$!} #{$!.backtrace.join("\n")}")
     end
 
+    Chef::Log.info "Creating user clownco-org-admin"
+    begin
+      output = `./bin/account-whacker -c #{Dir.tmpdir}/clownco-org-admin.pem -d ClowncoOrgAdmin -e clownco-org-admin@opscode.com -f ClowncoOrgAdmin -l ClowncoOrgAdmin -m ClowncoOrgAdmin -u clownco-org-admin -p p@ssw0rd1`
+      Chef::Log.debug(output)
+    rescue
+      Chef::Log.fatal("I caught #{$!} #{$!.backtrace.join("\n")}")
+    end
+
+
     Chef::Log.info("Creating bootstrap organization")
     begin
-      output = `./bin/bootstraptool -K "#{Dir.tmpdir}/validation.pem" -n "Clownco, Inc." -t "Business" -g "clownco" -p "#{Dir.tmpdir}/clownco.pem" -o "clownco" -a "http://localhost:4042"`
+      output = `./bin/bootstraptool -K "#{Dir.tmpdir}/clownco-org-validation.pem" -n "Clownco, Inc." -t "Business" -g "clownco" -p "#{Dir.tmpdir}/superuser.pem" -o "platform-superuser" -u clownco-org-admin -a "http://localhost:4042"`
       Chef::Log.debug(output)
     rescue
       Chef::Log.fatal("Generating organization failed: #{$!} #{$!.backtrace.join("\n")}")
       raise
     end
+    
   end
 end
 
@@ -494,7 +504,7 @@ def prepare_feature_cookbooks
       cookbook_name = File.basename(dir)
       Chef::Log.debug("Creating tarball for #{cookbook_name}")
       `tar zcvf #{cookbook_name}.tar.gz ./#{cookbook_name}`
-      Chef::StreamingCookbookUploader.post("http://localhost/organizations/clownco/cookbooks", "clownco", "#{Dir.tmpdir}/clownco.pem", { "name" => cookbook_name, "file" => File.new("#{cookbook_name}.tar.gz") })
+      Chef::StreamingCookbookUploader.post("http://localhost/organizations/clownco/cookbooks", "clownco-org-admin", "#{Dir.tmpdir}/clownco-org-admin.pem", { "name" => cookbook_name, "file" => File.new("#{cookbook_name}.tar.gz") })
       Chef::Log.debug("Uploaded #{cookbook_name} tarball")
     end
   end
