@@ -23,9 +23,14 @@ couchrest = CouchRest.new(Chef::Config[:couchdb_url])
 couchrest.database!('opscode_account')
 couchrest.default_database = 'opscode_account'
 
+couchrest_int = CouchRest.new(Chef::Config[:couchdb_url])
+couchrest_int.database!('opscode_account_internal')
+couchrest_int.default_database = 'opscode_account_internal'
+
 require 'mixlib/authorization'
 Mixlib::Authorization::Config.couchdb_uri = Chef::Config[:couchdb_url]
 Mixlib::Authorization::Config.default_database = couchrest.default_database
+Mixlib::Authorization::Config.internal_database = couchrest_int.default_database
 Mixlib::Authorization::Config.private_key = OpenSSL::PKey::RSA.new(File.read('/etc/opscode/azs.pem'))
 Mixlib::Authorization::Config.authorization_service_uri = 'http://localhost:5959'
 Mixlib::Authorization::Config.certificate_service_uri = "http://localhost:5140/certificates"
@@ -326,7 +331,7 @@ def setup_test_harness
   guid = create_chef_databases
   prepare_feature_cookbooks
   create_test_harness_setup_database(guid)
-  replication_specs = ["authorization", "chef_#{guid}", "opscode_account"].map{|source_db| {:source_db => source_db,:target_db => "#{source_db}_integration"}}
+  replication_specs = ["authorization", "chef_#{guid}", "opscode_account", "opscode_account_internal"].map{|source_db| {:source_db => source_db,:target_db => "#{source_db}_integration"}}
   replicate_dbs(replication_specs, true)
 end
 
@@ -396,7 +401,7 @@ end
 
 def delete_databases
   c = Chef::REST.new(Chef::Config[:couchdb_url], nil, nil)
-  %w{authorization authorization_integration opscode_account opscode_account_integration test_harness_setup}.each do |db|
+  %w{authorization authorization_integration opscode_account opscode_account_integration opscode_account_internal opscode_account_internal_integration test_harness_setup}.each do |db|
     begin
       c.delete_rest("#{db}/")
     rescue
@@ -418,6 +423,7 @@ def create_account_databases
   Chef::Log.info("Creating bootstrap databases")
   replicate_dbs({:source_db=>"authorization_design_documents", :target_db=>"authorization"})
   Chef::CouchDB.new(Chef::Config[:couchdb_url], "opscode_account").create_db  
+  Chef::CouchDB.new(Chef::Config[:couchdb_url], "opscode_account_internal").create_db  
 end
 
 def create_chef_databases
@@ -435,7 +441,7 @@ end
 def create_test_harness_setup_database(guid)
   CouchRest.new(Chef::Config[:couchdb_url]).database!("test_harness_setup")
   db = CouchRest::Database.new(CouchRest::Server.new(Chef::Config[:couchdb_url]),"test_harness_setup")
-  db.save_doc({'_id' => 'dbs_to_replicate', 'source_dbs' => ["authorization", "chef_#{guid}", "opscode_account"]})
+  db.save_doc({'_id' => 'dbs_to_replicate', 'source_dbs' => ["authorization", "chef_#{guid}", "opscode_account", "opsode_account_internal"]})
 end 
 
 def create_organization
