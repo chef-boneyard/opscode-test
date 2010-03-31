@@ -154,7 +154,7 @@ EOM
     # ---
     # prompt the user for a password
     print "MySQL Password: "
-    mysql_pass = gets
+    mysql_pass = STDIN.gets
     mysql_pass.chomp!
     
     # ---
