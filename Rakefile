@@ -441,7 +441,7 @@ end
 def create_test_harness_setup_database(guid)
   CouchRest.new(Chef::Config[:couchdb_url]).database!("test_harness_setup")
   db = CouchRest::Database.new(CouchRest::Server.new(Chef::Config[:couchdb_url]),"test_harness_setup")
-  db.save_doc({'_id' => 'dbs_to_replicate', 'source_dbs' => ["authorization", "chef_#{guid}", "opscode_account", "opsode_account_internal"]})
+  db.save_doc({'_id' => 'dbs_to_replicate', 'source_dbs' => ["authorization", "chef_#{guid}", "opscode_account", "opscode_account_internal"]})
 end 
 
 def create_organization
