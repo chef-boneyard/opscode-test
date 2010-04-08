@@ -1,4 +1,4 @@
-
+require 'pp'
 gems = %w[chef chef-server-api chef-server-webui chef-server chef-solr]
 require 'rubygems'
 require 'couchrest'
@@ -36,13 +36,6 @@ Mixlib::Authorization::Config.authorization_service_uri = 'http://localhost:5959
 Mixlib::Authorization::Config.certificate_service_uri = "http://localhost:5140/certificates"
 require 'mixlib/authorization/auth_join'
 require 'mixlib/authorization/models'
-
-class Chef
-  class Config
-    test_org_name "clownco"
-    test_org_request_uri_base "http://localhost/organizations/#{Chef::Config[:test_org_name]}"
-  end 
-end
 
 if ENV["DEBUG"]=="true"
   Chef::Log.level = :debug
@@ -110,7 +103,7 @@ def start_parkplace(type="normal")
 end
 
 def start_chef_solr(type="normal")
-  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-chef"))    
+  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-chef"))
   @chef_solr_pid = nil
   cid = fork
   if cid
@@ -128,7 +121,7 @@ def start_chef_solr(type="normal")
 end
 
 def start_chef_solr_indexer(type="normal")
-  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-chef"))  
+  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-chef"))
   @chef_solr_indexer = nil
   cid = fork
   if cid
@@ -319,17 +312,17 @@ def setup_test_harness
   cleanup_after_naughty_run
   create_account_databases
   create_organization
-  guid = create_chef_databases
+  org_db_names = create_chef_databases
   prepare_feature_cookbooks
-  create_test_harness_setup_database(guid)
-  replication_specs = ["authorization", "chef_#{guid}", "opscode_account", "opscode_account_internal"].map{|source_db| {:source_db => source_db,:target_db => "#{source_db}_integration"}}
+  create_test_harness_setup_database(org_db_names)
+  replication_specs = (%w{authorization opscode_account opscode_account_internal} + org_db_names).map{|source_db| {:source_db => source_db,:target_db => "#{source_db}_integration"}}
   replicate_dbs(replication_specs, true)
 end
 
 def configure_rabbitmq(type="normal")
   # hack. wait for rabbit to come up.
   sleep 2
-  
+
   puts `rabbitmqctl add_vhost /chef`
 
   # create 'chef' user, give it the password 'testing'
@@ -350,20 +343,20 @@ def replicate_dbs(replication_specs, delete_source_dbs = false)
   replication_specs.each do |spec|
     source_db = spec[:source_db]
     target_db = spec[:target_db]
-    
+
     Chef::Log.debug("Deleting #{target_db}, if exists")
     begin
       c.delete_rest("#{target_db}/")
     rescue Net::HTTPServerException => e
       raise unless e.message =~ /Not Found/
     end
-    
+
     Chef::Log.debug("Creating #{target_db}")
     c.put_rest(target_db, nil)
-    
+
     Chef::Log.debug("Replicating #{source_db} to #{target_db}")
     c.post_rest("_replicate", { "source" => "#{Chef::Config[:couchdb_url]}/#{source_db}", "target" => "#{Chef::Config[:couchdb_url]}/#{target_db}" })
-    
+
     if delete_source_dbs
       Chef::Log.debug("Deleting #{source_db}")
       c.delete_rest(source_db)
@@ -372,11 +365,10 @@ def replicate_dbs(replication_specs, delete_source_dbs = false)
 end
 
 def cleanup_after_naughty_run
-  if File.exists?(File.join(Dir.tmpdir, "validation.pem"))
-    File.unlink(File.join(Dir.tmpdir, "validation.pem")) 
-  end
-  if File.exists?(File.join(Dir.tmpdir, "clownco.pem"))
-    File.unlink(File.join(Dir.tmpdir, "clownco.pem"))
+  %w{clownco-org-admin.pem clownco-org-validation.pem skynet-org-admin.pem skynet-org-validation.pem cooky.pem superuser.pem}.each do |pem_file|
+    if File.exists?(File.join(Dir.tmpdir, pem_file))
+      File.unlink(File.join(Dir.tmpdir,pem_file))
+    end
   end
   cleanup_cookbook_tarballs
 end
@@ -405,10 +397,10 @@ end
 def get_db_list
   CouchRest.new(Chef::Config[:couchdb_url]).database!("test_harness_setup")
   db = CouchRest::Database.new(CouchRest::Server.new(Chef::Config[:couchdb_url]),"test_harness_setup")
-  
+
   doc = db.get('dbs_to_replicate')
   dbs_to_replicate = doc['source_dbs']
-end 
+end
 
 def create_account_databases
   Chef::Log.info("Creating bootstrap databases")
@@ -418,22 +410,25 @@ def create_account_databases
 end
 
 def create_chef_databases
-  organization = Mixlib::Authorization::Models::Organization.find(Chef::Config[:test_org_name])
-  guid = organization["guid"]
-  cdb = Chef::CouchDB.new(Chef::Config[:couchdb_url], "chef_#{guid.downcase}")
-  cdb.create_db
-  cdb.create_id_map
-  Chef::Node.create_design_document(cdb)
-  Chef::Role.create_design_document(cdb)
-  Chef::DataBag.create_design_document(cdb)
-  guid.downcase
-end 
+  %w{clownco skynet}.map do |orgname|
+    organization = Mixlib::Authorization::Models::Organization.find(orgname)
+    dbname = "chef_" + organization["guid"]
+    cdb = Chef::CouchDB.new(Chef::Config[:couchdb_url], dbname)
+    cdb.create_db
+    cdb.create_id_map
+    Chef::Node.create_design_document(cdb)
+    Chef::Role.create_design_document(cdb)
+    Chef::DataBag.create_design_document(cdb)
+    dbname
+  end
+end
 
-def create_test_harness_setup_database(guid)
+def create_test_harness_setup_database(org_db_names)
+  db_names = %w{authorization opscode_account opscode_account_internal}.concat Array(org_db_names)
   CouchRest.new(Chef::Config[:couchdb_url]).database!("test_harness_setup")
   db = CouchRest::Database.new(CouchRest::Server.new(Chef::Config[:couchdb_url]),"test_harness_setup")
-  db.save_doc({'_id' => 'dbs_to_replicate', 'source_dbs' => ["authorization", "chef_#{guid}", "opscode_account", "opscode_account_internal"]})
-end 
+  db.save_doc({'_id' => 'dbs_to_replicate', 'source_dbs' => db_names})
+end
 
 def create_organization
   Chef::Log.info("Creating bootstrap user 'platform-superuser'")
@@ -448,48 +443,34 @@ def create_organization
       raise
     end
   end
-  
-  Chef::Log.info("Creating global containers")
+
   oapath = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-account"))
   Dir.chdir(oapath) do
-    begin
-      output = `./bin/global-containers platform-superuser`
-      Chef::Log.debug(output)
-    rescue
-      Chef::Log.fatal("I caught #{$!} #{$!.backtrace.join("\n")}")
-      raise
-    end
-  end
-  
-  oapath = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-account"))
-  Dir.chdir(oapath) do
+    Chef::Log.info("Creating global containers")
+    output = `./bin/global-containers platform-superuser`
+    Chef::Log.debug(output)
+
     Chef::Log.info("Creating user Cooky")
-    begin
-      output = `./bin/account-whacker -c #{Dir.tmpdir}/cooky.pem -d Cooky -e cooky@opscode.com -f Cooky -l Monkey -m the -u cooky -p p@ssw0rd1`
-      Chef::Log.debug(output)
-    rescue
-      Chef::Log.fatal("I caught #{$!} #{$!.backtrace.join("\n")}")
-    end
+    output = `./bin/account-whacker -c #{Dir.tmpdir}/cooky.pem -d Cooky -e cooky@opscode.com -f Cooky -l Monkey -m the -u cooky -p p@ssw0rd1`
+    Chef::Log.debug(output)
 
     Chef::Log.info "Creating user clownco-org-admin"
-    begin
-      output = `./bin/account-whacker -c #{Dir.tmpdir}/clownco-org-admin.pem -d ClowncoOrgAdmin -e clownco-org-admin@opscode.com -f ClowncoOrgAdmin -l ClowncoOrgAdmin -m ClowncoOrgAdmin -u clownco-org-admin -p p@ssw0rd1`
-      Chef::Log.debug(output)
-    rescue
-      Chef::Log.fatal("I caught #{$!} #{$!.backtrace.join("\n")}")
-    end
+    output = `./bin/account-whacker -c #{Dir.tmpdir}/clownco-org-admin.pem -d ClowncoOrgAdmin -e clownco-org-admin@opscode.com -f ClowncoOrgAdmin -l ClowncoOrgAdmin -m ClowncoOrgAdmin -u clownco-org-admin -p p@ssw0rd1`
+    Chef::Log.debug(output)
 
+    Chef::Log.info("Creating clownco organization")
+    output = `./bin/bootstraptool -K "#{Dir.tmpdir}/clownco-org-validation.pem" -n "Clownco, Inc." -t "Business" -g "clownco" -p "#{Dir.tmpdir}/superuser.pem" -o "platform-superuser" -u clownco-org-admin -a "http://localhost:4042"`
+    Chef::Log.debug(output)
 
-    Chef::Log.info("Creating bootstrap organization")
-    begin
-      output = `./bin/bootstraptool -K "#{Dir.tmpdir}/clownco-org-validation.pem" -n "Clownco, Inc." -t "Business" -g "clownco" -p "#{Dir.tmpdir}/superuser.pem" -o "platform-superuser" -u clownco-org-admin -a "http://localhost:4042"`
-      Chef::Log.debug(output)
-    rescue
-      Chef::Log.fatal("Generating organization failed: #{$!} #{$!.backtrace.join("\n")}")
-      raise
-    end
-    
+    Chef::Log.info "Creating user skynet-org-admin"
+    output = `./bin/account-whacker -c #{Dir.tmpdir}/skynet-org-admin.pem -d SkynetOrgAdmin -e skynet-org-admin@opscode.com -f SkynetOrgAdmin -l SkynetOrgAdmin -m SkynetOrgAdmin -u skynet-org-admin -p p@ssw0rd1`
+    Chef::Log.debug(output)
+
+    Chef::Log.info("Creating skynet organization")
+    output = `./bin/bootstraptool -K "#{Dir.tmpdir}/skynet-org-validation.pem" -n "SkynetDotOrg." -t "Business" -g "skynet" -p "#{Dir.tmpdir}/superuser.pem" -o "platform-superuser" -u skynet-org-admin -a "http://localhost:4042"`
+    Chef::Log.debug(output)
   end
+
 end
 
 def prepare_feature_cookbooks
@@ -540,7 +521,7 @@ def start_dev_environment(type="normal")
   puts "Running Opscode Authz at #{@opscode_authz_pid}"
   puts "Running Opscode Account at #{@opscode_account_pid}"
   puts "Running Chef at #{@chef_server_pid}"
-  puts "Running nginx at #{@nginx_pid}"  
+  puts "Running nginx at #{@nginx_pid}"
 end
 
 def stop_dev_environment
@@ -570,11 +551,11 @@ def stop_dev_environment
   end
   if @couchdb_server_pid
     puts "Stopping CouchDB"
-    Process.kill("KILL", @couchdb_server_pid) 
+    Process.kill("KILL", @couchdb_server_pid)
   end
   if @rabbitmq_server_pid
     puts "Stopping RabbitMQ"
-    Process.kill("KILL", @rabbitmq_server_pid) 
+    Process.kill("KILL", @rabbitmq_server_pid)
   end
   if @chef_solr_pid
     puts "Stopping Chef Solr"
@@ -609,7 +590,7 @@ task :dev do
   wait_for_ctrlc
 end
 
-namespace :dev do  
+namespace :dev do
   desc "Install a test instance of Chef for doing features against"
   task :features do
     start_dev_environment("features")
@@ -617,16 +598,16 @@ namespace :dev do
   end
 
   namespace :features do
-    
+
     namespace :start do
       namespace :community do
         task :mysql do
-          ## :TODO: BUGBUG ## 
+          ## :TODO: BUGBUG ##
           # does not reliably kill mysqld when ctrl-C is received
           start_mysqld_safe
           wait_for_ctrlc
         end
-        
+
         task :solr do
           start_community_solr
           wait_for_ctrlc
@@ -637,7 +618,7 @@ namespace :dev do
           wait_for_ctrlc
         end
       end
-      
+
       desc "Start CouchDB for testing"
       task :couchdb do
         start_couchdb("features")
@@ -650,7 +631,7 @@ namespace :dev do
         configure_rabbitmq("features")
         wait_for_ctrlc
       end
-      
+
       desc "Start ParkPlace for testing"
       task :parkplace do
         start_parkplace("features")
@@ -674,7 +655,7 @@ namespace :dev do
         start_chef_server("features")
         wait_for_ctrlc
       end
-      
+
       desc "Start Chef Server Webui for testing"
       task :chef_server_webui do
         start_chef_server_webui("features")
@@ -710,13 +691,13 @@ namespace :dev do
         start_opscode_account("features")
         wait_for_ctrlc
       end
-      
+
       desc "Start Nginx for testing"
       task :nginx do
         start_nginx("features")
         wait_for_ctrlc
       end
-      
+
     end
   end
 
@@ -733,7 +714,7 @@ namespace :dev do
       configure_rabbitmq
       wait_for_ctrlc
     end
-    
+
     desc "Start ParkPlace"
     task :parkplace do
       start_parkplace
@@ -757,7 +738,7 @@ namespace :dev do
       start_chef_server
       wait_for_ctrlc
     end
-    
+
     desc "Start Chef Server Webui"
     task :chef_server_webui do
       start_chef_server_webui
@@ -793,13 +774,13 @@ namespace :dev do
       start_opscode_account
       wait_for_ctrlc
     end
-    
+
     desc "Start Nginx for testing"
     task :nginx do
       start_nginx
       wait_for_ctrlc
     end
-    
+
   end
 end
 
@@ -834,22 +815,22 @@ namespace :setup do
   task :test =>[:check_platform_files] do
     setup_test_harness
   end
-  
+
   desc "Prepare local testing by uploading feature cookbooks to ParkPlace"
   task :cookbooks do
     prepare_feature_cookbooks
   end
-  
+
   desc "Backup production platform files so we can safely test locally"
   task :from_platform do
     backup_platform_client
   end
-  
+
   desc "Return production platform files to their places"
   task :to_platform =>[:check_platform_files] do
     replace_platform_client
   end
-  
+
   desc "Setup for local platform testing"
   task :local_platform=>[:check_platform_files] do
     cleanup_replicas
