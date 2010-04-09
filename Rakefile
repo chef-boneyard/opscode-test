@@ -67,15 +67,6 @@ def start_community_solr
   end
 end
 
-def start_delayed_job(type="normal")
-  set_rails_env_for_type(type)
-  @delayed_job_pid = fork do
-    Dir.chdir(OPCODE_COMMUNITY_PATH) do
-      exec 'rake jobs:work'
-    end
-  end
-end
-
 def start_community_webui(type="normal")
   set_rails_env_for_type(type)
   @community_webui_pid = fork do
@@ -638,11 +629,6 @@ namespace :dev do
         
         task :solr do
           start_community_solr
-          wait_for_ctrlc
-        end
-        
-        task :delayed_job do
-          start_delayed_job
           wait_for_ctrlc
         end
         
