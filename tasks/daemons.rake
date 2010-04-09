@@ -47,7 +47,7 @@ def start_rabbitmq(type="normal")
 end
 
 def start_parkplace(type="normal")
-  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "parkplace"))
+  path = File.join(OPSCODE_PROJECT_DIR, "parkplace")
   @parkplace_pid = nil
   cid = fork
   if cid
@@ -60,7 +60,7 @@ def start_parkplace(type="normal")
 end
 
 def start_chef_solr(type="normal")
-  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-chef"))
+  path = File.join(OPSCODE_PROJECT_DIR, "opscode-chef")
   @chef_solr_pid = nil
   cid = fork
   if cid
@@ -78,7 +78,7 @@ def start_chef_solr(type="normal")
 end
 
 def start_chef_solr_indexer(type="normal")
-  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-chef"))
+  path = File.join(OPSCODE_PROJECT_DIR, "opscode-chef")
   @chef_solr_indexer = nil
   cid = fork
   if cid
@@ -96,7 +96,7 @@ def start_chef_solr_indexer(type="normal")
 end
 
 def start_chef_server(type="normal")
-  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-chef"))
+  path = File.join(OPSCODE_PROJECT_DIR, "opscode-chef")
   @chef_server_pid = nil
   mcid = fork
   if mcid # parent
@@ -114,7 +114,7 @@ def start_chef_server(type="normal")
 end
 
 def start_chef_server_webui(type="normal")
-  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-chef", "chef-server"))
+  path = File.join(OPSCODE_PROJECT_DIR, "opscode-chef", "chef-server")
   @chef_server_webui_pid = nil
   mcid = fork
   if mcid # parent
@@ -134,7 +134,7 @@ def start_chef_server_webui(type="normal")
 end
 
 def start_certificate(type="normal")
-  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-certificate"))
+  path = File.join(OPSCODE_PROJECT_DIR, "opscode-certificate")
   @certificate_pid = nil
   cid = fork
   if cid # parent
@@ -147,7 +147,7 @@ def start_certificate(type="normal")
 end
 
 def start_cert_erlang(type="normal")
-  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-cert-erlang"))
+  path = File.join(OPSCODE_PROJECT_DIR, "opscode-cert-erlang")
   @cert_erlang_pid = nil
   cid = fork
   if cid # parent
@@ -160,7 +160,7 @@ def start_cert_erlang(type="normal")
 end
 
 def start_opscode_audit(type="normal")
-  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-audit"))
+  path = File.join(OPSCODE_PROJECT_DIR, "opscode-audit")
   @opscode_audit_pid = nil
   cid = fork
   if cid # parent
@@ -173,7 +173,7 @@ def start_opscode_audit(type="normal")
 end
 
 def start_opscode_authz(type="normal")
-  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-authz"))
+  path = File.join(OPSCODE_PROJECT_DIR, "opscode-authz")
   @opscode_audit_pid = nil
   cid = fork
   if cid # parent
@@ -186,7 +186,7 @@ def start_opscode_authz(type="normal")
 end
 
 def start_opscode_account(type="normal")
-  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-account"))
+  path = File.join(OPSCODE_PROJECT_DIR, "opscode-account")
   @opscode_account_pid = nil
   cid = fork
   if cid # parent
@@ -199,7 +199,7 @@ def start_opscode_account(type="normal")
 end
 
 def start_nginx(type="normal")
-  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "nginx-sysoev"))
+  path = File.join(OPSCODE_PROJECT_DIR, "nginx-sysoev")
   nginx_pid_file = "/var/run/nginx.pid"
   @nginx_pid = nil
   cid = fork

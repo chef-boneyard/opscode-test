@@ -1,6 +1,6 @@
 
 def create_local_test
-  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-account", "bin"))
+  path = File.join(OPSCODE_PROJECT_DIR, "opscode-account", "bin")
   Dir.chdir(path) do
     system("./account-whacker -c /tmp/local-test-user.pem -D opscode_account -d local-test-user -e local-test-user@opscode.com -f local -l user  -m test -u local-test-user -p p@ssw0rd1")
     system("./global-containers local-test-user")
@@ -95,7 +95,7 @@ def cleanup_after_naughty_run
 end
 
 def cleanup_cookbook_tarballs
-  fcpath = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-chef", "features", "data", "cookbooks"))
+  fcpath = File.join(OPSCODE_PROJECT_DIR, "opscode-chef", "features", "data", "cookbooks")
   Dir.chdir(fcpath) do
     Dir[File.join(fcpath, '*.tar.gz')].each do |file|
       File.unlink(file)
@@ -154,7 +154,7 @@ end
 def create_organization
   Chef::Log.info("Creating bootstrap user 'platform-superuser'")
   Chef::Log.debug "Tmpdir: #{Dir.tmpdir}"
-  oapath = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-account"))
+  oapath = File.join(OPSCODE_PROJECT_DIR, "opscode-account")
   Dir.chdir(oapath) do
     begin
       output = `./bin/account-whacker -c #{Dir.tmpdir}/superuser.pem -d platform-superuser -e platform-cukes-superuser@opscode.com -f PlatformSuperuser -l PlatformCukeSuperuser -m cuker -u platform-superuser -p p@ssw0rd1`
@@ -165,7 +165,7 @@ def create_organization
     end
   end
 
-  oapath = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-account"))
+  oapath = File.join(OPSCODE_PROJECT_DIR, "opscode-account")
   Dir.chdir(oapath) do
     Chef::Log.info("Creating global containers")
     output = `./bin/global-containers platform-superuser`
@@ -196,7 +196,7 @@ end
 
 def prepare_feature_cookbooks
   Chef::Log.info "Preparing feature cookbooks"
-  fcpath = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-chef", "features", "data", "cookbooks"))
+  fcpath = File.join(OPSCODE_PROJECT_DIR, "opscode-chef", "features", "data", "cookbooks")
   Dir.chdir(fcpath) do
     Dir[File.join(fcpath, '*')].each do |dir|
       next unless File.directory?(dir)
