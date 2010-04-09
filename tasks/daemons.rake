@@ -198,6 +198,19 @@ def start_opscode_account(type="normal")
   end
 end
 
+def start_opscode_org_creator(type="normal")
+  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-org-creator/rel/org_app"))
+  @opscode_org_creator_pid = nil
+  cid = fork
+  if cid # parent
+    @opscode_org_creator_pid = cid
+  else # child
+    Dir.chdir(path) do
+      exec("bin/org_app start")
+    end
+  end  
+end
+
 def start_nginx(type="normal")
   path = File.join(OPSCODE_PROJECT_DIR, "nginx-sysoev")
   nginx_pid_file = "/var/run/nginx.pid"
@@ -432,6 +445,12 @@ namespace :dev do
         wait_for_ctrlc
       end
 
+      desc "Start Opscode org creator for testing"
+      task :opscode_org_creator do
+        start_opscode_org_creator("features")
+        wait_for_ctrlc
+      end
+
       desc "Start Nginx for testing"
       task :nginx do
         start_nginx("features")
@@ -512,6 +531,12 @@ namespace :dev do
     desc "Start Opscode Account"
     task :opscode_account do
       start_opscode_account
+      wait_for_ctrlc
+    end
+
+    desc "Start Opscode org creator"
+    task :opscode_org_creator do
+      start_opscode_org_creator
       wait_for_ctrlc
     end
 
