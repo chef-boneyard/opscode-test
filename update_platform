@@ -7,7 +7,7 @@
 cd ..
 
 # update non-gem dirs
-for DIR in 'opscode-chef' 'opscode-account' 'opscode-certificate' 'opscode-test' 'opscode-usermgmt'
+for DIR in 'opscode-chef' 'opscode-account' 'opscode-certificate' 'opscode-test'
 do
     (echo "\n\n$DIR\n" ; cd $DIR ; ../opscode-test/git-wtf ; git status ; git fetch ; git fetch --tags && git pull --rebase)
 done
