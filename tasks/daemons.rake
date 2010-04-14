@@ -206,7 +206,12 @@ def start_opscode_org_creator(type="normal")
     @opscode_org_creator_pid = cid
   else # child
     Dir.chdir(path) do
-      exec("bin/org_app console")
+      case type
+      when "normal"
+        exec("bin/org_app console dev")
+      when "features"
+        exec("bin/org_app console test")
+      end
     end
   end  
 end
@@ -461,6 +466,25 @@ namespace :dev do
   end
 
   namespace :start do
+    namespace :community do
+      task :mysql do
+        ## :TODO: BUGBUG ##
+        # does not reliably kill mysqld when ctrl-C is received
+        start_mysqld_safe
+        wait_for_ctrlc
+      end
+
+      task :solr do
+        start_community_solr
+        wait_for_ctrlc
+      end
+      
+      task :webui do
+        start_community_webui
+        wait_for_ctrlc
+      end
+    end
+    
     desc "Start CouchDB"
     task :couchdb do
       start_couchdb
