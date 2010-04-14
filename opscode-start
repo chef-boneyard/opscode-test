@@ -11,7 +11,7 @@ DELAY  = 1
 BASE_CMD = "cd #{SRCDIR} && rake dev:features:start:"
 
 TASKS = {}
-TASKS['platform'] = %w{couchdb rabbitmq parkplace chef_solr cert_erlang opscode_authz opscode_audit opscode_account chef_solr_indexer chef_server chef_server_webui nginx}
+TASKS['platform'] = %w{couchdb rabbitmq parkplace chef_solr cert_erlang opscode_authz opscode_audit opscode_account opscode_org_creator chef_solr_indexer chef_server chef_server_webui nginx}
 TASKS['community']= TASKS['platform'] + %w{community:mysql community:solr community:webui}
 
 
