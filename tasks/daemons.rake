@@ -199,14 +199,14 @@ def start_opscode_account(type="normal")
 end
 
 def start_opscode_org_creator(type="normal")
-  path = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-org-creator/rel/org_app"))
+  path = File.join(OPSCODE_PROJECT_DIR, "opscode-org-creator/rel/org_app")
   @opscode_org_creator_pid = nil
   cid = fork
   if cid # parent
     @opscode_org_creator_pid = cid
   else # child
     Dir.chdir(path) do
-      exec("bin/org_app start")
+      exec("bin/org_app console")
     end
   end  
 end

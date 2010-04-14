@@ -4,9 +4,31 @@ def create_local_test
   Dir.chdir(path) do
     system("./account-whacker -c /tmp/local-test-user.pem -D opscode_account -d local-test-user -e local-test-user@opscode.com -f local -l user  -m test -u local-test-user -p p@ssw0rd1")
     system("./global-containers local-test-user")
-    system("./bootstraptool -a http://localhost -K /tmp/local-test-validator.pem -n local-test-org -t Business -g local-test-org -u local-test-user -p /tmp/local-test-user.pem -o local-test-user")
+    output = create_public_org('local-test-org', 'local-test-org', 'local-test-user', '/tmp/local-test-user.pem', 'local-test-user', '/tmp/local-test-validator.pem')
+    Chef::Log.debug(output)
   end
   File.copy("local-test-client.rb","/etc/chef/client.rb")
+end
+
+def create_public_org(org_name, org_fullname, opscode_username, opscode_pkey, customer_username, client_key_path)
+  STDOUT.sync = true
+  Chef::Log.info("Creating #{org_fullname} organization...")
+  result = ""
+  waiting = true
+  while waiting
+    result = `./createorgtool -a http://localhost:4042 -K "#{client_key_path}" -n "#{org_fullname}" -t Business -g "#{org_name}" -u "#{customer_username}" -p "#{opscode_pkey}" -o "#{opscode_username}"`
+    if $?.exitstatus == 53
+      Chef::Log.info("...")
+      sleep 10
+    elsif $?.exitstatus == 0
+      Chef::Log.info("Created!")
+      waiting = false
+    else
+      Chef::Log.debug("Error!")
+      waiting = false
+    end
+  end
+  result
 end
 
 def replace_platform_client
@@ -165,30 +187,28 @@ def create_organization
     end
   end
 
-  oapath = File.join(OPSCODE_PROJECT_DIR, "opscode-account")
+  oapath = File.join(OPSCODE_PROJECT_DIR, "opscode-account", "bin")
   Dir.chdir(oapath) do
     Chef::Log.info("Creating global containers")
-    output = `./bin/global-containers platform-superuser`
+    output = `./global-containers platform-superuser`
     Chef::Log.debug(output)
 
     Chef::Log.info("Creating user Cooky")
-    output = `./bin/account-whacker -c #{Dir.tmpdir}/cooky.pem -d Cooky -e cooky@opscode.com -f Cooky -l Monkey -m the -u cooky -p p@ssw0rd1`
+    output = `./account-whacker -c #{Dir.tmpdir}/cooky.pem -d Cooky -e cooky@opscode.com -f Cooky -l Monkey -m the -u cooky -p p@ssw0rd1`
     Chef::Log.debug(output)
 
     Chef::Log.info "Creating user clownco-org-admin"
-    output = `./bin/account-whacker -c #{Dir.tmpdir}/clownco-org-admin.pem -d ClowncoOrgAdmin -e clownco-org-admin@opscode.com -f ClowncoOrgAdmin -l ClowncoOrgAdmin -m ClowncoOrgAdmin -u clownco-org-admin -p p@ssw0rd1`
+    output = `./account-whacker -c #{Dir.tmpdir}/clownco-org-admin.pem -d ClowncoOrgAdmin -e clownco-org-admin@opscode.com -f ClowncoOrgAdmin -l ClowncoOrgAdmin -m ClowncoOrgAdmin -u clownco-org-admin -p p@ssw0rd1`
     Chef::Log.debug(output)
 
-    Chef::Log.info("Creating clownco organization")
-    output = `./bin/bootstraptool -K "#{Dir.tmpdir}/clownco-org-validation.pem" -n "Clownco, Inc." -t "Business" -g "clownco" -p "#{Dir.tmpdir}/superuser.pem" -o "platform-superuser" -u clownco-org-admin -a "http://localhost:4042"`
+    output = create_public_org("clownco", "Clownco, Inc.", "platform-superuser", "#{Dir.tmpdir}/superuser.pem", "clownco-org-admin", "#{Dir.tmpdir}/clownco-org-validation.pem")
     Chef::Log.debug(output)
 
     Chef::Log.info "Creating user skynet-org-admin"
-    output = `./bin/account-whacker -c #{Dir.tmpdir}/skynet-org-admin.pem -d SkynetOrgAdmin -e skynet-org-admin@opscode.com -f SkynetOrgAdmin -l SkynetOrgAdmin -m SkynetOrgAdmin -u skynet-org-admin -p p@ssw0rd1`
+    output = `./account-whacker -c #{Dir.tmpdir}/skynet-org-admin.pem -d SkynetOrgAdmin -e skynet-org-admin@opscode.com -f SkynetOrgAdmin -l SkynetOrgAdmin -m SkynetOrgAdmin -u skynet-org-admin -p p@ssw0rd1`
     Chef::Log.debug(output)
 
-    Chef::Log.info("Creating skynet organization")
-    output = `./bin/bootstraptool -K "#{Dir.tmpdir}/skynet-org-validation.pem" -n "SkynetDotOrg." -t "Business" -g "skynet" -p "#{Dir.tmpdir}/superuser.pem" -o "platform-superuser" -u skynet-org-admin -a "http://localhost:4042"`
+    output = create_public_org("skynet", "SkynetDotOrg", "platform-superuser", "#{Dir.tmpdir}/superuser.pem", "skynet-org-admin", "#{Dir.tmpdir}/skynet-org-validation.pem")
     Chef::Log.debug(output)
   end
 
