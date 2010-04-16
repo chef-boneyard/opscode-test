@@ -204,6 +204,7 @@ File.open("opscode-org-creator/rel/org_app/etc/app.config", "w") do |config|
    ]}
   ].
 EOC
+end
 run_server "opscode-org-creator", "rel/org_app/bin/org_app start"
 
 
