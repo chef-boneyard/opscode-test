@@ -71,6 +71,13 @@ git "git@github.com:opscode/couchrest", branchname
 rake_install "couchrest"
 
 
+############ Checkout and install opscode-cucumber
+puts
+puts "---- opscode/opscode-cucumber ----"
+git "git@github.com:opscode/opscode-cucumber", branchname
+rake_install "opscode-cucumber"
+
+
 ############ ruby projects to checkout and rake install
 # TODO: don't forget that opscode-account's Rakefile has a typo wrt 
 # 'opscode-account' vs. 'opscode_account'
@@ -160,6 +167,46 @@ end
 run_server "opscode-cert-erlang", "./start.sh"
 
 
+############ opscode-org-creator
+puts
+puts "---- opscode-org-creator ----"
+git "git@github.com:opscode/opscode-org-creator.git", branchname
+Dir.chdir("opscode-org-creator") do |dir|
+  run "make rel"
+end
+File.open("opscode-org-creator/rel/org_app/etc/app.config", "w") do |config|
+  config.puts <<EOC
+[
+   %% SASL config
+   {sasl, [
+           {sasl_error_logger, {file, "log/sasl-error.log"}},
+           {errlog_type, error},
+           {error_logger_mf_dir, "log/sasl"},      % Log directory
+           {error_logger_mf_maxbytes, 10485760},   % 10 MB max file size
+           {error_logger_mf_maxfiles, 5}           % 5 files max
+           ]},
+   %% org_app config
+   {org_app, [
+              {account_couch_db, {"localhost", 5984}},
+              {account_database, "opscode_account"},
+              {ready_org_database, "opscode_account_internal"},
+              {ready_org_design, "Mixlib::Authorization::Models::OrganizationInternal-b55f90b2734082e5524e21cffb2f0c1e"},
+              {ready_org_view, "by_state_count"},
+              {ready_org_view_attrs, [{include_docs, false}, {key, "unassigned"}]},
+              {ready_org_depth, 25},
+              {max_workers, 5},
+              {org_create_wait, 2000},
+              {org_create_splay, 1800},
+              {bootstraptool_executable, "/mnt/bamboo-ebs/opscode-account/bin/bootstraptool"},
+              {account_service_base_url, "http://localhost:4042"},
+              {superuser_name, "local-test-user"},
+              {superuser_key_path, "/tmp/local-test-user.pem"}
+   ]}
+  ].
+EOC
+run_server "opscode-org-creator", "rel/org_app/bin/org_app start"
+
+
 ############ opscode-authz
 puts
 puts "---- opscode-authz ----"
@@ -211,7 +258,7 @@ run_server "opscode-chef/chef-server", "bin/chef-server -C ../features/data/conf
 ############ nginx
 puts
 puts "---- nginx ----"
-git "git@github.com:opscode/nginx-sysoev", "opscode-patched"
+git "git@github.com:opscode/nginx-sysoev", "opscode-deploy"
 if !File.exists? "nginx-sysoev/Makefile"
   Dir.chdir("nginx-sysoev") do |dir|
     run "./configure"
