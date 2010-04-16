@@ -199,8 +199,8 @@ File.open("opscode-org-creator/rel/org_app/etc/app.config", "w") do |config|
               {org_create_splay, 1800},
               {bootstraptool_executable, "/mnt/bamboo-ebs/opscode-account/bin/bootstraptool"},
               {account_service_base_url, "http://localhost:4042"},
-              {superuser_name, "local-test-user"},
-              {superuser_key_path, "/tmp/local-test-user.pem"}
+              {superuser_name, "platform-superuser"},
+              {superuser_key_path, "/tmp/superuser.pem"}
    ]}
   ].
 EOC
