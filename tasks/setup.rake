@@ -77,12 +77,12 @@ def setup_test_harness
   prepare_feature_cookbooks
   create_test_harness_setup_database(org_db_names)
   replication_specs = (%w{authorization opscode_account opscode_account_internal} + org_db_names).map{|source_db| {:source_db => source_db,:target_db => "#{source_db}_integration"}}
-  replicate_dbs(replication_specs, true)
+  replicate_dbs(replication_specs)
 end
 
-def replicate_dbs(replication_specs, delete_source_dbs = false)
+def replicate_dbs(replication_specs)
   replication_specs = [replication_specs].flatten
-  Chef::Log.debug "replication_specs = #{replication_specs.inspect}, delete_source_dbs = #{delete_source_dbs}"
+  Chef::Log.debug "replication_specs = #{replication_specs.inspect}"
   c = Chef::REST.new(Chef::Config[:couchdb_url], nil, nil)
   replication_specs.each do |spec|
     source_db = spec[:source_db]
@@ -101,10 +101,6 @@ def replicate_dbs(replication_specs, delete_source_dbs = false)
     Chef::Log.debug("Replicating #{source_db} to #{target_db}")
     c.post_rest("_replicate", { "source" => "#{Chef::Config[:couchdb_url]}/#{source_db}", "target" => "#{Chef::Config[:couchdb_url]}/#{target_db}" })
 
-    if delete_source_dbs
-      Chef::Log.debug("Deleting #{source_db}")
-      c.delete_rest(source_db)
-    end
   end
 end
 
