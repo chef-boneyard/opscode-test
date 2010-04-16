@@ -1,3 +1,4 @@
+PLATFORM_TEST_DIR = '/tmp/opscode-platform-test/'
 
 def create_local_test
   path = File.join(OPSCODE_PROJECT_DIR, "opscode-account", "bin")
@@ -59,7 +60,7 @@ def cleanup_chefs
 end
 
 def cleanup_cookbooks
-  c = Chef::REST.new("http://localhost/organizations/clownco", "clownco", "#{Dir.tmpdir}/clownco.pem")
+  c = Chef::REST.new("http://localhost/organizations/clownco", "clownco", "#{PLATFORM_TEST_DIR}/clownco.pem")
   cookbooks = c.get_rest("cookbooks").keys
   cookbooks.each do |cookbook|
     STDERR.puts c.delete_rest("cookbooks/#{cookbook}").inspect
@@ -109,8 +110,8 @@ end
 
 def cleanup_after_naughty_run
   %w{clownco-org-admin.pem clownco-org-validation.pem skynet-org-admin.pem skynet-org-validation.pem cooky.pem superuser.pem}.each do |pem_file|
-    if File.exists?(File.join(Dir.tmpdir, pem_file))
-      File.unlink(File.join(Dir.tmpdir,pem_file))
+    if File.exists?(File.join(PLATFORM_TEST_DIR, pem_file))
+      File.unlink(File.join(PLATFORM_TEST_DIR,pem_file))
     end
   end
   cleanup_cookbook_tarballs
@@ -175,11 +176,11 @@ end
 
 def create_organization
   Chef::Log.info("Creating bootstrap user 'platform-superuser'")
-  Chef::Log.debug "Tmpdir: #{Dir.tmpdir}"
+  Chef::Log.debug "Tmpdir: #{PLATFORM_TEST_DIR}"
   oapath = File.join(OPSCODE_PROJECT_DIR, "opscode-account")
   Dir.chdir(oapath) do
     begin
-      output = `./bin/account-whacker -c #{Dir.tmpdir}/superuser.pem -d platform-superuser -e platform-cukes-superuser@opscode.com -f PlatformSuperuser -l PlatformCukeSuperuser -m cuker -u platform-superuser -p p@ssw0rd1`
+      output = `./bin/account-whacker -c #{PLATFORM_TEST_DIR}/superuser.pem -d platform-superuser -e platform-cukes-superuser@opscode.com -f PlatformSuperuser -l PlatformCukeSuperuser -m cuker -u platform-superuser -p p@ssw0rd1`
       Chef::Log.debug(output)
     rescue
       Chef::Log.fatal("I caught #{$!} #{$!.backtrace.join("\n")}")
@@ -194,21 +195,21 @@ def create_organization
     Chef::Log.debug(output)
 
     Chef::Log.info("Creating user Cooky")
-    output = `./account-whacker -c #{Dir.tmpdir}/cooky.pem -d Cooky -e cooky@opscode.com -f Cooky -l Monkey -m the -u cooky -p p@ssw0rd1`
+    output = `./account-whacker -c #{PLATFORM_TEST_DIR}/cooky.pem -d Cooky -e cooky@opscode.com -f Cooky -l Monkey -m the -u cooky -p p@ssw0rd1`
     Chef::Log.debug(output)
 
     Chef::Log.info "Creating user clownco-org-admin"
-    output = `./account-whacker -c #{Dir.tmpdir}/clownco-org-admin.pem -d ClowncoOrgAdmin -e clownco-org-admin@opscode.com -f ClowncoOrgAdmin -l ClowncoOrgAdmin -m ClowncoOrgAdmin -u clownco-org-admin -p p@ssw0rd1`
+    output = `./account-whacker -c #{PLATFORM_TEST_DIR}/clownco-org-admin.pem -d ClowncoOrgAdmin -e clownco-org-admin@opscode.com -f ClowncoOrgAdmin -l ClowncoOrgAdmin -m ClowncoOrgAdmin -u clownco-org-admin -p p@ssw0rd1`
     Chef::Log.debug(output)
 
-    output = create_public_org("clownco", "Clownco, Inc.", "platform-superuser", "#{Dir.tmpdir}/superuser.pem", "clownco-org-admin", "#{Dir.tmpdir}/clownco-org-validation.pem")
+    output = create_public_org("clownco", "Clownco, Inc.", "platform-superuser", "#{PLATFORM_TEST_DIR}/superuser.pem", "clownco-org-admin", "#{PLATFORM_TEST_DIR}/clownco-org-validation.pem")
     Chef::Log.debug(output)
 
     Chef::Log.info "Creating user skynet-org-admin"
-    output = `./account-whacker -c #{Dir.tmpdir}/skynet-org-admin.pem -d SkynetOrgAdmin -e skynet-org-admin@opscode.com -f SkynetOrgAdmin -l SkynetOrgAdmin -m SkynetOrgAdmin -u skynet-org-admin -p p@ssw0rd1`
+    output = `./account-whacker -c #{PLATFORM_TEST_DIR}/skynet-org-admin.pem -d SkynetOrgAdmin -e skynet-org-admin@opscode.com -f SkynetOrgAdmin -l SkynetOrgAdmin -m SkynetOrgAdmin -u skynet-org-admin -p p@ssw0rd1`
     Chef::Log.debug(output)
 
-    output = create_public_org("skynet", "SkynetDotOrg", "platform-superuser", "#{Dir.tmpdir}/superuser.pem", "skynet-org-admin", "#{Dir.tmpdir}/skynet-org-validation.pem")
+    output = create_public_org("skynet", "SkynetDotOrg", "platform-superuser", "#{PLATFORM_TEST_DIR}/superuser.pem", "skynet-org-admin", "#{PLATFORM_TEST_DIR}/skynet-org-validation.pem")
     Chef::Log.debug(output)
   end
 
@@ -223,7 +224,7 @@ def prepare_feature_cookbooks
       cookbook_name = File.basename(dir)
       Chef::Log.debug("Creating tarball for #{cookbook_name}")
       `tar zcvf #{cookbook_name}.tar.gz ./#{cookbook_name}`
-      Chef::StreamingCookbookUploader.post("http://localhost/organizations/clownco/cookbooks", "clownco-org-admin", "#{Dir.tmpdir}/clownco-org-admin.pem", { "name" => cookbook_name, "file" => File.new("#{cookbook_name}.tar.gz") })
+      Chef::StreamingCookbookUploader.post("http://localhost/organizations/clownco/cookbooks", "clownco-org-admin", "#{PLATFORM_TEST_DIR}/clownco-org-admin.pem", { "name" => cookbook_name, "file" => File.new("#{cookbook_name}.tar.gz") })
       Chef::Log.debug("Uploaded #{cookbook_name} tarball")
     end
   end

@@ -194,7 +194,7 @@ def start_opscode_account(type="normal")
   else # child
     Dir.chdir(path) do
       #exec "bin/opscode-account"
-      exec("slice -a thin -N -p 4042 -l debug")
+      exec("bin/opscode-account -l debug")
     end
   end
 end
