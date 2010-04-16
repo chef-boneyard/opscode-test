@@ -96,7 +96,7 @@ def start_chef_solr_indexer(type="normal")
 end
 
 def start_chef_server(type="normal")
-  path = File.join(OPSCODE_PROJECT_DIR, "opscode-chef")
+  path = File.join(OPSCODE_PROJECT_DIR, "opscode-chef", "chef-server-api")
   @chef_server_pid = nil
   mcid = fork
   if mcid # parent
@@ -105,16 +105,16 @@ def start_chef_server(type="normal")
     Dir.chdir(path) do
       case type
       when "normal"
-        exec("./chef-server/bin/chef-server -a thin -l debug -N")
+        exec("./bin/chef-server-api -l debug -N")
       when "features"
-        exec("./chef-server/bin/chef-server -a thin -C #{File.join(path, "features", "data", "config", "server.rb")} -l debug -N")
+        exec("./bin/chef-server-api -C #{File.join(OPSCODE_PROJECT_DIR, 'opscode-chef', "features", "data", "config", "server.rb")} -l debug -N")
       end
     end
   end
 end
 
 def start_chef_server_webui(type="normal")
-  path = File.join(OPSCODE_PROJECT_DIR, "opscode-chef", "chef-server")
+  path = File.join(OPSCODE_PROJECT_DIR, "opscode-chef", "chef-server-webui")
   @chef_server_webui_pid = nil
   mcid = fork
   if mcid # parent
@@ -193,6 +193,7 @@ def start_opscode_account(type="normal")
     @opscode_account_pid = cid
   else # child
     Dir.chdir(path) do
+      #exec "bin/opscode-account"
       exec("slice -a thin -N -p 4042 -l debug")
     end
   end
