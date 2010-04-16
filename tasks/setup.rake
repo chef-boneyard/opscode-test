@@ -1,4 +1,10 @@
+require 'fileutils'
+
 PLATFORM_TEST_DIR = '/tmp/opscode-platform-test/'
+
+def create_credentials_dir
+  FileUtils.mkdir_p(PLATFORM_TEST_DIR) unless File.exist?(PLATFORM_TEST_DIR)
+end
 
 def create_local_test
   path = File.join(OPSCODE_PROJECT_DIR, "opscode-account", "bin")
@@ -69,6 +75,7 @@ def cleanup_cookbooks
 end
 
 def setup_test_harness
+  create_credentials_dir
   delete_databases
   cleanup_after_naughty_run
   create_account_databases
