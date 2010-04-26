@@ -48,7 +48,7 @@ make_install "otp"
 #   in already has a apache-couchdb-0.10.1 directory --? does it?
 puts
 puts "---- CouchDB ----"
-COUCHDB_DIR = "apache-couchdb-0.10.1"
+COUCHDB_DIR = "apache-couchdb-0.11.0"
 if !File.exists? "#{COUCHDB_DIR}/Makefile"
   if !File.directory?(COUCHDB_DIR)
     run "tar zxvf #{COUCHDB_DIR}.tar.gz"
@@ -253,13 +253,14 @@ run_server "chef/chef-solr", "bin/chef-solr-indexer -c ../features/data/config/s
 ############ chef_server
 puts
 puts "---- chef_server ----"
-run_server "opscode-chef/chef-server", "bin/chef-server -C ../features/data/config/server.rb -a thin -l debug -N"
+run_server "opscode-chef/chef-server-api", "bin/chef-server-api -C ../features/data/config/server.rb -l debug -N"
+
 
 
 ############ nginx
 puts
 puts "---- nginx ----"
-git "git@github.com:opscode/nginx-sysoev", "opscode-deploy"
+git "git@github.com:opscode/nginx-sysoev", "v0.8.33-patched"
 if !File.exists? "nginx-sysoev/Makefile"
   Dir.chdir("nginx-sysoev") do |dir|
     run "./configure"
