@@ -193,8 +193,8 @@ File.open("opscode-org-creator/rel/org_app/etc/app.config", "w") do |config|
               {ready_org_design, "Mixlib::Authorization::Models::OrganizationInternal-b55f90b2734082e5524e21cffb2f0c1e"},
               {ready_org_view, "by_state_count"},
               {ready_org_view_attrs, [{include_docs, false}, {key, "unassigned"}]},
-              {ready_org_depth, 25},
-              {max_workers, 5},
+              {ready_org_depth, 5},
+              {max_workers, 1},
               {org_create_wait, 2000},
               {org_create_splay, 1800},
               {bootstraptool_executable, "/mnt/bamboo-ebs/opscode-account/bin/bootstraptool"},
@@ -254,6 +254,7 @@ run_server "chef/chef-solr", "bin/chef-solr-indexer -c ../features/data/config/s
 puts
 puts "---- chef_server ----"
 run_server "opscode-chef/chef-server-api", "bin/chef-server-api -C ../features/data/config/server.rb -l debug -N"
+
 
 
 
