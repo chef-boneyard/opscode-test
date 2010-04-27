@@ -1,8 +1,5 @@
 #!/usr/bin/env ruby
 
-# TODO:
-# how do i give ruby capability to my remote servers?
-
 require "yaml"
 
 class << @self
@@ -11,6 +8,14 @@ end
 
 puts "** Test setup: Bootstrapping CouchDB..."
 run "ruby #{File.dirname(__FILE__)}/bootstrap_couchdb.rb opscode-test/continuous-integration/functional/authorization_design_documents.couchdb-dump"
+
+puts "**** TEST SETUP: opscode-test: setup:from_platform; setup:test ****"
+Dir.chdir("opscode-test") do |dir|
+  run "sudo mkdir /etc/chef", true   # it's ok if this fails, in case the directory already exists
+  run "sudo cp local-test-client.rb /etc/chef/client.rb"
+  run "rake setup:from_platform"
+  run "rake setup:test"
+end
 
 
 # Determine the path for cucumber binary
