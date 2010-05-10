@@ -194,7 +194,7 @@ def start_opscode_account(type="normal")
   else # child
     Dir.chdir(path) do
       #exec "bin/opscode-account"
-      exec("bin/opscode-account -l debug")
+      exec("bin/opscode-account -l warn")
     end
   end
 end

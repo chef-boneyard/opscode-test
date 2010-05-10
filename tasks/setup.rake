@@ -38,6 +38,11 @@ def create_public_org(org_name, org_fullname, opscode_username, opscode_pkey, cu
   result
 end
 
+def create_public_user(user_name, first_name, middle_name, last_name, display_name, email)
+  Chef::Log.info("Creating user #{user_name}")
+  `./createobjecttool -a 'http://localhost:4042' -o 'platform-superuser' -p '#{PLATFORM_TEST_DIR}/superuser.pem' -w 'user' -n '#{user_name}' -f '#{first_name}' -m '#{middle_name}' -l '#{last_name}' -d '#{display_name}' -e '#{email}' -k '#{PLATFORM_TEST_DIR}/#{user_name}.pem' -s 'p@ssw0rd1'`
+end
+
 def replace_platform_client
   STDERR.puts "Copying platform-client.rb to /etc/chef/client.rb"
   File.copy("platform-client.rb", "/etc/chef/client.rb")
@@ -197,19 +202,16 @@ def create_organization
     output = `./global-containers platform-superuser`
     Chef::Log.debug(output)
 
-    Chef::Log.info("Creating user Cooky")
-    output = `./account-whacker -c #{PLATFORM_TEST_DIR}/cooky.pem -d Cooky -e cooky@opscode.com -f Cooky -l Monkey -m the -u cooky -p p@ssw0rd1`
+    output = create_public_user('cooky', 'Cooky', 'the', 'Monkey', 'Cooky the Monkey', 'cooky@opscode.com')
     Chef::Log.debug(output)
 
-    Chef::Log.info "Creating user clownco-org-admin"
-    output = `./account-whacker -c #{PLATFORM_TEST_DIR}/clownco-org-admin.pem -d ClowncoOrgAdmin -e clownco-org-admin@opscode.com -f ClowncoOrgAdmin -l ClowncoOrgAdmin -m ClowncoOrgAdmin -u clownco-org-admin -p p@ssw0rd1`
+    output = create_public_user('clownco-org-admin', 'ClowncoOrgAdmin', 'ClowncoOrgAdmin', 'ClowncoOrgAdmin', 'ClowncoOrgAdmin', 'clownco-org-admin@opscode.com')
     Chef::Log.debug(output)
 
     output = create_public_org("clownco", "Clownco, Inc.", "platform-superuser", "#{PLATFORM_TEST_DIR}/superuser.pem", "clownco-org-admin", "#{PLATFORM_TEST_DIR}/clownco-org-validation.pem")
     Chef::Log.debug(output)
 
-    Chef::Log.info "Creating user skynet-org-admin"
-    output = `./account-whacker -c #{PLATFORM_TEST_DIR}/skynet-org-admin.pem -d SkynetOrgAdmin -e skynet-org-admin@opscode.com -f SkynetOrgAdmin -l SkynetOrgAdmin -m SkynetOrgAdmin -u skynet-org-admin -p p@ssw0rd1`
+    output = create_public_user('skynet-org-admin', 'SkynetOrgAdmin', 'SkynetOrgAdmin', 'SkynetOrgAdmin', 'SkynetOrgAdmin', 'skynet-org-admin@opscode.com')
     Chef::Log.debug(output)
 
     output = create_public_org("skynet", "SkynetDotOrg", "platform-superuser", "#{PLATFORM_TEST_DIR}/superuser.pem", "skynet-org-admin", "#{PLATFORM_TEST_DIR}/skynet-org-validation.pem")
