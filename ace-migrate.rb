@@ -80,7 +80,7 @@ orgs.each do |org|
     STDERR.puts "\ndata_bags done"
   end
 
-  Mixlib::Authorization::Models::Cookbook.on(org_database).by_latest_revision(:reduce=>true, :group=>true)["rows"].each do |cookbook_hash|
+  Mixlib::Authorization::Models::Cookbook.on(org_database).by_display_name.each do |cookbook_hash|
     cookbook_name = cookbook_hash["key"]
     cookbook_exists = !Mixlib::Authorization::Models::Cookbook.on(org_database).by_display_name(:key=>cookbook_name).first.nil?
     Mixlib::Authorization::Models::Cookbook.on(org_database).new(:name=>cookbook_name,:requester_id => admin_id, :orgname=>orgname).save unless cookbook_exists
