@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'tempfile'
 
 PLATFORM_TEST_DIR = '/tmp/opscode-platform-test/'
 
@@ -223,14 +224,30 @@ end
 def prepare_feature_cookbooks
   Chef::Log.info "Preparing feature cookbooks"
   fcpath = File.join(OPSCODE_PROJECT_DIR, "opscode-chef", "features", "data", "cookbooks")
+  
+  tmp = Tempfile.new("opscode-test-knife.rb")
+  tmp << <<-EOH
+    log_level                :info
+    log_location             STDOUT
+    node_name                'clownco-org-admin'
+    client_key               '/tmp/opscode-platform-test/clownco-org-admin.pem'
+    chef_server_url          'http://localhost:4000/organizations/clownco'  
+    cache_type               'BasicFile'
+    cache_options( :path => '/Users/nuoyan/.chef/checksums' )
+    cookbook_path            ["#{fcpath}"]
+  EOH
+  tmp.flush
+  
   Dir.chdir(fcpath) do
     Dir[File.join(fcpath, '*')].each do |dir|
       next unless File.directory?(dir)
       cookbook_name = File.basename(dir)
-      Chef::Log.debug("Creating tarball for #{cookbook_name}")
-      `tar zcvf #{cookbook_name}.tar.gz ./#{cookbook_name}`
-      Chef::StreamingCookbookUploader.post("http://localhost/organizations/clownco/cookbooks", "clownco-org-admin", "#{PLATFORM_TEST_DIR}/clownco-org-admin.pem", { "name" => cookbook_name, "file" => File.new("#{cookbook_name}.tar.gz") })
-      Chef::Log.debug("Uploaded #{cookbook_name} tarball")
+
+      # For now, I'm usnig knife to upload the cookbooks. Because we don't have a cookbook uploader class now and I don't want to copy over the big chunk of code to do cookbook upload.
+      # When we have a cookbook uploader, we should probably use that to do the upload.
+      cmd = "knife cookbook upload #{cookbook_name} -c #{tmp.path}"
+      Chef::Log.info(`#{cmd}`)
+      Chef::Log.info("Uploaded #{cookbook_name} tarball")
     end
   end
 end
