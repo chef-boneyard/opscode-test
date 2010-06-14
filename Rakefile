@@ -4,7 +4,7 @@ require 'rubygems'
 require 'couchrest'
 require 'spec'
 require 'tmpdir'
-require 'ftools'
+require 'fileutils'
 
 %w{chef}.each do |inc_dir|
   $: << File.join(File.dirname(__FILE__), '..', 'opscode-chef', inc_dir, 'lib')

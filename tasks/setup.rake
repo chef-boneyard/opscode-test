@@ -1,6 +1,10 @@
 require 'fileutils'
 require 'tempfile'
 
+require 'chef/shell_out'
+require 'chef/mixin/shell_out'
+include Chef::Mixin::ShellOut
+
 PLATFORM_TEST_DIR = '/tmp/opscode-platform-test/'
 
 def create_credentials_dir
@@ -188,13 +192,7 @@ def create_organization
   Chef::Log.debug "Tmpdir: #{PLATFORM_TEST_DIR}"
   oapath = File.join(OPSCODE_PROJECT_DIR, "opscode-account")
   Dir.chdir(oapath) do
-    begin
-      output = `./bin/account-whacker -c #{PLATFORM_TEST_DIR}/superuser.pem -d platform-superuser -e platform-cukes-superuser@opscode.com -f PlatformSuperuser -l PlatformCukeSuperuser -m cuker -u platform-superuser -p p@ssw0rd1`
-      Chef::Log.debug(output)
-    rescue
-      Chef::Log.fatal("I caught #{$!} #{$!.backtrace.join("\n")}")
-      raise
-    end
+    shell_out! "./bin/account-whacker -c #{PLATFORM_TEST_DIR}/superuser.pem -d platform-superuser -e platform-cukes-superuser@opscode.com -f PlatformSuperuser -l PlatformCukeSuperuser -m cuker -u platform-superuser -p p@ssw0rd1"
   end
 
   oapath = File.join(OPSCODE_PROJECT_DIR, "opscode-account", "bin")
@@ -233,7 +231,7 @@ def prepare_feature_cookbooks
     client_key               '/tmp/opscode-platform-test/clownco-org-admin.pem'
     chef_server_url          'http://localhost:4000/organizations/clownco'  
     cache_type               'BasicFile'
-    cache_options( :path => '/Users/nuoyan/.chef/checksums' )
+    cache_options( :path => '#{ENV['HOME']}/.chef/checksums' )
     cookbook_path            ["#{fcpath}"]
   EOH
   tmp.flush
@@ -263,6 +261,7 @@ namespace :setup do
   desc "Setup the test environment, including creating the organization, users, and uploading the fixture cookbooks"
   task :test =>[:check_platform_files] do
     setup_test_harness
+    Rake::Task['setup:cookbooks'].invoke
   end
 
   desc "Prepare local testing by uploading feature cookbooks to ParkPlace"
