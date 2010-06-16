@@ -12,14 +12,19 @@ def create_credentials_dir
 end
 
 def create_local_test
+  Chef::Log.info("Creating bootstrap user 'platform-superuser'")
+  Chef::Log.debug "Tmpdir: #{PLATFORM_TEST_DIR}"
   path = File.join(OPSCODE_PROJECT_DIR, "opscode-account", "bin")
   Dir.chdir(path) do
-    system("./account-whacker -c /tmp/local-test-user.pem -D opscode_account -d local-test-user -e local-test-user@opscode.com -f local -l user  -m test -u local-test-user -p p@ssw0rd1")
-    system("./global-containers local-test-user")
-    output = create_public_org('local-test-org', 'local-test-org', 'local-test-user', '/tmp/local-test-user.pem', 'local-test-user', '/tmp/local-test-validator.pem')
+    shell_out! "./account-whacker -c #{PLATFORM_TEST_DIR}/superuser.pem -d platform-superuser -e platform-cukes-superuser@opscode.com -f PlatformSuperuser -l PlatformCukeSuperuser -m cuker -u platform-superuser -p p@ssw0rd1"
+    Chef::Log.info("Creating global containers")
+    system("./global-containers platform-superuser")    
+    output = create_public_user('local-test-user', 'Local', 'Test', 'User', 'Local Test User', 'local-test-user@opscode.com')
+    Chef::Log.debug(output)
+    output = create_public_org("local-test-org", "Local Test Org", "platform-superuser", "#{PLATFORM_TEST_DIR}/superuser.pem", "local-test-user", "#{PLATFORM_TEST_DIR}/local-test-org-validator.pem")
     Chef::Log.debug(output)
   end
-  File.copy("local-test-client.rb","/etc/chef/client.rb")
+  FileUtils.copy("local-test-client.rb","/etc/chef/client.rb")
 end
 
 def create_public_org(org_name, org_fullname, opscode_username, opscode_pkey, customer_username, client_key_path)
@@ -285,6 +290,7 @@ namespace :setup do
     cleanup_chefs
     delete_databases
     create_account_databases
+    create_credentials_dir
     create_local_test
   end
 end

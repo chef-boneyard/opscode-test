@@ -18,7 +18,7 @@ search_url       "http://127.0.0.1/organizations/local-test-org"
 role_url         "http://127.0.0.1/organizations/local-test-org" 
 client_url       "http://127.0.0.1/organizations/local-test-org" 
 validation_client_name "local-test-org-validator"
-validation_key     "/tmp/local-test-validator.pem"
+validation_key     "/tmp/local-test-org-validator.pem"
 
 
 
