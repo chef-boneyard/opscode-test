@@ -50,7 +50,8 @@ end
 
 def create_public_user(user_name, first_name, middle_name, last_name, display_name, email)
   Chef::Log.info("Creating user #{user_name}")
-  `./createobjecttool -a 'http://localhost:4042' -o 'platform-superuser' -p '#{PLATFORM_TEST_DIR}/superuser.pem' -w 'user' -n '#{user_name}' -f '#{first_name}' -m '#{middle_name}' -l '#{last_name}' -d '#{display_name}' -e '#{email}' -k '#{PLATFORM_TEST_DIR}/#{user_name}.pem' -s 'p@ssw0rd1'`
+  o = shell_out!("./createobjecttool -a 'http://localhost:4042' -o 'platform-superuser' -p '#{PLATFORM_TEST_DIR}/superuser.pem' -w 'user' -n '#{user_name}' -f '#{first_name}' -m '#{middle_name}' -l '#{last_name}' -d '#{display_name}' -e '#{email}' -k '#{PLATFORM_TEST_DIR}/#{user_name}.pem' -s 'p@ssw0rd1'", :env=>{"DEBUG"=>"true"})
+  puts o.format_for_exception if Chef::Log.debug?
 end
 
 def replace_platform_client

@@ -193,8 +193,7 @@ def start_opscode_account(type="normal")
     @opscode_account_pid = cid
   else # child
     Dir.chdir(path) do
-      #exec "bin/opscode-account"
-      exec("bin/opscode-account -l warn")
+      exec("bin/opscode-account -l debug")
     end
   end
 end
