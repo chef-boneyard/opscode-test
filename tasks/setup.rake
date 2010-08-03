@@ -56,14 +56,14 @@ end
 
 def replace_platform_client
   STDERR.puts "Copying platform-client.rb to /etc/chef/client.rb"
-  File.copy("platform-client.rb", "/etc/chef/client.rb")
+  FileUtils.copy("platform-client.rb", "/etc/chef/client.rb")
 end
 
 def backup_platform_client
   if File.exists?("platform-client.rb")
     STDERR.puts "platform-client.rb already exists.  Doing nothing"
   else
-    File.copy("/etc/chef/client.rb", "platform-client.rb")
+    FileUtils.copy("/etc/chef/client.rb", "platform-client.rb")
   end
 end
 
