@@ -10,7 +10,19 @@ require 'fileutils'
   $: << File.join(File.dirname(__FILE__), '..', 'opscode-chef', inc_dir, 'lib')
 end
 
-OPSCODE_PROJECT_DIR = File.expand_path(File.dirname(__FILE__) + '/../')
+if File.exists?(File.dirname(__FILE__) + "/../opscode-test")
+  # local dev environment
+  OPSCODE_PROJECT_DIR = File.expand_path(File.dirname(__FILE__) + '/../')
+  OPSCODE_PROJECT_SUFFIX = ""
+elsif File.exists?(File.dirname(__FILE__) + "/../../../opscode-test/current")
+  # chef-deployed
+  OPSCODE_PROJECT_DIR = File.expand_path(File.dirname(__FILE__) + '/../../../')
+  OPSCODE_PROJECT_SUFFIX = "current"
+else
+  raise "could not determine OPSCODE_PROJECT_DIR: neither '..' (local dev) or '../../..' (PIAB)"
+end
+  
+  
 OPCODE_COMMUNITY_PATH = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-community-site"))
 
 require 'chef'

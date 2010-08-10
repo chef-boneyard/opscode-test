@@ -14,7 +14,7 @@ end
 def create_local_test
   Chef::Log.info("Creating bootstrap user 'platform-superuser'")
   Chef::Log.debug "Tmpdir: #{PLATFORM_TEST_DIR}"
-  path = File.join(OPSCODE_PROJECT_DIR, "opscode-account", "bin")
+  path = File.join(OPSCODE_PROJECT_DIR, "opscode-account", OPSCODE_PROJECT_SUFFIX, "bin")
   Dir.chdir(path) do
     shell_out! "./account-whacker -c #{PLATFORM_TEST_DIR}/superuser.pem -d platform-superuser -e platform-cukes-superuser@opscode.com -f PlatformSuperuser -l PlatformCukeSuperuser -m cuker -u platform-superuser -p p@ssw0rd1"
     Chef::Log.info("Creating global containers")
@@ -137,7 +137,7 @@ def cleanup_after_naughty_run
 end
 
 def cleanup_cookbook_tarballs
-  fcpath = File.join(OPSCODE_PROJECT_DIR, "opscode-chef", "features", "data", "cookbooks")
+  fcpath = File.join(OPSCODE_PROJECT_DIR, "opscode-chef", OPSCODE_PROJECT_SUFFIX, "features", "data", "cookbooks")
   Dir.chdir(fcpath) do
     Dir[File.join(fcpath, '*.tar.gz')].each do |file|
       File.unlink(file)
@@ -196,12 +196,12 @@ end
 def create_organization
   Chef::Log.info("Creating bootstrap user 'platform-superuser'")
   Chef::Log.debug "Tmpdir: #{PLATFORM_TEST_DIR}"
-  oapath = File.join(OPSCODE_PROJECT_DIR, "opscode-account")
+  oapath = File.join(OPSCODE_PROJECT_DIR, "opscode-account", OPSCODE_PROJECT_SUFFIX)
   Dir.chdir(oapath) do
     shell_out! "./bin/account-whacker -c #{PLATFORM_TEST_DIR}/superuser.pem -d platform-superuser -e platform-cukes-superuser@opscode.com -f PlatformSuperuser -l PlatformCukeSuperuser -m cuker -u platform-superuser -p p@ssw0rd1"
   end
 
-  oapath = File.join(OPSCODE_PROJECT_DIR, "opscode-account", "bin")
+  oapath = File.join(OPSCODE_PROJECT_DIR, "opscode-account", OPSCODE_PROJECT_SUFFIX, "bin")
   Dir.chdir(oapath) do
     Chef::Log.info("Creating global containers")
     output = `./global-containers platform-superuser`
@@ -227,7 +227,7 @@ end
 
 def prepare_feature_cookbooks
   Chef::Log.info "Preparing feature cookbooks"
-  fcpath = File.join(OPSCODE_PROJECT_DIR, "opscode-chef", "features", "data", "cookbooks")
+  fcpath = File.join(OPSCODE_PROJECT_DIR, "opscode-chef", OPSCODE_PROJECT_SUFFIX, "features", "data", "cookbooks")
   
   tmp = Tempfile.new("opscode-test-knife.rb")
   tmp << <<-EOH
