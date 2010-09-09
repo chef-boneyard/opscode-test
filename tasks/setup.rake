@@ -97,7 +97,7 @@ def setup_test_harness
   create_account_databases
   create_organization
   org_db_names = create_chef_databases
-  prepare_feature_cookbooks
+  #prepare_feature_cookbooks
   create_test_harness_setup_database(org_db_names)
   replication_specs = (%w{authorization opscode_account opscode_account_internal} + org_db_names).map{|source_db| {:source_db => source_db,:target_db => "#{source_db}_integration"}}
   replicate_dbs(replication_specs)
