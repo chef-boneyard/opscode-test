@@ -205,6 +205,9 @@ if ARGV.length < 1
   exit
 end
 
+# turn on autoflush.
+STDOUT.sync = true
+
 wanted_emi_id = ARGV[0]
 shutdown_first = ARGV[1] == "-shutdown"
 
