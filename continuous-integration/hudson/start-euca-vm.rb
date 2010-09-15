@@ -7,8 +7,8 @@
 #  EC2_URL, EC2_ACCESS_KEY, EC2_SECRET_KEY
 MAXTRIES_FOR_RUNNING_STATE = 600 # how many tries (seconds) to wait for the instance to be 'running'
 MAXTRIES_FOR_SSH = 60            # how many tries (seconds) to wait for ssh to work
-#INSTANCE_TYPE = 'c1.xlarge'     # instance_type (size)
-INSTANCE_TYPE = 'm1.large'       # instance_type (size)
+INSTANCE_TYPE = 'c1.xlarge'     # instance_type (size)
+#INSTANCE_TYPE = 'm1.large'       # instance_type (size)
 SSH_USER = "ubuntu"
 KEYPAIR = 'timkey'                # keypair to use to start instances
 KEYPAIR_FILENAME = [ "#{ENV['HOME']}/.euca/#{KEYPAIR}.pem", "#{ENV['HOME']}/#{KEYPAIR}.pem" ].select {|fn| File.exist?(fn) }
@@ -113,12 +113,12 @@ def is_instance_in_state?(instance_id, state)
   result
 end
 
-def wait_until_instance_in_state(instance_id, state)
+def wait_until_instance_in_state(instance, state)
   num_tries = 1
 
-  debug "wait_until_instance_in_state(instance_id = #{instance_id}, state = #{state})"
+  debug "wait_until_instance_in_state(instance_id = #{instance[:instance_id]}, state = #{state})"
   result_instance = nil
-  while !(result_instance = is_instance_in_state?(instance_id, state)) && num_tries < MAXTRIES_FOR_RUNNING_STATE
+  while !(result_instance = is_instance_in_state?(instance[:instance_id], state)) && num_tries < MAXTRIES_FOR_RUNNING_STATE
     debug "instance wasn't #{state} on try #{num_tries}/#{MAXTRIES_FOR_RUNNING_STATE}: trying again"
     sleep 1
     num_tries += 1
@@ -133,7 +133,7 @@ def wait_until_instance_in_state(instance_id, state)
 end
   
 def run_instance(emi_id)
-  new_instance_id = nil
+  new_instance = nil
 
   run_cmd = "euca-run-instances #{emi_id} -k #{KEYPAIR} -t #{INSTANCE_TYPE}"
   debug "run_instance(emi_id = #{emi_id})"
@@ -142,7 +142,7 @@ def run_instance(emi_id)
     run_proc.each_line do |line|
       new_instance = parse_instance_line(line)
       if new_instance
-        new_instance_id = new_instance[:instance_id]
+        # we done.
       elsif line =~ /RESERVATION/
         # ignore.
       else
@@ -151,11 +151,11 @@ def run_instance(emi_id)
     end
   end
   
-  if !new_instance_id
+  if !new_instance
     raise "couldn't start instance with emi_id #{emi_id}: empty result from euca-run-instances"
   end
   
-  running_instance = wait_until_instance_in_state(new_instance_id, 'running')
+  running_instance = wait_until_instance_in_state(new_instance, 'running')
   if running_instance
     debug "run_instance: running_instance state NOW = #{running_instance[:state]}"
   else
@@ -206,12 +206,37 @@ if ARGV.length < 1
 end
 
 wanted_emi_id = ARGV[0]
+shutdown_first = ARGV[1] == "-shutdown"
 
-puts "SHUTDOWN IF RUNNING:"
-shutdown_instances_if_running(wanted_emi_id)
+# Find a running instance. If we were passed -shutdown, shut any currently
+# running instance with this EMI down. Otherwise, just find a 
+# non-terminating one then wait for it to be running.
+if shutdown_first
+  puts "SHUTDOWN IF RUNNING:"
+  shutdown_instances_if_running(wanted_emi_id)
 
-puts "RUN:"
-instance = run_instance(wanted_emi_id)
+  puts "RUN:"
+  instance = run_instance(wanted_emi_id)
+else
+
+  instance = enumerate_instances.find do |instance|
+    instance[:emi_id] == wanted_emi_id && 
+      (instance[:state] == 'running' || instance[:state] == 'pending')
+  end
+  
+  if instance
+    if instance[:state] == 'running'
+      puts "FOUND RUNNING INSTANCE WITH instance_id = #{instance[:instance_id]}"
+    else
+      puts "FOUND INSTANCE WITH instance_id = #{instance[:instance_id]}, but it's in state #{instance[:state]} .. waiting for 'running'"
+      wait_until_instance_in_state(instance, 'running')
+    end
+  else
+    puts "RUN"
+    instance = run_instance(wanted_emi_id)
+  end
+    
+end
 
 if wait_for_ssh_running(instance)
   do_on_remote(instance, "'sudo hostname ubuntu-ci-slave-euca && sudo chef-client -l debug && sudo env GEM_HOME=/srv/localgems GEM_PATH=/srv/localgems PATH=/srv/localgems:$PATH java -jar slave.jar'")
