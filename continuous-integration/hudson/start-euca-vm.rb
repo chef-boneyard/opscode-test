@@ -7,8 +7,8 @@
 #  EC2_URL, EC2_ACCESS_KEY, EC2_SECRET_KEY
 MAXTRIES_FOR_RUNNING_STATE = 600 # how many tries (seconds) to wait for the instance to be 'running'
 MAXTRIES_FOR_SSH = 60            # how many tries (seconds) to wait for ssh to work
-INSTANCE_TYPE = 'c1.xlarge'     # instance_type (size)
-#INSTANCE_TYPE = 'm1.large'       # instance_type (size)
+INSTANCE_TYPE = 'c1.xlarge'      # instance_type (size)
+#INSTANCE_TYPE = 'm1.large'      # instance_type (size)
 SSH_USER = "ubuntu"
 KEYPAIR = 'timkey'                # keypair to use to start instances
 KEYPAIR_FILENAME = [ "#{ENV['HOME']}/.euca/#{KEYPAIR}.pem", "#{ENV['HOME']}/#{KEYPAIR}.pem" ].select {|fn| File.exist?(fn) }
@@ -51,7 +51,7 @@ def parse_instance_line(line)
     _eki_id = $11
     _eri_id = $12
     
-    { :instance_id => instance_id, :emi_id => emi_id, :public_ip => public_ip, :state => state }
+    { :instance_id => instance_id, :emi_id => emi_id, :public_ip => public_ip, :private_ip => private_ip, :state => state }
   else
     nil
   end
@@ -165,7 +165,9 @@ def run_instance(emi_id)
   running_instance
 end
 
-def wait_for_ssh_running(instance)
+def wait_for_ssh_running(instance, use_private_ip)
+  ip_address = use_private_ip ? instance[:private_ip] : instance[:public_ip]
+
   num_tries = 1
   ssh_running = nil
   
@@ -173,7 +175,7 @@ def wait_for_ssh_running(instance)
     # send a blank line to netcat (nc) and then tell it to exit 1 second after
     # EOF. The remote server should respond with the SSH banner in that amount
     # of time.
-    IO.popen("echo | nc #{instance[:public_ip]} 22 -q 1", "r") do |netcat_proc|
+    IO.popen("echo | nc #{ip_address} 22 -q 1", "r") do |netcat_proc|
       netcat_proc.each_line do |line|
         if line =~ /SSH/
           ssh_running = true
@@ -193,8 +195,10 @@ def wait_for_ssh_running(instance)
   ssh_running
 end
 
-def do_on_remote(instance, cmd)
-  cmd = "ssh -i #{KEYPAIR_FILENAME} #{SSH_USER}@#{instance[:public_ip]} #{cmd}"
+def do_on_remote(instance, use_private_ip, cmd)
+  ip_address = use_private_ip ? instance[:private_ip] : instance[:public_ip]
+
+  cmd = "ssh -i #{KEYPAIR_FILENAME} #{SSH_USER}@#{ip_address} #{cmd}"
   puts "CMD: #{cmd}"
   system cmd
 end
@@ -208,8 +212,24 @@ end
 # turn on autoflush.
 STDOUT.sync = true
 
-wanted_emi_id = ARGV[0]
-shutdown_first = ARGV[1] == "-shutdown"
+# Craptastic argument handling.
+wanted_emi_id = ARGV.shift
+shutdown_first = false
+use_private_ip = false
+
+ARGV.each do |arg|
+  if arg == '-shutdown'
+    shutdown_first = true
+
+  elsif arg == '-private'
+    # TODO: tim, 2010-9-15
+    # use the private IP to interact with it via SSH; this is useful when Hudson is
+    # running a VM that is beside (a sibling to) the VM for the slave, as the VM's
+    # don't seem to be able to interact with eachother via their public IP's (or
+    # I can't figure out how..)
+    use_private_ip = true
+  end
+end
 
 # Find a running instance. If we were passed -shutdown, shut any currently
 # running instance with this EMI down. Otherwise, just find a 
@@ -221,7 +241,6 @@ if shutdown_first
   puts "RUN:"
   instance = run_instance(wanted_emi_id)
 else
-
   instance = enumerate_instances.find do |instance|
     instance[:emi_id] == wanted_emi_id && 
       (instance[:state] == 'running' || instance[:state] == 'pending')
@@ -241,8 +260,8 @@ else
     
 end
 
-if wait_for_ssh_running(instance)
-  do_on_remote(instance, "'sudo hostname ubuntu-ci-slave-euca && sudo chef-client -l debug && sudo env GEM_HOME=/srv/localgems GEM_PATH=/srv/localgems PATH=/srv/localgems:$PATH java -jar slave.jar'")
+if wait_for_ssh_running(instance, use_private_ip)
+  do_on_remote(instance, use_private_ip, "'sudo hostname ubuntu-ci-slave-euca && sudo chef-client -l debug && sudo env GEM_HOME=/srv/localgems GEM_PATH=/srv/localgems PATH=/srv/localgems:$PATH java -jar slave.jar'")
 else
   puts "ERROR: Not running slave JAR as ssh never responded"
 end
