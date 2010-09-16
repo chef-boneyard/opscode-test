@@ -260,7 +260,6 @@ else
     
 end
 
-do_cmd "rm ~/.ssh/known_hosts"
 if wait_for_ssh_running(instance, use_private_ip)
   do_on_remote(instance, use_private_ip, "'sudo hostname ubuntu-ci-slave-euca && sudo chef-client -l debug && (cd /srv/opscode-test/current && rake setup:test) && sudo env GEM_HOME=/srv/localgems GEM_PATH=/srv/localgems PATH=/srv/localgems:$PATH java -jar slave.jar'")
 else
