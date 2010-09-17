@@ -17,6 +17,10 @@ RESULT=$?
 
 mv -v spec/reports/* "$STARTING_PWD"/spec_reports/
 
+# TODO: tim, 2010-9-17: touch output files as otherwise, Hudson complains
+# that they are too old. I'm unsure of why.
+touch "$STARTING_PWD"/spec_reports/*.xml
+
 # return with the same error code that rake returned.
 exit $RESULT
 
