@@ -14,4 +14,5 @@ shift
 
 rake -f /srv/localgems/gems/ci_reporter-1.6.2/stub.rake ci:setup:rspec "$@"
 
+rm -fr "$STARTING_PWD"/spec_reports
 mv -v spec/reports "$STARTING_PWD"/spec_reports
