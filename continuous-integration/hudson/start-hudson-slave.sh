@@ -8,13 +8,12 @@ sudo hostname ubuntu-ci-slave-euca
 #sudo chef-client -l debug # this is run by the hudson builder.
 
 # Everything we do from now on uses the /srv-installed GEM's, bins, etc.
-export GEM_HOME=/srv/localgems GEM_PATH=/srv/localgems PATH=/srv/localgems/bin:$PATH
 
 # Bootstrap the database.
 (cd /srv/opscode-test/current && 
-    sudo rake setup:local_platform &&
-    sudo rake setup:test)
+    sudo env GEM_HOME=/srv/localgems GEM_PATH=/srv/localgems PATH=/srv/localgems/bin:$PATH rake setup:local_platform &&
+    sudo env GEM_HOME=/srv/localgems GEM_PATH=/srv/localgems PATH=/srv/localgems/bin:$PATH rake setup:test)
 
 # run hudson slave.
-sudo java -jar slave.jar
+sudo env GEM_HOME=/srv/localgems GEM_PATH=/srv/localgems PATH=/srv/localgems/bin:$PATH java -jar slave.jar
 
