@@ -16,5 +16,5 @@ export GEM_HOME=/srv/localgems GEM_PATH=/srv/localgems PATH=/srv/localgems/bin:$
     sudo rake setup:test)
 
 # run hudson slave.
-java -jar slave.jar
+sudo java -jar slave.jar
 

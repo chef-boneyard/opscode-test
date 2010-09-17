@@ -261,7 +261,7 @@ else
 end
 
 if wait_for_ssh_running(instance, use_private_ip)
-  do_on_remote(instance, use_private_ip, "'sudo su hudson -c ./start-hudson-slave.sh'")
+  do_on_remote(instance, use_private_ip, "./start-hudson-slave.sh")
 else
   puts "ERROR: Not running slave JAR as ssh never responded"
 end
