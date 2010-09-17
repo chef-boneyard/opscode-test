@@ -21,5 +21,9 @@ start-virtualbox-vm.rb
 	An equivalent script for VirtualBox. Saved here for posterity, as we aren't
 	using VirtualBox anymore.
 	
+start-hudson-slave.sh
+	Run by Hudson via SSH to run chef-client, setup the database, then run the slave
+	jar.
+	
 Hudson should be set up with GEM_PATH, GEM_HOME, PATH already set to include
 /srv/localgems.
