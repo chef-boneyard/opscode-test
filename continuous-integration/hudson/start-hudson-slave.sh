@@ -11,7 +11,7 @@ sudo hostname ubuntu-ci-slave-euca
 
 # Bootstrap the database.
 (cd /srv/opscode-test/current && 
-    sudo env GEM_HOME=/srv/localgems GEM_PATH=/srv/localgems PATH=/srv/localgems/bin:$PATH rake setup:local_platform &&
+    sudo env GEM_HOME=/srv/localgems GEM_PATH=/srv/localgems PATH=/srv/localgems/bin:$PATH rake setup:from_platform &&
     sudo env GEM_HOME=/srv/localgems GEM_PATH=/srv/localgems PATH=/srv/localgems/bin:$PATH rake setup:test)
 
 # run hudson slave.
