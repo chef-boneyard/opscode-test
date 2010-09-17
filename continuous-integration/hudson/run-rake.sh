@@ -13,5 +13,10 @@ cd /srv/"$1"/current
 shift
 
 rake -f /srv/localgems/gems/ci_reporter-1.6.2/stub.rake ci:setup:rspec "$@"
+RESULT=$?
 
 mv -v spec/reports/* "$STARTING_PWD"/spec_reports/
+
+# return with the same error code that rake returned.
+exit $RESULT
+
