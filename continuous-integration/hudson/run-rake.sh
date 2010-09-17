@@ -13,3 +13,5 @@ cd /srv/"$1"/current
 shift
 
 rake -f /srv/localgems/gems/ci_reporter-1.6.2/stub.rake ci:setup:rspec "$@"
+
+mv -v spec/reports "$STARTING_PWD"/spec_reports
