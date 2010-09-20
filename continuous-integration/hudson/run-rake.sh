@@ -15,6 +15,9 @@ shift
 rake -f /srv/localgems/gems/ci_reporter-1.6.2/stub.rake ci:setup:rspec "$@"
 RESULT=$?
 
+if [ ! -d "$STARTING_PWD/spec_reports" ]; then
+    mkdir "$STARTING_PWD"/spec_reports
+fi
 mv -v spec/reports/* "$STARTING_PWD"/spec_reports/
 ruby /srv/opscode-test/current/continuous-integration/hudson/touch-files.rb "$STARTING_PWD/spec_reports/"
 
