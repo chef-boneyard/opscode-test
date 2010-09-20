@@ -23,14 +23,11 @@ def touch_file(filename)
 end
 
 ARGV.each do |filename|
-  puts "filename = #{filename}; directory = #{File.directory?(filename)}"
   if File.directory?(filename)
-    puts "true"
     Dir["#{filename}/*"].each do |filename_in_dir|
       touch_file(filename_in_dir)
     end
   else
-    puts "false."
     touch_file(filename)
   end
 end
