@@ -16,10 +16,7 @@ rake -f /srv/localgems/gems/ci_reporter-1.6.2/stub.rake ci:setup:rspec "$@"
 RESULT=$?
 
 mv -v spec/reports/* "$STARTING_PWD"/spec_reports/
-
-# TODO: tim, 2010-9-17: touch output files as otherwise, Hudson complains
-# that they are too old. I'm unsure of why.
-touch "$STARTING_PWD"/spec_reports/*.xml
+ruby /srv/opscode-test/current/continuous-integration/hudson/touch-files.rb "$STARTING_PWD/spec_reports/"
 
 # return with the same error code that rake returned.
 exit $RESULT
