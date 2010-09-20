@@ -15,9 +15,24 @@
 # server time). So, we're just going to update each of the input files to the
 # current time.
 
-now = Time.now
+$now = Time.now
+
+def touch_file(filename)
+  puts "touch_file: #{filename}"
+  File.utime($now, $now, filename)
+end
+
 ARGV.each do |filename|
-  File.utime(now, now, filename)
+  puts "filename = #{filename}; directory = #{File.directory?(filename)}"
+  if File.directory?(filename)
+    puts "true"
+    Dir["#{filename}/*"].each do |filename_in_dir|
+      touch_file(filename_in_dir)
+    end
+  else
+    puts "false."
+    touch_file(filename)
+  end
 end
 
   
