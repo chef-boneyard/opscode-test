@@ -2,8 +2,6 @@
 
 OLD_PWD=$PWD
 
-sudo hostname ubuntu-ci-slave-euca
-
 # run chef with the system GEM's.
 #sudo chef-client -l debug # this is run by the hudson builder.
 
