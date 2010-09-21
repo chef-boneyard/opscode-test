@@ -18,7 +18,7 @@
 $now = Time.now
 
 def touch_file(filename)
-  puts "touch_file: #{filename}"
+  #puts "touch_file: #{filename}"
   File.utime($now, $now, filename)
 end
 
