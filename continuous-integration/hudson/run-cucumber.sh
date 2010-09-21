@@ -13,4 +13,10 @@ cd /srv/"$1"/current
 shift
 
 cucumber "$@" --format junit --out "$STARTING_PWD/junit_output"
+RESULT=$?
+
+ruby /srv/opscode-test/current/continuous-integration/hudson/touch-files.rb "$STARTING_PWD/junit_output/"
+
+# return with the same error code that cucumber returned.
+exit $RESULT
 
