@@ -121,6 +121,9 @@ def replicate_dbs(replication_specs)
     Chef::Log.debug("Creating #{target_db}")
     c.put_rest(target_db, nil)
 
+    puts "REPLICATE: "
+    puts ({ "source" => "#{Chef::Config[:couchdb_url]}/#{source_db}",
+            "target" => "#{Chef::Config[:couchdb_url]}/#{target_db}" }.inspect)
     Chef::Log.debug("Replicating #{source_db} to #{target_db}")
     c.post_rest("_replicate", { "source" => "#{Chef::Config[:couchdb_url]}/#{source_db}", "target" => "#{Chef::Config[:couchdb_url]}/#{target_db}" })
 

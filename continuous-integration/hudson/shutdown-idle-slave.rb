@@ -11,7 +11,7 @@ uptime = 0
 File.open("/proc/uptime", "r") do |uptime_file|
   uptime_file.each_line do |line|
     if line =~ /([\d\.]+) ([\d\.]+)/
-      uptime = $1
+      uptime = $1.to_f
     end
   end
 end
