@@ -7,6 +7,10 @@ unless File.exists?("/proc/uptime")
   raise "/proc/uptime doesn't exist! This only works on Linux."
 end
 
+if File.exists?("/srv/hudson/shutdown-idle-slave.disable")
+  exit
+end
+
 uptime = 0
 File.open("/proc/uptime", "r") do |uptime_file|
   uptime_file.each_line do |line|
