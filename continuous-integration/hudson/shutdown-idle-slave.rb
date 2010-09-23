@@ -29,5 +29,5 @@ end
 #puts "uptime: #{uptime}"
 
 if !slave_jar_running && uptime > 30
-  system 'halt'
+  system '/sbin/halt'
 end
