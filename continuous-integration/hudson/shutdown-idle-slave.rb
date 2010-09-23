@@ -32,6 +32,6 @@ end
 #puts "slave_jar_running: #{slave_jar_running}"
 #puts "uptime: #{uptime}"
 
-if !slave_jar_running && uptime > 30
+if !slave_jar_running && uptime > (30 * 60)
   system '/sbin/halt'
 end
