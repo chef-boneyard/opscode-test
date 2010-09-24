@@ -72,10 +72,14 @@ def cleanup_replicas
 end
 
 def cleanup_chefs
-  begin
-    chef_rest.get_rest('_all_dbs').each { |db| c.delete_rest("#{db}/") if db =~ /^chef_/ }
-  rescue
-    STDERR.puts "failed cleanup: #{db}, #{$!.message}"
+  chef_rest.get_rest('_all_dbs').each do |db| 
+    begin
+      if db =~ /^chef_/
+        chef_rest.delete_rest("#{db}/") 
+      end
+    rescue
+      STDERR.puts "failed cleanup: #{db}, #{$!.message}"
+    end
   end
 end
 
