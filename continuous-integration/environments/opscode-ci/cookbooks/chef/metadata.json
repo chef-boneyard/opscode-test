@@ -1,33 +1,33 @@
 {
-    "recipes": {
-      "chef": "Installs Opensource Chef from source"
-    },
-    "maintainer": "Opscode, Inc.",
-    "attributes": {
-    },
-    "replacing": {
-    },
-    "dependencies": {
-      "opscode-base": [
+  "recipes": {
+    "chef": "Installs Opensource Chef from source"
+  },
+  "maintainer_email": "cookbooks@opscode.com",
+  "groupings": {
+  },
+  "attributes": {
+  },
+  "recommendations": {
+  },
+  "dependencies": {
+    "opscode-base": [
 
-      ]
-    },
-    "maintainer_email": "cookbooks@opscode.com",
-    "groupings": {
-    },
-    "recommendations": {
-    },
-    "platforms": {
-    },
-    "license": "Apache v2.0",
-    "version": "0.8.0",
-    "suggestions": {
-    },
-    "conflicting": {
-    },
-    "long_description": "Installs Chef gem directly from source.\n",
-    "name": "chef",
-    "description": "Installs Open Source Chef gem",
-    "providing": {
-    }
+    ]
+  },
+  "suggestions": {
+  },
+  "platforms": {
+  },
+  "license": "Apache v2.0",
+  "version": "0.8.0",
+  "conflicting": {
+  },
+  "providing": {
+  },
+  "name": "chef",
+  "maintainer": "Opscode, Inc.",
+  "long_description": "Installs Chef gem directly from source.\n",
+  "description": "Installs Open Source Chef gem",
+  "replacing": {
   }
+}

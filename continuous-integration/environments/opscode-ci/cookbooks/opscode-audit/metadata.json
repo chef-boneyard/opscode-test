@@ -1,36 +1,36 @@
 {
-    "recipes": {
-      "opscode-audit": "Installs Opscode Audit from source"
-    },
-    "maintainer": "Opscode, Inc.",
-    "attributes": {
-    },
-    "replacing": {
-    },
-    "dependencies": {
-      "opscode-base": [
+  "recipes": {
+    "opscode-audit": "Installs Opscode Audit from source"
+  },
+  "maintainer_email": "cookbooks@opscode.com",
+  "groupings": {
+  },
+  "attributes": {
+  },
+  "recommendations": {
+  },
+  "dependencies": {
+    "opscode-base": [
 
-      ],
-      "unicorn": [
+    ],
+    "unicorn": [
 
-      ]
-    },
-    "maintainer_email": "cookbooks@opscode.com",
-    "groupings": {
-    },
-    "recommendations": {
-    },
-    "platforms": {
-    },
-    "license": "Apache 2.0",
-    "version": "0.8.0",
-    "suggestions": {
-    },
-    "conflicting": {
-    },
-    "long_description": "Installs Audit directly from source.\n",
-    "name": "opscode-audit",
-    "description": "Installs Opscode Audit and starts service",
-    "providing": {
-    }
+    ]
+  },
+  "suggestions": {
+  },
+  "platforms": {
+  },
+  "license": "Apache 2.0",
+  "version": "0.8.0",
+  "conflicting": {
+  },
+  "providing": {
+  },
+  "name": "opscode-audit",
+  "maintainer": "Opscode, Inc.",
+  "long_description": "Installs Audit directly from source.\n",
+  "description": "Installs Opscode Audit and starts service",
+  "replacing": {
   }
+}

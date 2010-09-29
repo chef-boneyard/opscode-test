@@ -1,45 +1,45 @@
 {
-    "recipes": {
-      "opscode-account": "Installs Opscode Account from source"
-    },
-    "maintainer": "Opscode, Inc.",
-    "attributes": {
-    },
-    "replacing": {
-    },
-    "dependencies": {
-      "opscode-base": [
+  "recipes": {
+    "opscode-account": "Installs Opscode Account from source"
+  },
+  "maintainer_email": "cookbooks@opscode.com",
+  "groupings": {
+  },
+  "attributes": {
+  },
+  "recommendations": {
+  },
+  "dependencies": {
+    "opscode-base": [
 
-      ],
-      "unicorn": [
+    ],
+    "unicorn": [
 
-      ],
-      "chef": [
+    ],
+    "chef": [
 
-      ],
-      "opscode-audit": [
+    ],
+    "opscode-audit": [
 
-      ],
-      "opscode-chef": [
+    ],
+    "opscode-chef": [
 
-      ]
-    },
-    "maintainer_email": "cookbooks@opscode.com",
-    "groupings": {
-    },
-    "recommendations": {
-    },
-    "platforms": {
-    },
-    "license": "Apache 2.0",
-    "version": "0.8.1",
-    "suggestions": {
-    },
-    "conflicting": {
-    },
-    "long_description": "Installs Account directly from source.\n",
-    "name": "opscode-account",
-    "description": "Installs Opscode Account and starts service",
-    "providing": {
-    }
+    ]
+  },
+  "suggestions": {
+  },
+  "platforms": {
+  },
+  "license": "Apache 2.0",
+  "version": "0.8.1",
+  "conflicting": {
+  },
+  "providing": {
+  },
+  "name": "opscode-account",
+  "maintainer": "Opscode, Inc.",
+  "long_description": "Installs Account directly from source.\n",
+  "description": "Installs Opscode Account and starts service",
+  "replacing": {
   }
+}

@@ -75,14 +75,3 @@ runit_service "opscode-webui"
 service = resources(:service => "opscode-webui")
 service.subscribes(:restart, resources(:template => "/etc/unicorn/opscode-webui.rb"))
 service.subscribes(:restart, resources(:template => "/srv/opscode-chef/current/chef-server-webui/config/environments/#{node[:app_environment]}.rb"))
-
-# TODO: tim, 2010-9-21: turn webui off, as it's not working and continually
-# restarts, leeching all the CPU from the machine.
-script "TODO shutdown opscode-webui" do
-  interpreter "bash"
-  user "root"
-  code <<-EOH
-    /etc/init.d/opscode-webui stop
-  EOH
-end
-
