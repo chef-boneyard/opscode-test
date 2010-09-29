@@ -1,0 +1,33 @@
+[ %% SASL config 
+  {sasl, 
+    [ 
+      {sasl_error_logger, 
+        {file, "log/sasl-error.log"}
+      }, 
+      {errlog_type, error}, 
+      {error_logger_mf_dir, "log/sasl"}, % Log directory 
+      {error_logger_mf_maxbytes, 10485760}, % 10 MB max file size 
+      {error_logger_mf_maxfiles, 5} % 5 files max 
+    ]
+  }, %% org_app config 
+  {org_app, 
+    [ 
+      {account_couch_db, 
+        {"<%= @couchdb_server %>", 5984} 
+      }, 
+      {account_database, "opscode_account"}, 
+      {ready_org_database, "opscode_account_internal"},
+      {ready_org_design, "Mixlib::Authorization::Models::OrganizationInternal-48acbb3cdff0332031068da2ff17175b"}, 
+      {ready_org_view, "by_state_count"},
+      {ready_org_depth, <%= @ready_org_depth %>}, 
+      {ready_org_view_attrs, [{include_docs, false}, {key, "unassigned"}]},
+      {max_workers, <%= @max_workers %>},
+      {org_create_wait, <%= @org_create_wait_ms %>}, 
+      {org_create_splay, <%= @org_create_splay_ms %>}, 
+      {bootstraptool_executable, "/srv/opscode-account/current/bin/bootstraptool"},
+      {account_service_base_url, "http://localhost:4042"},
+      {superuser_name, "platform-superuser"}, 
+      {superuser_key_path, "/tmp/opscode-platform-test/superuser.pem"}
+    ]
+  } 
+].

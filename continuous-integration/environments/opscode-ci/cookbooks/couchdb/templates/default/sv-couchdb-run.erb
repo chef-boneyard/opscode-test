@@ -1,0 +1,4 @@
+#!/bin/sh
+exec 2>&1
+ulimit -n 65535
+exec /usr/bin/env HOME="/tmp" /srv/couchdb/bin/couchdb

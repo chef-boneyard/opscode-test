@@ -1,0 +1,3 @@
+# Shutdown the system if the Hudson slave process is missing and
+# the system has been up for more than 30 minutes.
+* * * * * root /srv/opscode-test/current/continuous-integration/hudson/shutdown-idle-slave.rb

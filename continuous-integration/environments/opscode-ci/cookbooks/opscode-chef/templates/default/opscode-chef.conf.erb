@@ -1,0 +1,48 @@
+supportdir = "/srv/opscode-chef/shared/system"
+
+log_level          :error
+log_location       STDOUT
+file_cache_path    File.join(supportdir, "cache")
+ssl_verify_mode    :verify_none
+registration_url   "http://127.0.0.1:4000"
+openid_url         "http://127.0.0.1:4000"
+template_url       "http://127.0.0.1:4000"
+remotefile_url     "http://127.0.0.1:4000"
+search_url         "http://127.0.0.1:4000"
+role_url           "http://127.0.0.1:4000"
+chef_server_url    "http://127.0.0.1:4000"
+#client_url         "http://<%= @account_server['ipaddress'] %>:4042"
+couchdb_url        "http://<%= @couchdb_server['ipaddress'] %>:5984"
+#solr_url           "http://<%= @solr_server['ipaddress'] %>:8983"
+client_url         "http://<%= @int_lb_dns %>:4042"
+#couchdb_url        "http://<%= @int_lb_dns %>:5984"
+solr_url           "http://<%= @int_lb_dns %>:8983"
+couchdb_version    0.9
+
+cookbook_path      File.join(supportdir, "cookbooks")
+openid_store_path  File.join(supportdir, "openid", "store")
+openid_cstore_path File.join(supportdir, "openid", "cstore")
+search_index_path  File.join(supportdir, "search_index")
+role_path          File.join(supportdir, "roles")
+couchdb_database   'chef'
+
+parkplace          false
+
+amqp_host '<%= @audit_server['ipaddress'] %>'
+amqp_port '5672'
+amqp_user '<%= @rabbitmq_user %>'
+amqp_pass '<%= @rabbitmq_password %>'
+amqp_vhost '/chef'
+amqp_identity '<%= @rabbitmq_identity %>'
+amqp_consumer_id 'hotsauce'
+
+#Chef::Log::Formatter.show_time = false 
+
+require 'opscode/audit/config'
+
+#Opscode::Audit::Config[:audit_host] = '<%= @audit_server['ipaddress'] %>'
+Opscode::Audit::Config[:audit_host] = '<%= @int_lb_dns %>'
+Opscode::Audit::Config[:audit_port] = '3030'
+#Opscode::Audit::Config[:audit_url]  = 'http://<%= @audit_server['ipaddress'] %>:3030/log'
+Opscode::Audit::Config[:audit_url]  = 'http://<%= @int_lb_dns %>:3030/log'
+

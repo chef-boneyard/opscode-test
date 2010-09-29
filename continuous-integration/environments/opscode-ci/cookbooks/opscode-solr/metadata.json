@@ -1,0 +1,45 @@
+{
+    "recipes": {
+      "opscode-solr": "Installs Opscode Solr from source"
+    },
+    "maintainer": "Opscode, Inc.",
+    "attributes": {
+    },
+    "replacing": {
+    },
+    "dependencies": {
+      "runit": [
+
+      ],
+      "opscode-base": [
+
+      ],
+      "java": [
+
+      ],
+      "opscode-github": [
+
+      ],
+      "capistrano": [
+
+      ]
+    },
+    "maintainer_email": "cookbooks@opscode.com",
+    "groupings": {
+    },
+    "recommendations": {
+    },
+    "platforms": {
+    },
+    "license": "Apache 2.0",
+    "version": "0.7.1",
+    "suggestions": {
+    },
+    "conflicting": {
+    },
+    "long_description": "Installs Opscode Solr directly from source.\n",
+    "name": "opscode-solr",
+    "description": "Installs Opscode Solr and starts service",
+    "providing": {
+    }
+  }

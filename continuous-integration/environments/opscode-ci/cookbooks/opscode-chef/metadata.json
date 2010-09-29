@@ -1,0 +1,42 @@
+{
+    "recipes": {
+      "opscode-chef": "Installs Opscode Chef from source"
+    },
+    "maintainer": "Opscode, Inc.",
+    "attributes": {
+    },
+    "replacing": {
+    },
+    "dependencies": {
+      "opscode-certificate": [
+
+      ],
+      "opscode-base": [
+
+      ],
+      "chef": [
+
+      ],
+      "opscode-audit": [
+
+      ]
+    },
+    "maintainer_email": "cookbooks@opscode.com",
+    "groupings": {
+    },
+    "recommendations": {
+    },
+    "platforms": {
+    },
+    "license": "Apache 2.0",
+    "version": "0.8.1",
+    "suggestions": {
+    },
+    "conflicting": {
+    },
+    "long_description": "Installs Chef Server directly from source.\n",
+    "name": "opscode-chef",
+    "description": "Installs Opscode Chef and starts service",
+    "providing": {
+    }
+  }

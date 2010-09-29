@@ -1,0 +1,12 @@
+#!/bin/sh
+export GEM_HOME=/srv/localgems
+export GEM_PATH=/srv/localgems
+export PATH="/srv/localgems/bin:$PATH"
+cd /srv/parkplace/current
+
+mkdir /var/run/parkplace-home
+
+exec 2>&1
+#exec env HOME="/srv/parkplace/shared/home" /srv/parkplace/current/bin/parkplace
+exec env HOME="/var/run/parkplace-home" /srv/parkplace/current/bin/parkplace
+

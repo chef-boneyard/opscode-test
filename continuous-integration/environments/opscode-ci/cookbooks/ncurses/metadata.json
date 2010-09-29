@@ -1,0 +1,29 @@
+{
+    "recipes": {
+    },
+    "maintainer": "Opscode",
+    "attributes": {
+    },
+    "replacing": {
+    },
+    "dependencies": {
+    },
+    "maintainer_email": "ops@opscode.com",
+    "groupings": {
+    },
+    "recommendations": {
+    },
+    "platforms": {
+    },
+    "license": "All rights reserved",
+    "version": "0.1.0",
+    "suggestions": {
+    },
+    "conflicting": {
+    },
+    "long_description": "= DESCRIPTION:\n\n= REQUIREMENTS:\n\n= ATTRIBUTES: \n\n= USAGE:\n\n",
+    "name": "ncurses",
+    "description": "Installs/Configures ncurses",
+    "providing": {
+    }
+  }

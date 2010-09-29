@@ -1,0 +1,111 @@
+# WARNING!
+# Substantive changes to this file should be accompanied by an update to the deployment template in the
+# platform_deployment repo's site-cookbooks/opscode-account/templates/default/init.rb.erb file.
+#
+
+# MERB
+require 'merb-haml'
+require 'merb-assets'
+require 'merb-helpers'
+require 'merb-param-protection'
+
+# COUCHDB
+require 'couchrest'
+
+# OPSCODE & CHEF
+require 'chef/log'
+require 'opscode/audit'
+
+#merb_gems_version = "1.0.15"
+#dependency "merb-haml", merb_gems_version
+#dependency "merb-assets", merb_gems_version
+#dependency "merb-helpers", merb_gems_version
+#dependency "couchrest", ">= 0.22"
+#
+Opscode::Audit::Config[:routing_key_base] = 'account'
+Opscode::Audit::Log.logger = Merb.logger
+Opscode::Audit::Config[:audit_host] = '<%= @int_lb_dns %>'
+Opscode::Audit::Config[:audit_port] = '3030'
+Opscode::Audit::Config[:audit_url]  = 'http://<%= @int_lb_dns %>:3030/log'
+
+use_template_engine :haml
+
+Merb::Config.use do |c|
+  # Sets up a custom session id key which is used for the session persistence
+  # cookie name.  If not specified, defaults to '_session_id'.
+  # c[:session_id_key] = '_session_id'
+
+  # The session_secret_key is only required for the cookie session store.
+  c[:session_secret_key]  = '44bba2ef4e477d158b95fd5b6382b6c390a12ece'
+
+  # There are various options here, by default Merb comes with 'cookie',
+  # 'memory', 'memcache' or 'container'.
+  # You can of course use your favorite ORM instead:
+  # 'datamapper', 'sequel' or 'activerecord'.
+  c[:session_store] = 'cookie'
+
+  # When running a slice standalone, you're usually developing it,
+  # so enable template reloading by default.
+  c[:reload_templates] = false
+  c[:reload_classes] = false
+  
+  # only set default log level if it's not been set by 'opscode-account'
+  c[:log_level] = :debug unless c[:log_level]
+
+  c[:log_stream] = STDOUT
+  c[:log_file] = nil
+end
+
+# Bunny time!
+Chef::Config.amqp_host '<%= @rabbitmq_host['ipaddress'] %>'
+Chef::Config.amqp_port '5672'
+Chef::Config.amqp_user '<%= @rabbitmq_user %>'
+Chef::Config.amqp_pass '<%= @rabbitmq_password %>'
+Chef::Config.amqp_vhost '/chef'
+Chef::Config.amqp_identity '<%= @rabbitmq_identity %>'
+Chef::Config.amqp_consumer_id 'hotsauce'
+
+# Couchdb time!
+couchdb_uri = '<%= @couchdb_server['ipaddress'] %>:5984'
+account_database = 'opscode_account'
+internal_database = 'opscode_account_internal'
+private_key = OpenSSL::PKey::RSA.new(File.read('/etc/opscode/azs.pem'))
+webui_public_key = OpenSSL::PKey::RSA.new(File.read('/etc/opscode/webui_pub.pem'))
+authorization_service_uri = 'http://<%= @int_lb_dns %>:5959'
+certificate_service_uri = 'http://localhost:5140/certificates'
+
+couchrest = CouchRest.new(couchdb_uri)
+couchrest.database!(account_database)
+couchrest.default_database = account_database
+
+couchrest_internal = CouchRest.new(couchdb_uri)
+couchrest_internal.database!(internal_database)
+couchrest_internal.default_database = internal_database
+  
+require 'mixlib/authorization'
+Mixlib::Authorization::Config.couchdb_uri = couchdb_uri
+Mixlib::Authorization::Config.default_database = couchrest.default_database
+Mixlib::Authorization::Config.internal_database = couchrest_internal.default_database
+Mixlib::Authorization::Config.private_key = private_key
+Mixlib::Authorization::Config.web_ui_public_key = webui_public_key
+Mixlib::Authorization::Config.authorization_service_uri = authorization_service_uri
+Mixlib::Authorization::Config.certificate_service_uri = certificate_service_uri
+require 'mixlib/authorization/auth_join'
+require 'mixlib/authorization/models'
+
+# Interact with OrganizationInternal so the extended document lazily creates
+# the design documents, then print out the URL!
+begin
+  state_count = Mixlib::Authorization::Models::OrganizationInternal.by_state_count(:include_docs => false)
+  if state_count['rows']
+    state_count['rows'].each do |entry|
+      if entry.is_a?(Hash) && entry['key'] && entry['value']
+        Merb.logger.warn "opscode_account_internal has #{entry['value']} organizations in state #{entry['key']}"
+      end
+    end
+  end
+  Merb.logger.warn "OrganizationInternal design docs partial URL:   #{Mixlib::Authorization::Models::OrganizationInternal.design_doc_slug}"
+rescue
+  # ignore this error
+  Merb.logger.error "Ignoring error from opscode_account_internal setup query: #{$!}: #{$!.backtrace.join("\n")}"
+end

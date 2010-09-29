@@ -1,0 +1,36 @@
+{
+    "recipes": {
+      "rabbitmq": "Installs Rabbitmq-server from deb from rabbitmq.com"
+    },
+    "maintainer": "Opscode, Inc.",
+    "attributes": {
+    },
+    "replacing": {
+    },
+    "dependencies": {
+      "runit": [
+
+      ],
+      "erlang": [
+
+      ]
+    },
+    "maintainer_email": "cookbooks@opscode.com",
+    "groupings": {
+    },
+    "recommendations": {
+    },
+    "platforms": {
+    },
+    "license": "Apache 2.0",
+    "version": "0.7.0",
+    "suggestions": {
+    },
+    "conflicting": {
+    },
+    "long_description": "Installs Rabbitmq directly from deb from rabbitmq.com.\n",
+    "name": "rabbitmq",
+    "description": "Installs Rabbitmq-server and starts service",
+    "providing": {
+    }
+  }

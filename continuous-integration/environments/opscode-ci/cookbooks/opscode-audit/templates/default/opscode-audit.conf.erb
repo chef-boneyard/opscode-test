@@ -1,0 +1,17 @@
+log_level :error
+log_location STDOUT
+amqp_host '<%= @amqp_host['ipaddress'] %>'
+amqp_port '5672'
+amqp_user '<%= @amqp_user %>'
+amqp_pass '<%= @amqp_password %>'
+amqp_vhost '/'
+amqp_connection_timeout nil
+amqp_logging false
+audit_host '0.0.0.0'
+audit_port '3030'
+audit_url 'http://127.0.0.1:3030/log'
+hbase_api_url 'http://localhost:60010/api'
+routing_key_base 'audit'
+app_name 'audit'
+local_log_directory '/var/spool/opscode/audit'
+local_log_filename 'log'

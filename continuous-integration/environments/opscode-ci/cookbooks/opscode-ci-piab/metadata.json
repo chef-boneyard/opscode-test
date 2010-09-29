@@ -1,0 +1,56 @@
+{
+    "recipes": {
+    },
+    "maintainer": "Opscode",
+    "attributes": {
+    },
+    "replacing": {
+    },
+    "dependencies": {
+      "opscode-certificate": [
+
+      ],
+      "opscode-base": [
+
+      ],
+      "couchdb": [
+
+      ],
+      "opscode-solr": [
+
+      ],
+      "opscode-audit": [
+
+      ],
+      "opscode-authz": [
+
+      ],
+      "opscode-chef": [
+
+      ],
+      "opscode-account": [
+
+      ],
+      "rabbitmq": [
+
+      ]
+    },
+    "maintainer_email": "ops@opscode.com",
+    "groupings": {
+    },
+    "recommendations": {
+    },
+    "platforms": {
+    },
+    "license": "All rights reserved",
+    "version": "0.1.0",
+    "suggestions": {
+    },
+    "conflicting": {
+    },
+    "long_description": "= DESCRIPTION:\n\n= REQUIREMENTS:\n\n= ATTRIBUTES: \n\n= USAGE:\n\n",
+    "name": "opscode-ci-piab",
+    "description": "Installs/Configures opscode-ci-piab",
+    "providing": {
+    }
+  }

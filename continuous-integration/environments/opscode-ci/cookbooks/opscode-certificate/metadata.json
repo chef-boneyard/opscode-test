@@ -1,0 +1,42 @@
+{
+    "recipes": {
+      "opscode-certificate": "Installs Opscode Certificate service"
+    },
+    "maintainer": "Opscode, Inc.",
+    "attributes": {
+    },
+    "replacing": {
+    },
+    "dependencies": {
+      "runit": [
+
+      ],
+      "opscode-base": [
+
+      ],
+      "opscode-github": [
+
+      ],
+      "erlang": [
+
+      ]
+    },
+    "maintainer_email": "cookbooks@opscode.com",
+    "groupings": {
+    },
+    "recommendations": {
+    },
+    "platforms": {
+    },
+    "license": "Apache 2.0",
+    "version": "0.7.0",
+    "suggestions": {
+    },
+    "conflicting": {
+    },
+    "long_description": "Installs Cert directly from source.\n",
+    "name": "opscode-certificate",
+    "description": "Installs Opscode Certificate Service",
+    "providing": {
+    }
+  }

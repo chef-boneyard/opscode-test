@@ -1,0 +1,11 @@
+{
+	"name": "ubuntu-ci-slave-euca.local",
+	"run_list": [ "role[ci-slave]" ],
+	"json_class": "Chef::Node",
+	"chef_type": "node",
+	"normal": {
+        "couchdb": {
+            "clean-couchdb-setup-test": true
+	    }
+	}
+}

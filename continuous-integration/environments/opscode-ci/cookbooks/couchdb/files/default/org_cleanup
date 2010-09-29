@@ -1,0 +1,159 @@
+#!/usr/bin/ruby
+ENV['GEM_HOME']="/srv/localgems"
+ENV['GEM_PATH']="/srv/localgems"
+require 'rubygems'
+require 'mixlib/cli'
+require 'couchrest'
+require 'mixlib/authorization'
+
+couchrest = CouchRest.new(ARGV[0] || 'http://localhost:5984')
+couchrest.default_database = 'opscode_account'
+
+Mixlib::Authorization::Config.couchdb_uri = ARGV[0] || 'http://localhost:5984'
+Mixlib::Authorization::Config.default_database ||= couchrest.default_database
+require 'mixlib/authorization/auth_join'
+require 'mixlib/authorization/models'
+
+#
+# Load the set of "started" orgs at the point of running and delete all of them. 
+#
+# Use:
+# ./org_cleanup_script COUCHDB_URI
+# For example, ./org_cleanup_script http://localhost:5984
+#
+module Opscode
+  class OrgCleanup
+    
+    class Log
+      extend  Mixlib::Log
+    end
+
+    Log.logger = Logger.new(STDERR)
+    Log.level = :debug
+    
+    extend Mixlib::Authorization::AuthHelper
+  
+    attr_reader :account_db, :pending_org_db
+    
+    def initialize
+      @account_db = CouchRest.new(Mixlib::Authorization::Config.couchdb_uri).database('opscode_account')
+      @pending_org_db = CouchRest.new(Mixlib::Authorization::Config.couchdb_uri).database('opscode_account_internal')
+    end
+    
+    def run
+      cleanup_started_orgs
+      cleanup_nagios_test_users
+      cleanup_nagios_test_orgs
+      OrgCleanup::Log.info "Script finished."      
+    end
+    
+    def cleanup_nagios_test_users
+      OrgCleanup::Log.info "Begin cleaning up Nagios test users."
+      
+      begin
+        # returns an array of hashes, each has id, value, and key, in which key is the username, and value is the rev.
+        users =  CouchRest.new(Mixlib::Authorization::Config.couchdb_uri).database('opscode_account').slow_view(
+                  :map => "function(doc) {  
+                            if ((doc['couchrest-type'] == 'Mixlib::Authorization::Models::User') && /signup-test-user/.exec(doc['username'])) {
+                              emit(doc['username'], doc['_rev']);
+                            }
+                          }"
+                )["rows"]
+      
+        users.each do |user|
+          begin
+            if user["key"].split(/signup-test-user-[a-zA-Z0-9]{5,}-/)[1]  <=  (Time.now - 60*60*24).utc.strftime("%y-%m-%d-%H-%M-%S")
+              OrgCleanup::Log.info "Begin Processing User (name: #{user["key"]})"
+              account_db.delete_doc({"_id" => user["id"], "_rev" => user["value"]})
+              OrgCleanup::Log.info "Deleted user document in opscode_account database."
+            end
+          rescue => e
+            OrgCleanup::Log.error "Error raised trying to process user (name: #{user["key"]}) \n #{e.message} \n #{e.backtrace}. \n\n Continuing to the next one."
+          end
+        end
+        OrgCleanup::Log.info "Finished cleaning up Nagios test users."
+      rescue => e
+        OrgCleanup::Log.error "Error obtaining the list of nagios test users \n #{e.message} \n #{e.backtrace}. \n\n Skipped deleting Nagios users."
+      end
+    end
+    
+    def cleanup_nagios_test_orgs
+      OrgCleanup::Log.info "Begin cleaning up Nagios test orgs."
+      
+      begin
+        
+        # returns an array of hashes, each has id, value, and key, in which key is the name, and value is the org rev.
+        orgs =  CouchRest.new(Mixlib::Authorization::Config.couchdb_uri).database('opscode_account').slow_view(
+                  :map => "function(doc) {  
+                            if ((doc['couchrest-type'] == 'Mixlib::Authorization::Models::Organization') && /signup-test-/.exec(doc['name'])) {
+                              emit(doc['name'], doc['_rev']);
+                            }
+                          }"
+                )["rows"]
+      
+        orgs.each do |org|
+          begin
+            # 1. see if the org is created at least one day ago  
+            # 2. if so, delete it.
+            if org["key"].split(/signup-test-[a-zA-Z0-9]{5,}-/)[1] <= (Time.now - 60*60*24).utc.strftime("%y-%m-%d-%H-%M-%S")
+              org_guid = Mixlib::Authorization::Models::Organization.on(account_db).by_name(:key => org["key"]).first["guid"]
+              OrgCleanup::Log.info "Begin Processing Org (name: #{org["key"]})"
+              account_db.delete_doc({"_id" => org["id"], "_rev" => org["value"]})
+              OrgCleanup::Log.info "Deleted organization document in opscode_account database."
+              CouchRest.new(Mixlib::Authorization::Config.couchdb_uri).database("chef_#{org_guid}").delete!
+              OrgCleanup::Log.info "Deleted organization chef_#{org_guid} Database."
+              OrgCleanup::Log.info "Finished with organization (guid: #{org["key"]})."
+            end
+          rescue => e
+            OrgCleanup::Log.error "Error raised trying to process org (name: #{org["key"]}) \n #{e.message} \n #{e.backtrace}. \n\n Continuing to the next one."
+          end
+        end
+        OrgCleanup::Log.info "Finished cleaning up Nagios test orgs."
+      rescue => e
+        OrgCleanup::Log.error "Error obtaining the list of nagios test orgs \n #{e.message} \n #{e.backtrace}. \n\n Skipped deleting Nagios orgs."
+      end
+      
+    end
+    
+    def cleanup_started_orgs
+      begin
+        # get the current list of started organizations
+        started_orgs = Mixlib::Authorization::Models::OrganizationInternal.on(pending_org_db).by_state(:key => "started")
+        OrgCleanup::Log.info "Begin cleaning up broken orgs. A total of #{started_orgs.length} such orgs will be deleted."
+      
+        started_orgs.each do |org|
+          org_guid = org["organization_guid"]
+      
+          # Delete the opscode_account_internal database
+          OrgCleanup::Log.info "Begin processing organization (guid: #{org_guid})."
+        
+          begin
+            pending_org_db.delete_doc({"_id" => org["_id"], "_rev" => org["_rev"]})
+            OrgCleanup::Log.info "Deleted document in opscode_account_internal database."
+      
+            # Get the opscode-account org record (without docs because we only need the id).
+            opscode_account_org = Mixlib::Authorization::Models::Organization.on(account_db).by_guid(:key => org_guid)
+      
+            # Delete it if found.
+            account_db.delete_doc({"_id" => opscode_account_org.first["_id"], "_rev" => opscode_account_org.first["_rev"]}) unless opscode_account_org.length == 0
+            OrgCleanup::Log.info "Deleted organization document in opscode_account database."
+      
+            # Delete chef_guid database.
+            CouchRest.new(Mixlib::Authorization::Config.couchdb_uri).database("chef_#{org_guid}").delete!
+            OrgCleanup::Log.info "Deleted organization chef_#{org_guid} database."
+            OrgCleanup::Log.info "Finished with organization (guid: #{org_guid})."
+          rescue => e
+            OrgCleanup::Log.error "Error raised trying to process org (guid: #{org_guid}) \n #{e.message} \n #{e.backtrace} \n\n Continuing to the next one."
+          end  
+        end
+      rescue => e
+        OrgCleanup::Log.error "Error obtaining the list of started but not finished orgs \n #{e.message} \n #{e.backtrace} \n\n Skipped deleting bad pending orgs."
+      end
+    end
+    
+  end
+end
+
+if __FILE__ == $0
+  Opscode::OrgCleanup.new.run
+end

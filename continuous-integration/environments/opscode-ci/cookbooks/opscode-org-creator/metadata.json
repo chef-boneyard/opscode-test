@@ -1,0 +1,30 @@
+{
+    "recipes": {
+      "opscode-org-creator": "Installs Opscode Org Creator app"
+    },
+    "maintainer": "Opscode, Inc.",
+    "attributes": {
+    },
+    "replacing": {
+    },
+    "dependencies": {
+    },
+    "maintainer_email": "cookbooks@opscode.com",
+    "groupings": {
+    },
+    "recommendations": {
+    },
+    "platforms": {
+    },
+    "license": "Apache 2.0",
+    "version": "0.1.0",
+    "suggestions": {
+    },
+    "conflicting": {
+    },
+    "long_description": "Installs Opscode Org Creatore service directly from source.\n",
+    "name": "opscode-org-creator",
+    "description": "Installs Opscode Org Creator service",
+    "providing": {
+    }
+  }

@@ -1,0 +1,33 @@
+{
+    "recipes": {
+      "nginx": "Installs and configures nginx"
+    },
+    "maintainer": "Opscode, Inc.",
+    "attributes": {
+    },
+    "replacing": {
+    },
+    "dependencies": {
+      "opscode-github": [
+
+      ]
+    },
+    "maintainer_email": "cookbooks@opscode.com",
+    "groupings": {
+    },
+    "recommendations": {
+    },
+    "platforms": {
+    },
+    "license": "Apache v2.0",
+    "version": "0.7.0",
+    "suggestions": {
+    },
+    "conflicting": {
+    },
+    "long_description": "Installs and configures nginx\n",
+    "name": "nginx",
+    "description": "Installs and configures nginx",
+    "providing": {
+    }
+  }

@@ -1,0 +1,20 @@
+Chef::Config[:account_service_uri]  = 'http://<%= @int_lb_dns %>:4042'
+Chef::Config[:chef_server_host_uri] = 'http://<%= @int_lb_dns %>:4000'
+Chef::Config[:web_ui_proxy_user]    = 'opscode'
+Chef::Config[:web_ui_private_key]   = '/etc/opscode/webui_priv.pem'
+
+Merb::Config.use do |c|
+  # if you need to test single sign on with community site, change this to the common domain
+  # e.g. c[:default_cookie_domain] = '.localhost.localdomain'
+<% if node[:app_environment] == "production" or node[:app_environment] == "preprod" -%>
+  c[:default_cookie_domain] = '.opscode.com'
+<% else -%>
+  c[:default_cookie_domain] = nil
+<% end -%>
+  c[:exception_details] = false
+  c[:reload_classes] = false 
+end
+
+Merb::Mailer.delivery_method = :sendmail
+
+COMMUNITY_SITE_URL = 'http://<%= @community_servername %>/'

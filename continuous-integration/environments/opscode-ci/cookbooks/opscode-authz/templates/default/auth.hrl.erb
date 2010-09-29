@@ -1,0 +1,8 @@
+%%% File    : auth.hrl
+%%% Rendered by Chef at deploy time just for you!
+
+-define(OPSCODE_COUCH, {"<%= @couchdb_server['ipaddress'] %>", 5984}).
+%%%-define(OPSCODE_COUCH, {"<%= @int_lb_dns %>", 5984}).
+-define(AUTH_DATABASE, "authorization").
+-define(AUTH_PERMISSIONS, [create, read, update, delete, grant]).
+
