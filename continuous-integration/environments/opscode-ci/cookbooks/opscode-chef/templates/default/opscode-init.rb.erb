@@ -1,0 +1,80 @@
+#####
+##  ARE YOU ABOUT TO CHANGE THIS?
+##  Substantive changes to this file should be accompanied by an update to the deployment template in the
+##  platform_deployment repo's site-cookbooks/opscode-chef/templates/default/opscode-init.rb.erb
+######
+
+require 'merb-haml'
+require 'merb-assets'
+require 'merb-helpers'
+
+require 'couchrest'
+
+require 'chef'
+require 'chef/role'
+require 'chef/data_bag'
+require 'chef/data_bag_item'
+require 'opscode/audit'
+require File.join(File.dirname(__FILE__), '../lib/s3_helper')
+
+
+Opscode::Audit::Config[:routing_key_base] = 'chef-server-api'
+Opscode::Audit::Config[:audit_host] = '<%= @int_lb_dns %>'
+Opscode::Audit::Config[:audit_port] = '3030'
+Opscode::Audit::Config[:audit_url]  = 'http://<%= @int_lb_dns %>:3030/log'
+
+use_template_engine :haml
+
+Merb::Config.use do |c|
+
+  if Chef::Config[:log_location].kind_of?(String)
+    c[:log_file] = Chef::Config[:log_location]
+  end
+
+  Struct.new("S3Config", :access_key_id, :secret_key_id, :use_ssl, :server, :port, :platform_bucket_name)
+#  c[:s3config] = Struct::S3Config.new('<%= @s3_access_key %>','<%= @s3_secret_key %>', true, "s3.amazonaws.com", 443, 'opscode-platform-<%= @chef_env %>-cookbook-tarballs')
+  c[:s3config] = Struct::S3Config.new('44CF9590006BF252F707','OtxrzxIsfpFjA7SwPzILwy8Bw21TLhquhboDYROV', nil, 	"127.0.0.1", 3002,'opscode-platform-data-dev')
+
+  c[:couchdb_uri] = 'http://<%= @couchdb_server['ipaddress'] %>:5984'
+  c[:guidservice_host] = 'localhost'
+  c[:guidservice_port] = 8000
+  c[:certificateservice_uri] = 'http://localhost:5140/certificates'
+  c[:account_database] = 'opscode_account'
+  c[:org_database_prefix] = 'chef'
+  c[:authorizationservice_uri] = 'http://<%= @int_lb_dns %>:5959'
+  c[:service_private_key] = OpenSSL::PKey::RSA.new(File.read('/etc/opscode/azs.pem'))
+  c[:cookbook_cache_path] = File.join("/tmp", "cookbooks_cache")
+  c[:solr_uri] = 'http://<%= @int_lb_dns %>:8983'
+
+  c[:exception_details] = true
+  c[:reload_classes] = false
+  c[:log_level] = Chef::Config[:log_level]
+
+  S3Helper.establish_s3_connection
+
+end
+
+# Bunny time!
+Chef::Config.amqp_host '<%= @rabbitmq_host['ipaddress'] %>'
+Chef::Config.amqp_port '5672'
+Chef::Config.amqp_user '<%= @rabbitmq_user %>'
+Chef::Config.amqp_pass '<%= @rabbitmq_password %>'
+Chef::Config.amqp_vhost '/chef'
+Chef::Config.amqp_identity '<%= @rabbitmq_identity %>'
+Chef::Config.amqp_consumer_id 'hotsauce'
+
+COUCHDB = CouchRest.new(Merb::Config[:couchdb_uri])
+COUCHDB.database!(Merb::Config[:account_database])
+COUCHDB.default_database = Merb::Config[:account_database]
+
+require 'mixlib/authorization'
+Mixlib::Authorization::Config.default_database = COUCHDB.default_database
+Mixlib::Authorization::Config.couchdb_uri = Merb::Config[:couchdb_uri]
+Mixlib::Authorization::Config.default_database = COUCHDB.default_database
+Mixlib::Authorization::Config.private_key = Merb::Config[:service_private_key]
+Mixlib::Authorization::Config.authorization_service_uri = Merb::Config[:authorizationservice_uri]
+Mixlib::Authorization::Config.certificate_service_uri = Merb::Config[:certificateservice_uri]
+require 'mixlib/authorization/auth_join'
+require 'mixlib/authorization/models'
+
+Mixlib::Authorization::Config.web_ui_public_key = OpenSSL::PKey::RSA.new(File.read('/etc/opscode/webui_pub.pem'))

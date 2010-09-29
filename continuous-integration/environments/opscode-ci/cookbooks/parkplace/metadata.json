@@ -1,0 +1,33 @@
+{
+  "recipes": {
+    "parkplace": "Installs Parkplace from Opscode's GIT repository"
+  },
+  "maintainer_email": "cookbooks@opscode.com",
+  "groupings": {
+  },
+  "attributes": {
+  },
+  "recommendations": {
+  },
+  "dependencies": {
+    "runit": [
+
+    ]
+  },
+  "suggestions": {
+  },
+  "platforms": {
+  },
+  "license": "Apache 2.0",
+  "version": "0.7.0",
+  "conflicting": {
+  },
+  "providing": {
+  },
+  "name": "parkplace",
+  "maintainer": "Opscode, Inc.",
+  "long_description": "Installs Parkplace directly from Opscode's GIT repository'.\n",
+  "description": "Installs Parkplace and starts service",
+  "replacing": {
+  }
+}

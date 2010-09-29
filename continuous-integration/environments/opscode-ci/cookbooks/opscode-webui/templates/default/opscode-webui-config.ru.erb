@@ -1,0 +1,21 @@
+#
+# this config file is managed by chef, are you?
+#
+$:.unshift(File.expand_path(File.join(File.dirname(__FILE__), "..", "chef", "lib")))
+$:.unshift(File.expand_path(File.join(File.dirname(__FILE__), "lib")))
+require 'rubygems'
+require 'rest-client'
+require 'merb-core'
+require 'chef'
+
+Merb::Config.setup(:merb_root   => File.expand_path(File.dirname(__FILE__)),
+                   :fork_for_class_load => false,
+                   :environment => '<%= node[:app_environment] %>', :init_file => File.dirname(__FILE__) / "config/init.rb")
+Merb.environment = Merb::Config[:environment]
+Merb.root = Merb::Config[:merb_root]
+Merb::BootLoader.run
+
+# to make unicorn serve static content
+use Merb::Rack::Static, Merb.dir_for(:public)
+
+run Merb::Rack::Application.new

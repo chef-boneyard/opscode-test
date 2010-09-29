@@ -1,0 +1,5 @@
+#!/bin/sh
+export GEM_HOME=/srv/localgems
+export GEM_PATH=/srv/localgems
+exec 2>&1
+exec chpst -u opscode -U opscode /srv/opscode-solr/current/chef-solr/bin/chef-solr -c /srv/opscode-solr/current/chef-solr/opscode-solr.conf

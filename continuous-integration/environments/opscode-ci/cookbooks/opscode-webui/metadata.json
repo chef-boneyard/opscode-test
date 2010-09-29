@@ -1,0 +1,42 @@
+{
+  "recipes": {
+    "opscode-webui": "Installs Opscode Webui from source"
+  },
+  "maintainer_email": "cookbooks@opscode.com",
+  "groupings": {
+  },
+  "attributes": {
+  },
+  "recommendations": {
+  },
+  "dependencies": {
+    "unicorn": [
+
+    ],
+    "chef": [
+
+    ],
+    "opscode-account": [
+
+    ],
+    "opscode-chef": [
+
+    ]
+  },
+  "suggestions": {
+  },
+  "platforms": {
+  },
+  "license": "Apache 2.0",
+  "version": "0.8.0",
+  "conflicting": {
+  },
+  "providing": {
+  },
+  "name": "opscode-webui",
+  "maintainer": "Opscode, Inc.",
+  "long_description": "Installs Chef Webui directly from source.\n",
+  "description": "Installs Opscode Webui and starts service",
+  "replacing": {
+  }
+}

@@ -1,0 +1,5 @@
+MAILTO=sysadmin@opscode.com
+
+# Managed by Chef
+# m h  dom mon dow   command
+15 8 * * * root /usr/local/bin/org_cleanup

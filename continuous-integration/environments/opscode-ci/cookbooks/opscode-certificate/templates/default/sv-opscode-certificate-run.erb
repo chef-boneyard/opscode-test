@@ -1,0 +1,8 @@
+#!/bin/sh
+export GEM_HOME=/srv/localgems
+export GEM_PATH=/srv/localgems
+export PATH="/srv/localgems/bin:$PATH"
+cd /srv/opscode-certificate/current
+
+exec 2>&1
+exec /usr/bin/env HOME="/srv/opscode-certificate/shared" /srv/opscode-certificate/current/start.sh

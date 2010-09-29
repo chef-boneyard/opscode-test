@@ -1,0 +1,82 @@
+{
+  "recipes": {
+    "couchdb": "Installs CouchDB 0.9.0 from tarball",
+    "couchdb::master": "Installs CouchDB"
+  },
+  "maintainer_email": "cookbooks@opscode.com",
+  "groupings": {
+  },
+  "attributes": {
+    "couchdb/dir": {
+      "required": "optional",
+      "calculated": false,
+      "choice": [
+
+      ],
+      "default": "/srv/couchdb/etc/couchdb",
+      "type": "string",
+      "recipes": [
+
+      ],
+      "display_name": "CouchDB Directory",
+      "description": "Location for CouchDB configuration"
+    },
+    "couchdb/listen_port": {
+      "required": "optional",
+      "calculated": false,
+      "choice": [
+
+      ],
+      "default": "5984",
+      "type": "string",
+      "recipes": [
+
+      ],
+      "display_name": "CouchDB Listen Port",
+      "description": "Port that CouchDB should listen on"
+    },
+    "couchdb/listen_ip": {
+      "required": "optional",
+      "calculated": false,
+      "choice": [
+
+      ],
+      "default": "0.0.0.0",
+      "type": "string",
+      "recipes": [
+
+      ],
+      "display_name": "CouchDB Listen IP",
+      "description": "IP address that CouchDB should listen on"
+    }
+  },
+  "recommendations": {
+  },
+  "dependencies": {
+    "runit": [
+
+    ],
+    "perl": [
+
+    ],
+    "erlang": [
+
+    ]
+  },
+  "suggestions": {
+  },
+  "platforms": {
+  },
+  "license": "Apache 2.0",
+  "version": "0.7.0",
+  "conflicting": {
+  },
+  "providing": {
+  },
+  "name": "couchdb",
+  "maintainer": "Opscode, Inc.",
+  "long_description": "Installs the CouchDB package if it is available from an package repository on\nthe node. If the package repository is not available, CouchDB needs to be \ninstalled via some other method, either a backported package, or compiled \ndirectly from source.\n",
+  "description": "Installs CouchDB package and starts service",
+  "replacing": {
+  }
+}

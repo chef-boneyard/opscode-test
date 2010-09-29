@@ -1,0 +1,33 @@
+{
+  "recipes": {
+    "opscode-test": "Installs Opscode Test from source (for CI tasks only)"
+  },
+  "maintainer_email": "tim@opscode.com",
+  "groupings": {
+  },
+  "attributes": {
+  },
+  "recommendations": {
+  },
+  "dependencies": {
+    "opscode-base": [
+
+    ]
+  },
+  "suggestions": {
+  },
+  "platforms": {
+  },
+  "license": "Apache 2.0",
+  "version": "0.8.0",
+  "conflicting": {
+  },
+  "providing": {
+  },
+  "name": "opscode-test-repos",
+  "maintainer": "Opscode, Inc.",
+  "long_description": "Installs Opscode Test from source (for CI tasks only)\n",
+  "description": "Installs Opscode Test from source (for CI tasks only)",
+  "replacing": {
+  }
+}

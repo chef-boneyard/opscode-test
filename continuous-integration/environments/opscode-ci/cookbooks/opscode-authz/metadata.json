@@ -1,0 +1,48 @@
+{
+  "recipes": {
+    "opscode-authz": "Installs Opscode authz from source"
+  },
+  "maintainer_email": "cookbooks@opscode.com",
+  "groupings": {
+  },
+  "attributes": {
+  },
+  "recommendations": {
+  },
+  "dependencies": {
+    "runit": [
+
+    ],
+    "opscode-base": [
+
+    ],
+    "unicorn": [
+
+    ],
+    "opscode-github": [
+
+    ],
+    "erlang": [
+
+    ],
+    "capistrano": [
+
+    ]
+  },
+  "suggestions": {
+  },
+  "platforms": {
+  },
+  "license": "Apache 2.0",
+  "version": "0.7.0",
+  "conflicting": {
+  },
+  "providing": {
+  },
+  "name": "opscode-authz",
+  "maintainer": "Opscode, Inc.",
+  "long_description": "Installs authz directly from source.\n",
+  "description": "Installs Opscode authz and starts service",
+  "replacing": {
+  }
+}

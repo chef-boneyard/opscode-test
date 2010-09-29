@@ -1,0 +1,27 @@
+upstream backend_get {
+        server 127.0.0.1:5984 weight=1; 
+        server 10.249.65.208:5984 weight=1; 
+        # any number of servers can be added here to distribute load. 
+}
+
+upstream backend_post {
+        server 127.0.0.1:5984 weight=1; 
+}
+
+server {
+        listen   80;
+        server_name  localhost;
+
+        access_log  /srv/coucdb/var/log/couchdb/couchdb.access.log;
+
+        location / {
+                proxy_read_timeout 300;
+                if ($request_method = GET)
+                {
+                        proxy_pass http://backend_get;
+                        break;
+                }
+                proxy_pass http://backend_post;
+        }
+}
+

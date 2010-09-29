@@ -3,6 +3,7 @@ require 'tempfile'
 
 require 'chef/shell_out'
 require 'chef/mixin/shell_out'
+
 include Chef::Mixin::ShellOut
 
 PLATFORM_TEST_DIR = '/tmp/opscode-platform-test/'
@@ -109,20 +110,10 @@ def chef_rest
   Chef::REST.new(Chef::Config[:couchdb_url], nil, nil)
 end
 
-def wipe_db(db)
-  begin
-    chef_rest.delete_rest("#{db}")
-  rescue Net::HTTPServerException => e
-    raise unless e.message =~ /Not Found/
-  end
-  
-  chef_rest.put_rest(db, nil)
-end
-
 # Bulk GET all documents in the given db, using the given page size.
 # Calls the required block for each page size, passing in an array of
 # rows.
-def bulk_get_paged(db, page_size)
+def bulk_get_paged(chef_rest, db, page_size)
   last_key = nil
 
   paged_rows = nil
@@ -146,16 +137,28 @@ end
 # Replicate a (set of) source databases to a (set of) target databases. Uses
 # manual bulk GET/POST as Couch's internal _replicate endpoint crashes and
 # starts to time out after some number of runs.
-def replicate_dbs(replication_specs)
+def replicate_dbs(replication_specs, delete_source_dbs = false)
   replication_specs = [replication_specs].flatten
   
+  Chef::Log.debug "replicate_dbs: replication_specs = #{replication_specs.inspect}, delete_source_dbs = #{delete_source_dbs}"
+  
+  chef_rest = Chef::REST.new(Chef::Config[:couchdb_url], nil, nil)
   replication_specs.each do |spec|
     source_db = spec[:source_db]
     target_db = spec[:target_db]
 
-    wipe_db(target_db)
-  
-    bulk_get_paged(source_db, 100) do |paged_rows|
+    # Delete and re-create the target db
+    begin
+      Chef::Log.debug("Deleting #{target_db}, if exists")
+      chef_rest.delete_rest("#{target_db}")
+    rescue Net::HTTPServerException => e
+      raise unless e.message =~ /Not Found/
+    end
+    Chef::Log.debug("Creating #{target_db}")
+    chef_rest.put_rest(target_db, nil)
+
+    Chef::Log.debug("Replicating #{source_db} to #{target_db} using bulk (batch) method")
+    bulk_get_paged(chef_rest, source_db, 100) do |paged_rows|
       #puts "incoming paged_rows is #{paged_rows.inspect}"
       paged_rows = paged_rows.map do |row|
         doc_in_row = row['doc']
@@ -165,8 +168,14 @@ def replicate_dbs(replication_specs)
 
       #puts "now, paged_rows is #{paged_rows.inspect}"
       #pp({:_PAGED_ROWS => paged_rows})
-    
+
       chef_rest.post_rest("#{target_db}/_bulk_docs", {"docs" => paged_rows})
+    end
+
+    # Delete the source if asked to..
+    if delete_source_dbs
+      Chef::Log.debug("Deleting #{source_db}")
+      c.delete_rest(source_db)
     end
   end
 end
