@@ -103,6 +103,7 @@ package "libxslt1-dev"
 package "libxml-simple-ruby"
 
 gems = {
+  "rack" => '1.1.0',
   "actionpack" => "2.3.8",
   "chef" => nil,
   #"couchrest" => '0.23',
@@ -114,7 +115,6 @@ gems = {
 #  "merb-helpers" => '1.0.15',
 #  "merb-haml" => '1.0.15',
 #  "merb-param-protection" => "1.0.15",
-  "rack" => '1.1.0',
   "merb-slices" => '1.1.3',
   "merb-assets" => '1.1.3',
   "merb-helpers" => '1.1.3',
