@@ -103,6 +103,10 @@ query :node, 'run_list:recipe\[bravo\]', ["ab", "b"]
 query :node, 'run_list:recipe\[zulu\]', []
 query :node, 'run_list:recipe\[alpha\]', ["a", "ab"]
 
+# Negation:
+query :node, '(run_list:recipe\[bravo\] AND NOT run_list:recipe\[alpha\])', ["b"]
+query :node, "(NOT tag:apples AND tag:ap*)", ["b", "c"]
+
 # Prefix searches:
 
 query :node, "tag:a*", ["a", "ab", "b", "c"]
