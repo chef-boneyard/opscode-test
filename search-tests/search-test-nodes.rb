@@ -68,8 +68,107 @@ example_nodes = {
   end
 }
 
+example_data_bags = {
+  'toys' => Proc.new do
+    items = []
+    bag = Chef::DataBag.new
+    bag.name "toys"
+    bag.save
+    item = Chef::DataBagItem.new
+    item_data = {
+      "id" => "marbles",
+      "colors" => ["black", "white", "green", "red", "blue"]
+    }
+    item.data_bag "toys"
+    item.raw_data = item_data
+    item.save
+    items << item
+
+    item = Chef::DataBagItem.new
+    item_data = {
+      "id" => "balls",
+      "baseballs" => 4,
+      "soccerballs" => 2,
+      "footballs" => 1
+    }
+    item.data_bag "toys"
+    item.raw_data = item_data
+    item.save
+    items << item
+    items
+  end,
+
+  'fruit' => Proc.new do
+    items = []
+    bag = Chef::DataBag.new
+    bag.name "fruit"
+    bag.save
+    item = Chef::DataBagItem.new
+    item_data = {
+      "id" => "citrus",
+      "names" => ["orange", "lemon", "lime"]
+    }
+    item.data_bag "fruit"
+    item.raw_data = item_data
+    item.save
+    items << item
+
+    item = Chef::DataBagItem.new
+    item_data = {
+      "id" => "tropical",
+      "names" => ["banana", "papaya", "mango"]
+    }
+    item.data_bag "fruit"
+    item.raw_data = item_data
+    item.save
+    items << item
+    items
+  end
+}
+
+example_roles = {
+  'prod' =>
+  Proc.new do
+    r = Chef::Role.new
+    r.name "prod"
+    r.run_list << "base"
+    r.run_list << "role[monitoring]"
+    r.default_attributes["key"] = 123
+    r.save
+    r
+  end,
+  'web' =>
+  Proc.new do
+    r = Chef::Role.new
+    r.name "web"
+    r.run_list << "base"
+    r.run_list << "nginx"
+    r.default_attributes["key"] = 456
+    r.save
+    r
+  end
+
+}
+
 example_nodes.each do |name, nproc|
   n = nproc.call
   n.save
   puts "saved node: #{name}"
+end
+
+example_data_bags.each do |name, nproc|
+  items = nproc.call
+  puts "saved #{items.size} data bag items"
+end
+
+%w(ac ab cc).each do |client_name|
+  client = Chef::ApiClient.new
+  client.name client_name
+  client.save
+  puts "saved client: #{client.name}"
+end
+
+example_roles.each do |name, r|
+  a_role = r.call
+  puts "saved role: #{a_role.name}"
 end

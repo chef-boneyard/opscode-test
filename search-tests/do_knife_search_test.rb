@@ -41,14 +41,19 @@ class QueryTest
     @expected = Set.new(expected)
   end
 
+  def same_type?(q)
+    (@type.class == String && q.type.class == String) ||
+      (@type == q.type)
+  end
+
   def and(q)
-    raise "types must match" unless q.type == @type
+    raise "types must match" unless same_type? q
     QueryTest.new(@type, "(#{@query} AND #{q.query})",
                   @expected.intersection(q.expected))
   end
 
   def or(q)
-    raise "types must match" unless q.type == @type
+    raise "types must match" unless same_type? q
     QueryTest.new(@type, "(#{@query} OR #{q.query})",
                   @expected.union(q.expected))
   end
@@ -103,6 +108,23 @@ query :node, 'run_list:recipe\[bravo\]', ["ab", "b"]
 query :node, 'run_list:recipe\[zulu\]', []
 query :node, 'run_list:recipe\[alpha\]', ["a", "ab"]
 
+# data bag item searching
+query "toys", 'colors:green', ["data_bag_item_toys_marbles"]
+query "toys", 'colors:white', ["data_bag_item_toys_marbles"]
+query "fruit", 'names:lemon', ["data_bag_item_fruit_citrus"]
+query "toys", 'baseballs:4 OR colors:black', ["data_bag_item_toys_marbles",
+                                              "data_bag_item_toys_balls"]
+
+# basic client list search
+# query :client, '*:*', ['ac', 'bc', 'cc']
+
+# role search
+query :role, 'name:pro*', ['prod']
+query :role, 'run_list:recipe\[base\]', ['prod', 'web']
+query :role, 'run_list:role\[monitoring\]', ['prod']
+query :role, 'key:456', ['web']
+query :role, 'key:[1 TO 5000]', ['web', 'prod']
+
 # Negation:
 query :node, '(run_list:recipe\[bravo\] AND NOT run_list:recipe\[alpha\])', ["b"]
 query :node, "(NOT tag:apples AND tag:ap*)", ["b", "c"]
@@ -126,7 +148,9 @@ query :node, 'value:[* TO 5]', ['a', 'b', 'c']
 query :node, 'value:[5 TO *]', []
 # exclusive range
 query :node, 'value:{1 TO 3}', ['b']
-
+# more negation tests
+query :node, '(value:[1 TO 3] AND NOT value:[1 TO 2])', ['c']
+query :node, '(NOT value:[1 TO 2] AND value:[1 TO 3])', ['c']
 
 # Quotes
 query :node, 'multi_word:"foo bar baz"', ['a']
@@ -151,14 +175,21 @@ query :node, 'nested_b1_a2_a3:B1_A2_A3-c', ['c']
 query :node, 'nested_*_b2_a3:A1_B2_A3-*', ['a', 'b', 'c']
 
 
+
 ALL_TESTS.each do |q|
   q.execute
 end
 
+node_tests = ALL_TESTS.select { |x| x.type == :node }
+role_tests = ALL_TESTS.select { |x| x.type == :role }
+data_bag_tests = ALL_TESTS.select { |x| x.type.class == String }
+
 # AND/OR precedence
-100.times do |i|
-  random_bool_query(ALL_TESTS, 2)
-  random_bool_query(ALL_TESTS, 3)
-  random_bool_query(ALL_TESTS, 4)
+[node_tests, role_tests].each do |test_list|
+  10.times do |i|
+    random_bool_query(test_list, 2)
+    random_bool_query(test_list, 3)
+    random_bool_query(test_list, 4)
+  end
 end
 
