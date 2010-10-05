@@ -95,6 +95,18 @@ def start_chef_solr_indexer(type="normal")
   end
 end
 
+def start_opscode_expander(type="normal")
+  path = File.join(OPSCODE_PROJECT_DIR, "opscode-expander")
+  @opscode_expander = nil
+  cid = fork
+  if cid
+    @opscode_expander = cid
+  else
+    Dir.chdir(path)
+    exec("./bin/opscode-expander -n 1 -i 1")
+  end
+end
+
 def start_chef_server(type="normal")
   path = File.join(OPSCODE_PROJECT_DIR, "opscode-chef", "chef-server-api")
   @chef_server_pid = nil
@@ -408,6 +420,12 @@ namespace :dev do
         wait_for_ctrlc
       end
 
+      desc "Start Opscode Expander for testing"
+      task :opscode_expander do
+        start_opscode_expander("features")
+        wait_for_ctrlc
+      end
+
       desc "Start Chef Server for testing"
       task :chef_server do
         start_chef_server("features")
@@ -513,6 +531,12 @@ namespace :dev do
     desc "Start Chef Solr Indexer"
     task :chef_solr_indexer do
       start_chef_solr_indexer
+      wait_for_ctrlc
+    end
+
+    desc "Start Opscode Expander"
+    task :opscode_expander do
+      start_opscode_expander
       wait_for_ctrlc
     end
 
