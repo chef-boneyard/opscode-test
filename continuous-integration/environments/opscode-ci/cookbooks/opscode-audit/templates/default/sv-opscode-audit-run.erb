@@ -1,5 +1,0 @@
-#!/bin/sh
-export GEM_HOME=/srv/localgems
-export GEM_PATH=/srv/localgems
-exec 2>&1
-exec chpst -u opscode -U opscode /srv/opscode-audit/current/bin/opscode-audit -c /srv/opscode-audit/current/config/opscode-audit.conf

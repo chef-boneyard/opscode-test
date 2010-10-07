@@ -8,8 +8,6 @@
 		"environment": {
 			"default-remote": "opscode",
 			"opscode-certificate-remote": "opscode",
-			"opscode-audit-revision": "master",
-			"opscode-audit-remote": "opscode",
 			"default-revision": "master",
 			"opscode-certificate-revision": "master",
 			"int-lb-dns": "127.0.0.1",
@@ -34,24 +32,6 @@
 				"id": "opscode-solr",
 				"type": "derderder",
 				"deploy_to": "/srv/opscode-solr",
-				"owner": "opscode"
-			},
-			"opscode-audit": {
-				"group": "opscode",
-				"repository": "git@github.com:opscode/opscode-audit.git",
-				"server_roles": [
-					"opscode-audit",
-					"opscode-chef",
-					"opscode-account",
-					"rabbitmq"
-				],
-				"migrate": {
-					"production": false,
-					"staging": false
-				},
-				"id": "opscode-audit",
-				"type": "derderder",
-				"deploy_to": "/srv/opscode-audit",
 				"owner": "opscode"
 			},
 			"opscode-certificate": {

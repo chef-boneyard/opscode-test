@@ -7,7 +7,6 @@
 #
 
 include_recipe "opscode-base"
-include_recipe "opscode-audit::library"
 
 env = node["environment"]
 app = node["apps"]["opscode-chef"]

@@ -8,6 +8,5 @@ EOH
 version           "0.8.1"
 recipe            "opscode-chef", "Installs Opscode Chef from source"
 depends           "opscode-base"
-depends           "opscode-audit"
 depends           "opscode-certificate"
 depends           "chef"

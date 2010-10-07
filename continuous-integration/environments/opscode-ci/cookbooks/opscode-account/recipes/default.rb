@@ -8,7 +8,6 @@
 
 include_recipe "opscode-base"
 include_recipe "unicorn"
-include_recipe "opscode-audit::client"
 include_recipe "chef"
 
 include_recipe "opscode-account::library"
