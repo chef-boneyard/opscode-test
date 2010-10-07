@@ -217,7 +217,7 @@ def prepare_feature_cookbooks
     log_location             STDOUT
     node_name                'clownco-org-admin'
     client_key               '/tmp/opscode-platform-test/clownco-org-admin.pem'
-    chef_server_url          'http://localhost:4000/organizations/clownco'  
+    chef_server_url          'http://localhost/organizations/clownco'  
     cache_type               'BasicFile'
     cache_options( :path => '#{ENV['HOME']}/.chef/checksums' )
     cookbook_path            ["#{fcpath}"]
