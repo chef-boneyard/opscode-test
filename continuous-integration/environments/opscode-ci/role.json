@@ -1,6 +1,6 @@
 {
 	"name": "ci-slave",
-	"run_list": [ "recipe[opscode-ci-piab]", "recipe[parkplace]", "recipe[opscode-test-repos]", "recipe[opscode-org-creator]", "recipe[nginx::piab]", "recipe[opscode-webui]" ],
+	"run_list": [ "recipe[opscode-ci-piab]", "recipe[parkplace]", "recipe[opscode-test-repos]", "recipe[opscode-org-creator]", "recipe[nginx::piab]", "recipe[opscode-webui]", "recipe[chef-server]" ],
 	"json_class": "Chef::Role",
 	"chef_type": "role",
 	"default_attributes": {

@@ -1,0 +1,36 @@
+{
+  "attributes": {
+  },
+  "conflicting": {
+  },
+  "dependencies": {
+    "unicorn": [
+
+    ],
+    "chef": [
+
+    ]
+  },
+  "providing": {
+  },
+  "maintainer": "Opscode, Inc.",
+  "replacing": {
+  },
+  "platforms": {
+  },
+  "license": "Apache 2.0",
+  "version": "0.8.1",
+  "maintainer_email": "cookbooks@opscode.com",
+  "long_description": "Starts Chef API service.\n",
+  "groupings": {
+  },
+  "recipes": {
+    "chef-server": "Starts Chef API service"
+  },
+  "recommendations": {
+  },
+  "name": "chef-server",
+  "description": "Starts Chef API service",
+  "suggestions": {
+  }
+}
