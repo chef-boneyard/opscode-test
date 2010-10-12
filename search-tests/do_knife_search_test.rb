@@ -19,7 +19,7 @@ Example:
 node_name       'alice'
 client_key      "#{ENV['HOME']}/alcie.pem"
 chef_server_url "https://api-preprod.opscode.com/organizations/YOUR_ORG_HERE"
-
+wildcard_in_key_tests true
 EOH
 
 if ARGV.size != 1
@@ -169,11 +169,12 @@ query :node, 'nested_b1_a2_a3:B1_A2_A3-c', ['c']
 query :node, 'nested_a1_b2_a3:A1_B2_A3-*', ['a', 'b', 'c']
 
 # # nested expando (only w/ new stuff)
-query :node, 'nested_b1_*_a3:B1_A2_A3-a', ['a']
-query :node, 'nested_b1_a2_*:B1_A2_A3-b', ['b']
-query :node, 'nested_b1_a2_a3:B1_A2_A3-c', ['c']
-query :node, 'nested_*_b2_a3:A1_B2_A3-*', ['a', 'b', 'c']
-
+if Chef::Config["wildcard_in_key_tests"]
+  query :node, 'nested_b1_*_a3:B1_A2_A3-a', ['a']
+  query :node, 'nested_b1_a2_*:B1_A2_A3-b', ['b']
+  query :node, 'nested_b1_a2_a3:B1_A2_A3-c', ['c']
+  query :node, 'nested_*_b2_a3:A1_B2_A3-*', ['a', 'b', 'c']
+end
 
 
 ALL_TESTS.each do |q|
