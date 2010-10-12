@@ -59,7 +59,7 @@ resources(:service => "opscode-chef").subscribes(:restart, resources(:deploy => 
 
 r = resources(:service => "opscode-chef")
 unicorn_config "/etc/unicorn/opscode-chef.rb" do
-  listen 4000 => { :backlog => 1024, :tcp_nodelay => true }
+  listen 4001 => { :backlog => 1024, :tcp_nodelay => true }
   worker_timeout 3600
   preload_app false
   worker_processes node.cpu.total.to_i * 4
