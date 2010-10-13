@@ -104,6 +104,7 @@ def setup_test_harness
   create_test_harness_setup_database(org_db_names)
   replication_specs = (%w{authorization opscode_account opscode_account_internal} + org_db_names).map{|source_db| {:source_db => "#{Chef::Config[:couchdb_url]}/#{source_db}",:target_db => "#{Chef::Config[:couchdb_url]}/#{source_db}_integration"}}
   replicate_dbs(replication_specs)
+  cleanup_unassigned_orgs
 end
 
 def chef_rest
@@ -235,6 +236,13 @@ def prepare_feature_cookbooks
       Chef::Log.info(`#{cmd}`)
       Chef::Log.info("Uploaded #{cookbook_name} tarball")
     end
+  end
+end
+
+def cleanup_unassigned_orgs
+  db = CouchRest.new(Chef::Config[:couchdb_url]).database!('opscode_account_internal_integration')
+  Mixlib::Authorization::Models::OrganizationInternal.on(db).all.each do |o|
+    Mixlib::Authorization::Models::OrganizationInternal.on(db).new(o).destroy
   end
 end
 
