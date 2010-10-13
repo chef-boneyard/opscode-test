@@ -53,7 +53,7 @@ remote_file "/etc/cron.d/org_cleanup_cron" do
   backup false
 end
 
-couch_name_ver = "apache-couchdb-0.11.0"
+couch_name_ver = "apache-couchdb-1.0.1"
 tarball_name = "#{couch_name_ver}.tar.gz"
 dest_dir = "/srv/couchdb"
 
