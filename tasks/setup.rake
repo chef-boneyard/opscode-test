@@ -100,7 +100,7 @@ def setup_test_harness
   create_account_databases
   create_organization
   org_db_names = create_chef_databases
-  #prepare_feature_cookbooks
+  prepare_feature_cookbooks
   create_test_harness_setup_database(org_db_names)
   replication_specs = (%w{authorization opscode_account opscode_account_internal} + org_db_names).map{|source_db| {:source_db => "#{Chef::Config[:couchdb_url]}/#{source_db}",:target_db => "#{Chef::Config[:couchdb_url]}/#{source_db}_integration"}}
   replicate_dbs(replication_specs)
@@ -249,7 +249,6 @@ namespace :setup do
   desc "Setup the test environment, including creating the organization, users, and uploading the fixture cookbooks"
   task :test =>[:check_platform_files] do
     setup_test_harness
-    Rake::Task['setup:cookbooks'].invoke
   end
 
   desc "Prepare local testing by uploading feature cookbooks to ParkPlace"
