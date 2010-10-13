@@ -14,7 +14,7 @@ env = node["environment"]
 # exec("./chef-server-api/bin/chef-server -a thin -C #{File.join(File.dirname(__FILE__), "features", "data", "config", "server.rb")} -l debug -N")
 
 runit_service "chef-server"
-resources(:service => "chef-server").subscribes(:restart, resources(:deploy => "chef-server"))
+resources(:service => "chef-server").subscribes(:restart, resources(:deploy => "chef"))
 
 directory "/srv/chef/shared" do
   owner 'opscode'
@@ -29,7 +29,7 @@ cookbook_file "/etc/chef/server.rb" do
 end
 
 r = resources(:service => "chef-server")
-unicorn_config "/etc/unicorn/chef.rb" do
+unicorn_config "/etc/unicorn/chef-server.rb" do
   listen 4000 => { :backlog => 1024, :tcp_nodelay => true }
   worker_timeout 3600
   preload_app false

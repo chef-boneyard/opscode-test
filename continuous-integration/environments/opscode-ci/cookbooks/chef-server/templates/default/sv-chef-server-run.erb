@@ -2,7 +2,8 @@
 export GEM_HOME=/srv/localgems
 export GEM_PATH=/srv/localgems
 export PATH="/srv/localgems/bin:$PATH"
-cd /srv/chef/current/chef-server-api
+cd /srv/chef/current
 
 exec 2>&1
-exec env HOME="/srv/chef/shared/system" unicorn -E none -c /etc/unicorn/chef.rb config.ru
+exec env HOME="/srv/chef/shared/system" unicorn -E none -c /etc/unicorn/chef-server.rb chef-server-api/development.ru
+
