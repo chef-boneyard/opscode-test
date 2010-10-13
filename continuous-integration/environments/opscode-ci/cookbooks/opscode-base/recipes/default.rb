@@ -103,9 +103,11 @@ package "libxslt1-dev"
 package "libxml-simple-ruby"
 
 gems = {
+  "net-ssh-multi" => nil,
   "rack" => '1.1.0',
   "actionpack" => "2.3.8",
   "chef" => nil,
+  "fog" => nil,
   #"couchrest" => '0.23',
   #"aws-s3" => nil,
   "ruby-hmac" => nil,
