@@ -30,6 +30,7 @@ deploy_revision app['id'] do
   group app['group']
   deploy_to app['deploy_to']
   migrate false
+
   before_symlink do
     bash "install_gem_local" do
       user "root"
@@ -43,5 +44,14 @@ deploy_revision app['id'] do
       EOH
     end
   end
+
+  before_restart do
+    execute("bundle install --deployment") do
+      cwd("/srv/opscode-webui/current")
+      user(app['owner'])
+      group(app['group'])
+    end
+  end
+
 end
 

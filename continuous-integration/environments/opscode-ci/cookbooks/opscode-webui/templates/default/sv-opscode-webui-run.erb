@@ -6,4 +6,4 @@ cd /srv/opscode-chef/current/chef-server-webui
 
 exec 2>&1
 #exec env MERB_ENV=foo ./chef-server/bin/chef-server-webui
-exec /usr/bin/env HOME="/srv/opscode-chef/shared" unicorn -c /etc/unicorn/opscode-webui.rb -E cucumber config.ru
+exec /usr/bin/env HOME="/srv/opscode-chef/shared" bundle exec unicorn -c /etc/unicorn/opscode-webui.rb -E cucumber config.ru

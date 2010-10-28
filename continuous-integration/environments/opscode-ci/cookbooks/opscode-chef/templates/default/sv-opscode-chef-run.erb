@@ -1,8 +1,8 @@
 #!/bin/sh
-export GEM_HOME=/srv/localgems
-export GEM_PATH=/srv/localgems
-export PATH="/srv/localgems/bin:$PATH"
+#export GEM_HOME=/srv/localgems
+#export GEM_PATH=/srv/localgems
+#export PATH="/srv/localgems/bin:$PATH"
 cd /srv/opscode-chef/current/chef-server-api
 
 exec 2>&1
-exec env HOME="/srv/opscode-chef/shared/system" unicorn -E none -c /etc/unicorn/opscode-chef.rb config.ru
+exec env HOME="/srv/opscode-chef/shared/system" bundle exec unicorn -E none -c /etc/unicorn/opscode-chef.rb config.ru

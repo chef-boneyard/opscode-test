@@ -14,14 +14,8 @@ require 'chef'
 require 'chef/role'
 require 'chef/data_bag'
 require 'chef/data_bag_item'
-require 'opscode/audit'
+
 require File.join(File.dirname(__FILE__), '../lib/s3_helper')
-
-
-Opscode::Audit::Config[:routing_key_base] = 'chef-server-api'
-Opscode::Audit::Config[:audit_host] = '<%= @int_lb_dns %>'
-Opscode::Audit::Config[:audit_port] = '3030'
-Opscode::Audit::Config[:audit_url]  = 'http://<%= @int_lb_dns %>:3030/log'
 
 use_template_engine :haml
 
