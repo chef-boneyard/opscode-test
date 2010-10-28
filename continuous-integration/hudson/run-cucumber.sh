@@ -16,7 +16,12 @@ export PATH=/srv/localgems/bin:$PATH
 cd /srv/"$1"/current
 shift
 
-cucumber "$@" --format junit --out "$STARTING_PWD/junit_output"
+if [ -f Gemfile.lock ]; then
+  bundle exec cucumber "$@" --format junit --out "$STARTING_PWD/junit_output"
+else
+  cucumber "$@" --format junit --out "$STARTING_PWD/junit_output"
+fi
+
 RESULT=$?
 
 ruby /srv/opscode-test/current/continuous-integration/hudson/touch-files.rb "$STARTING_PWD/junit_output/"
