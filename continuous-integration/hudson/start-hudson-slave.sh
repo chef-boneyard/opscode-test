@@ -1,9 +1,6 @@
 #!/bin/bash
 
-OLD_PWD=$PWD
-
-# run chef with the system GEM's.
-#sudo chef-client -l debug # this is run by the hudson builder.
+# This script assumes /srv is mounted already.
 
 # Everything we do from now on uses the /srv-installed GEM's, bins, etc.
 
@@ -13,5 +10,5 @@ OLD_PWD=$PWD
     sudo env GEM_HOME=/srv/localgems GEM_PATH=/srv/localgems PATH=/srv/localgems/bin:$PATH rake setup:test)
 
 # run hudson slave.
-sudo env GEM_HOME=/srv/localgems GEM_PATH=/srv/localgems PATH=/srv/localgems/bin:$PATH java -jar slave.jar
+sudo env GEM_HOME=/srv/localgems GEM_PATH=/srv/localgems PATH=/srv/localgems/bin:$PATH java -jar /srv/hudson/slave.jar
 
