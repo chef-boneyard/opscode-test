@@ -14,7 +14,6 @@ require 'couchrest'
 
 # OPSCODE & CHEF
 require 'chef/log'
-require 'opscode/audit'
 
 #merb_gems_version = "1.0.15"
 #dependency "merb-haml", merb_gems_version
@@ -22,11 +21,6 @@ require 'opscode/audit'
 #dependency "merb-helpers", merb_gems_version
 #dependency "couchrest", ">= 0.22"
 #
-Opscode::Audit::Config[:routing_key_base] = 'account'
-Opscode::Audit::Log.logger = Merb.logger
-Opscode::Audit::Config[:audit_host] = '<%= @int_lb_dns %>'
-Opscode::Audit::Config[:audit_port] = '3030'
-Opscode::Audit::Config[:audit_url]  = 'http://<%= @int_lb_dns %>:3030/log'
 
 use_template_engine :haml
 
