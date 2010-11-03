@@ -9,6 +9,17 @@ export GEM_HOME=/srv/localgems
 export GEM_PATH=/srv/localgems
 export PATH=/srv/localgems/bin:$PATH
 
+# restart couchdb to (hopefully) mitigate the replication issues (e.g., opscode-account
+# does many replicates and eventually causes Couch to start misbehaving)
+/etc/init.d/couchdb restart
+
+# Kill any lingering couchjs processes
+echo "Existing couchjs processes:"
+ps uxaw | grep couchjs | grep -v grep
+killall couchjs
+
+
+
 cd /srv/"$1"/current
 shift
 
