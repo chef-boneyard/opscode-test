@@ -19,7 +19,7 @@
 			"community_servername": "ubuntu-ci-slave",
 
 			"chef-remote": "timh",
-			"chef-revision": "nofields"
+			"chef-revision": "nofields-work"
 		},
 		"apps": {
 			"opscode-solr": {
