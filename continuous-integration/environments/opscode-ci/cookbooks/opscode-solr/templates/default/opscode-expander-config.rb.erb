@@ -1,0 +1,11 @@
+# The URL is the only Solr config Opscode Expander needs #
+solr_url    "http://localhost:8983"
+
+# Parameters for connecting to RabbitMQ
+amqp_host '<%= @rabbitmq_host %>'
+amqp_port '5672'
+amqp_user '<%= @rabbitmq_user %>'
+amqp_pass '<%= @rabbitmq_password %>'
+amqp_vhost '<%= @rabbitmq_vhost %>'
+
+ps_tag '<%= @opscode_expander_ps_tag %>'
