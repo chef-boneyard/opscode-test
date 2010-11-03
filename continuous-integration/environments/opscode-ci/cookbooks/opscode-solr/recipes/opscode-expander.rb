@@ -30,7 +30,7 @@ template("opscode_expander_config") do
   mode    "644"
   variables :rabbitmq_host      => 'localhost',
             :rabbitmq_user      => "chef",
-            :rabbitmq_password  => node["rabbitmq"]["users"]["chef"],
+            :rabbitmq_password  => node["apps"]["rabbitmq"]["users"]["chef"],
             :rabbitmq_vhost     => "/chef",
             :opscode_expander_ps_tag => ''
 end
