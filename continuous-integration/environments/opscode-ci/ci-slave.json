@@ -16,7 +16,10 @@
 			"org_creator_ready_org_depth": 10,
 			"org_creator_create_wait_ms": 2000,
 			"org_creator_create_splay_ms": 1500,
-			"community_servername": "ubuntu-ci-slave"
+			"community_servername": "ubuntu-ci-slave",
+
+			"chef-remote": "sdelano",
+			"chef-revision": "nofields"
 		},
 		"apps": {
 			"opscode-solr": {
