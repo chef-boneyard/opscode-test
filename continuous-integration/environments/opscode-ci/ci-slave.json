@@ -18,7 +18,7 @@
 			"org_creator_create_splay_ms": 1500,
 			"community_servername": "ubuntu-ci-slave",
 
-			"chef-remote": "sdelano",
+			"chef-remote": "timh",
 			"chef-revision": "nofields"
 		},
 		"apps": {
