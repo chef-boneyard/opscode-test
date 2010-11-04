@@ -19,7 +19,7 @@ def create_local_test
   Dir.chdir(path) do
     shell_out! "./account-whacker -c #{PLATFORM_TEST_DIR}/superuser.pem -d platform-superuser -e platform-cukes-superuser@opscode.com -f PlatformSuperuser -l PlatformCukeSuperuser -m cuker -u platform-superuser -p p@ssw0rd1"
     Chef::Log.info("Creating global containers")
-    system("./global-containers platform-superuser")    
+    system("./global-containers platform-superuser")
     output = create_public_user('local-test-user', 'Local', 'Test', 'User', 'Local Test User', 'local-test-user@opscode.com')
     Chef::Log.debug(output)
     output = create_public_org("local-test-org", "Local Test Org", "platform-superuser", "#{PLATFORM_TEST_DIR}/superuser.pem", "local-test-user", "#{PLATFORM_TEST_DIR}/local-test-org-validator.pem")
@@ -73,10 +73,10 @@ def cleanup_replicas
 end
 
 def cleanup_chefs
-  chef_rest.get_rest('_all_dbs').each do |db| 
+  chef_rest.get_rest('_all_dbs').each do |db|
     begin
       if db =~ /^chef_/
-        chef_rest.delete_rest("#{db}/") 
+        chef_rest.delete_rest("#{db}/")
       end
     rescue
       STDERR.puts "failed cleanup: #{db}, #{$!.message}"
@@ -121,7 +121,7 @@ def cleanup_after_naughty_run
 end
 
 def cleanup_cookbook_tarballs
-  fcpath = File.join(OPSCODE_PROJECT_DIR, "opscode-chef", OPSCODE_PROJECT_SUFFIX, "features", "data", "cookbooks")
+  fcpath = File.join(OPSCODE_PROJECT_DIR, "chef", OPSCODE_PROJECT_SUFFIX, "features", "data", "cookbooks")
   Dir.chdir(fcpath) do
     Dir[File.join(fcpath, '*.tar.gz')].each do |file|
       File.unlink(file)
@@ -151,8 +151,8 @@ end
 def create_account_databases
   Chef::Log.info("Creating bootstrap databases")
   replicate_dbs({:source_db=>"#{Chef::Config[:couchdb_url]}/authorization_design_documents", :target_db=>"#{Chef::Config[:couchdb_url]}/authorization"})
-  Chef::CouchDB.new(Chef::Config[:couchdb_url], "opscode_account").create_db  
-  Chef::CouchDB.new(Chef::Config[:couchdb_url], "opscode_account_internal").create_db  
+  Chef::CouchDB.new(Chef::Config[:couchdb_url], "opscode_account").create_db
+  Chef::CouchDB.new(Chef::Config[:couchdb_url], "opscode_account_internal").create_db
 end
 
 def create_chef_databases
@@ -210,21 +210,21 @@ end
 
 def prepare_feature_cookbooks
   Chef::Log.info "Preparing feature cookbooks"
-  fcpath = File.join(OPSCODE_PROJECT_DIR, "opscode-chef", OPSCODE_PROJECT_SUFFIX, "features", "data", "cookbooks")
-  
+  fcpath = File.join(OPSCODE_PROJECT_DIR, "chef", OPSCODE_PROJECT_SUFFIX, "features", "data", "cookbooks")
+
   tmp = Tempfile.new("opscode-test-knife.rb")
   tmp << <<-EOH
     log_level                :info
     log_location             STDOUT
     node_name                'clownco-org-admin'
     client_key               '/tmp/opscode-platform-test/clownco-org-admin.pem'
-    chef_server_url          'http://localhost/organizations/clownco'  
+    chef_server_url          'http://localhost/organizations/clownco'
     cache_type               'BasicFile'
     cache_options( :path => '#{ENV['HOME']}/.chef/checksums' )
     cookbook_path            ["#{fcpath}"]
   EOH
   tmp.flush
-  
+
   Dir.chdir(fcpath) do
     Dir[File.join(fcpath, '*')].each do |dir|
       next unless File.directory?(dir)
