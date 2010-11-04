@@ -18,8 +18,8 @@
 			"org_creator_create_splay_ms": 1500,
 			"community_servername": "ubuntu-ci-slave",
 
-			"chef-remote": "timh",
-			"chef-revision": "nofields-work"
+			"chef-remote": "opscode",
+			"chef-revision": "pl-master"
 		},
 		"apps": {
 			"opscode-solr": {
@@ -127,7 +127,6 @@
 			  "group": "opscode"
 			},
 			"rabbitmq": {
-				"--COMMENT--": "do not change password below; this is depended on by chef features tests",
 				"users": {
 					"mapper": "testing",
 					"chef": "testing"
