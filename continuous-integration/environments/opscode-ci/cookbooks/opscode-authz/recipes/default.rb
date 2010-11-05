@@ -29,7 +29,7 @@ authz_rev = env['opscode-authz-revision'] || env['default-revision']
 
 ## Then, deploy
 deploy_revision app['id'] do
-  #action :force_deploy
+  action :force_deploy
   revision env['opscode-authz-revision'] || env['default-revision']
   repository 'git@github.com:' + (env['opscode-authz-remote'] || env['default-remote']) + '/opscode-authz.git'
   remote (env['opscode-authz-remote'] || env['default-remote'])
