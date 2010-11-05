@@ -49,7 +49,7 @@ def switch_chef_branch
     # TODO: This may be unneeded work if the cukes are being run against another
     # project, but this is a reasonable place to put it.
     puts "Restarting chef-server (OSS):"
-    if !(system "/etc/init.d/chef-server restart")
+    if !(system "/etc/init.d/chef-server force-restart")
       raise "Couldn't restart OSS chef server"
     end
   end
