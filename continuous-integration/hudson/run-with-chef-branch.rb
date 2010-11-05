@@ -99,7 +99,9 @@ begin
   
   ret_code = $?.exitstatus
 ensure
-  switch_chef_branch(DEFAULT_REMOTE, DEFAULT_BRANCH)
+  if chef_remote_wanted != DEFAULT_REMOTE || chef_branch_wanted != DEFAULT_BRANCH
+    switch_chef_branch(DEFAULT_REMOTE, DEFAULT_BRANCH)
+  end
 end
 
 # return with the same error code that run-rake/run-cucumber returned.

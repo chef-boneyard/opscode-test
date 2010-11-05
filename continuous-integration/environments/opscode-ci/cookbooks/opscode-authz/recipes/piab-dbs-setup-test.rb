@@ -22,58 +22,22 @@
 # in its data directory, then restart it. This data is a snapshot of CouchDB
 # in a state right after opscode-test's "setup:test" rake task is done.
 
-# TODO: tim, 2010-9-16: not doing this; just run setup:test from the node
-# startup script for now.
-if false && node['couchdb']['clean-couchdb-setup-test'] == true
-  script "clean-couchdb-setup-test: shutdown couchdb" do
-    interpreter "bash"
-    user "root"
-    code <<-EOM
-      /etc/init.d/couchdb stop
-      rm -frv /srv/couchdb/var/lib/couchdb || true
-      mkdir /srv/couchdb/var/lib/couchdb
-    EOM
-  end
-  
-  remote_directory "/srv/couchdb/var/lib/couchdb" do
-    source "couchdb-data"
-    recursive true
-    files_backup false
-    files_owner "root"
-    files_group "root"
-    files_mode "0644"
-    owner "root"
-    group "root"
-    mode "0644"
-  end
-  
-  script "clean-couchdb-setup-test: startup couchdb" do
-    interpreter "bash"
-    user "root"
-    code <<-EOM
-      /etc/init.d/couchdb start
-    EOM
-  end
-else
-  
-  cpan_module "JSON"
+cpan_module "JSON"
 
-  http_request "populate authorization_design_documents" do
-    url 'http://localhost:5984/authorization_design_documents/_bulk_docs'
-    action :nothing
-    message( { "docs" =>
-        [{"_id"=>"_design/access_control_entries", "views"=>{"by_acl_and_type"=>{"map"=>"function(doc) { if(doc.type == 'access_control_entry') { emit([doc.acl_id, doc.ace_type],null) } }"}, "by_id"=>{"map"=>"function(doc) { if(doc.type == 'access_control_entry') {emit(doc._id,null)}}"}}}, {"_id"=>"_design/access_control_lists", "views"=>{"by_ace_id"=>{"map"=>"function(doc) { if(doc.type == 'access_control_entry') { emit(doc.acl_id, doc._id) } }"}, "by_id"=>{"map"=>"function(doc) { if(doc.type == 'access_control_list') {emit(doc._id,null)}}"}, "by_object_id"=>{"map"=>"function(doc) { if(doc.type == 'access_control_list') { emit(doc.object_id, doc._id) } }"}}}, {"_id"=>"_design/actors", "views"=>{"by_id"=>{"map"=>"function(doc) { if(doc.type == 'actor') {emit(doc._id,null)}}"}}}, {"_id"=>"_design/containers", "views"=>{"by_path"=>{"map"=>"function(doc) { if(doc.type == 'container') {emit(doc.path,doc._id)}}"}, "by_id"=>{"map"=>"function(doc) { if(doc.type == 'container') {emit(doc._id,null)}}"}}}, {"_id"=>"_design/groups", "views"=>{"by_id"=>{"map"=>"function(doc) { if(doc.type == 'group') {emit(doc._id,null)}}"}}}, {"_id"=>"_design/objects", "views"=>{"by_type"=>{"map"=>"function(doc) {emit(doc._id,doc.type)}"}}}, {"_id"=>"containersets", "couchrest-type"=>"ContainersConfig", "global_containerset"=>{"organizations"=>"organizations", "users"=>"users"}, "organizations_containerset"=>{"groups"=>"groups", "data"=>"data", "search_role"=>"search/role", "cookbooks"=>"cookbooks", "search_node"=>"search/node", "nodes"=>"nodes", "roles"=>"roles", "containers"=>"containers", "search"=>"search", "clients"=>"clients", "sandboxes" => "sandboxes"}}]}
-           )
-  end
+http_request "populate authorization_design_documents" do
+  url 'http://localhost:5984/authorization_design_documents/_bulk_docs'
+  action :nothing
+  message( { "docs" =>
+      [{"_id"=>"_design/access_control_entries", "views"=>{"by_acl_and_type"=>{"map"=>"function(doc) { if(doc.type == 'access_control_entry') { emit([doc.acl_id, doc.ace_type],null) } }"}, "by_id"=>{"map"=>"function(doc) { if(doc.type == 'access_control_entry') {emit(doc._id,null)}}"}}}, {"_id"=>"_design/access_control_lists", "views"=>{"by_ace_id"=>{"map"=>"function(doc) { if(doc.type == 'access_control_entry') { emit(doc.acl_id, doc._id) } }"}, "by_id"=>{"map"=>"function(doc) { if(doc.type == 'access_control_list') {emit(doc._id,null)}}"}, "by_object_id"=>{"map"=>"function(doc) { if(doc.type == 'access_control_list') { emit(doc.object_id, doc._id) } }"}}}, {"_id"=>"_design/actors", "views"=>{"by_id"=>{"map"=>"function(doc) { if(doc.type == 'actor') {emit(doc._id,null)}}"}}}, {"_id"=>"_design/containers", "views"=>{"by_path"=>{"map"=>"function(doc) { if(doc.type == 'container') {emit(doc.path,doc._id)}}"}, "by_id"=>{"map"=>"function(doc) { if(doc.type == 'container') {emit(doc._id,null)}}"}}}, {"_id"=>"_design/groups", "views"=>{"by_id"=>{"map"=>"function(doc) { if(doc.type == 'group') {emit(doc._id,null)}}"}}}, {"_id"=>"_design/objects", "views"=>{"by_type"=>{"map"=>"function(doc) {emit(doc._id,doc.type)}"}}}, {"_id"=>"containersets", "couchrest-type"=>"ContainersConfig", "global_containerset"=>{"organizations"=>"organizations", "users"=>"users"}, "organizations_containerset"=>{"groups"=>"groups", "data"=>"data", "search_role"=>"search/role", "cookbooks"=>"cookbooks", "search_node"=>"search/node", "nodes"=>"nodes", "roles"=>"roles", "containers"=>"containers", "search"=>"search", "clients"=>"clients", "sandboxes" => "sandboxes"}}]}
+         )
+end
 
-  http_request "create authorization_design_documents database" do
-    url 'http://localhost:5984/authorization_design_documents'
-    action :put
-    only_if do 
-      response = JSON.parse(`curl http://localhost:5984/authorization_design_documents`)
-      (response.has_key?("error") && response["error"] == "not_found")
-    end
-    notifies :post, resources(:http_request => "populate authorization_design_documents"), :immediately
+http_request "create authorization_design_documents database" do
+  url 'http://localhost:5984/authorization_design_documents'
+  action :put
+  only_if do 
+    response = JSON.parse(`curl http://localhost:5984/authorization_design_documents`)
+    (response.has_key?("error") && response["error"] == "not_found")
   end
-    
+  notifies :post, resources(:http_request => "populate authorization_design_documents"), :immediately
 end
