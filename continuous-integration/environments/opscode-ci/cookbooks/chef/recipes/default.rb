@@ -36,11 +36,11 @@ deploy_revision 'chef' do
           export "GEM_PATH=/srv/localgems"
           export "PATH=/srv/localgems/bin:$PATH"
           cd chef
-          rake repackage || rake build
-          gem install pkg/*.gem 
+          rake gem
+          gem install pkg/*.gem
           cd ../chef-solr
-          rake repackage || rake build
-          gem install pkg/*.gem 
+          rake gem
+          gem install pkg/*.gem
       EOH
     end
   end
