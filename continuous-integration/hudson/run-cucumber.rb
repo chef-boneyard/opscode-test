@@ -101,7 +101,7 @@ Dir.chdir("/srv/#{project_name}/current") do |project_dir|
   
   # Run with bundler if appropriate..
   cmdline = if File.exist?("Gemfile.lock")
-    "bundle exec cucumber #{partial_cmdline}"
+    "bundle exec #{partial_cmdline}"
   else
     partial_cmdline
   end
