@@ -7,6 +7,7 @@
 
 include_recipe "erlang"
 include_recipe "opscode-base"
+include_recipe "opscode-authz::piab-dbs-setup-test"
 
 env = node["environment"]
 app = node["apps"]["opscode-authz"]

@@ -20,7 +20,6 @@
 
 include_recipe "erlang"
 include_recipe "build-essential"
-include_recipe "couchdb::piab-dbs-setup-test"
 
 if node[:platform_version].to_f < 9.10
   couchdb_prereq = ["libicu38", "libicu-dev", "libmozjs-dev" ]
