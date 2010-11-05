@@ -69,27 +69,9 @@ def start_chef_solr(type="normal")
     Dir.chdir(path) do
       case type
       when "normal"
-        exec("chef-solr -l debug")
+        exec("bundle exec chef-solr -l debug")
       when "features"
-        exec("chef-solr -c #{File.join(File.dirname(__FILE__), "features", "data", "config", "server.rb")} -l debug")
-      end
-    end
-  end
-end
-
-def start_chef_solr_indexer(type="normal")
-  path = File.join(OPSCODE_PROJECT_DIR, "opscode-chef")
-  @chef_solr_indexer = nil
-  cid = fork
-  if cid
-    @chef_solr_indexer_pid = cid
-  else
-    Dir.chdir(path) do
-      case type
-      when "normal"
-        exec("chef-solr-indexer -l debug")
-      when "features"
-        exec("chef-solr-indexer -c #{File.join(File.dirname(__FILE__), "features", "data", "config", "server.rb")} -l debug")
+        exec("bundle exec chef-solr -c #{File.expand_path(File.join(File.dirname(__FILE__), "..", "features", "data", "config", "server.rb"))} -l debug")
       end
     end
   end
@@ -171,22 +153,9 @@ def start_cert_erlang(type="normal")
   end
 end
 
-def start_opscode_audit(type="normal")
-  path = File.join(OPSCODE_PROJECT_DIR, "opscode-audit")
-  @opscode_audit_pid = nil
-  cid = fork
-  if cid # parent
-    @opscode_audit_pid = cid
-  else # child
-    Dir.chdir(path) do
-      exec("./bin/opscode-audit")
-    end
-  end
-end
-
 def start_opscode_authz(type="normal")
   path = File.join(OPSCODE_PROJECT_DIR, "opscode-authz")
-  @opscode_audit_pid = nil
+  @opscode_authz_pid = nil
   cid = fork
   if cid # parent
     @opscode_authz_pid = cid
@@ -274,7 +243,6 @@ def start_dev_environment(type="normal")
   start_chef_solr_indexer(type)
   #start_certificate(type)
   start_cert_erlang(type)
-  start_opscode_audit(type)
   start_opscode_authz(type)
   start_opscode_account(type)
   start_chef_server(type)
@@ -287,7 +255,6 @@ def start_dev_environment(type="normal")
   puts "Running Chef Solr Indexer at #{@chef_solr_indexer_pid}"
   #puts "Running Certificate at #{@certificate_pid}"
   puts "Running Cert(Erlang) at #{@cert_erlang_pid}"
-  puts "Running Opscode Audit at #{@opscode_audit_pid}"
   puts "Running Opscode Authz at #{@opscode_authz_pid}"
   puts "Running Opscode Account at #{@opscode_account_pid}"
   puts "Running Chef at #{@chef_server_pid}"
@@ -306,10 +273,6 @@ def stop_dev_environment
   if @cert_erlang_pid
     puts "Stopping Certgen(Erlang)"
     Process.kill("KILL", @cert_erlang_pid)
-  end
-  if @opscode_audit_pid
-    puts "Stopping Opscode Audit"
-    Process.kill("KILL", @opscode_audit_pid)
   end
   if @opscode_authz_pid
     puts "Stopping Opscode Authz"
@@ -450,12 +413,6 @@ namespace :dev do
         wait_for_ctrlc
       end
 
-      desc "Start Opscode Audit for testing"
-      task :opscode_audit do
-        start_opscode_audit("features")
-        wait_for_ctrlc
-      end
-
       desc "Start Opscode Authz for testing"
       task :opscode_authz do
         start_opscode_authz("features")
@@ -561,12 +518,6 @@ namespace :dev do
     desc "Start Certgen(Erlang)"
     task :cert_erlang do
       start_cert_erlang
-      wait_for_ctrlc
-    end
-
-    desc "Start Opscode Audit"
-    task :opscode_audit do
-      start_opscode_audit
       wait_for_ctrlc
     end
 
