@@ -27,9 +27,9 @@ shift
 rm -f "$STARTING_PWD/junit_output/"*
 
 if [ -f Gemfile.lock ]; then
-  bundle exec cucumber "$@" --format junit --out "$STARTING_PWD/junit_output"
+  bundle exec cucumber "$@" --format junit --out "$STARTING_PWD/junit_output" --format pretty
 else
-  cucumber "$@" --format junit --out "$STARTING_PWD/junit_output"
+  cucumber "$@" --format junit --out "$STARTING_PWD/junit_output" --format pretty
 fi
 
 RESULT=$?
