@@ -24,9 +24,7 @@ def switch_chef_branch(chef_remote_wanted, chef_branch_wanted)
     end
   
     puts "Restarting chef-server (OSS):"
-    if !(system "/etc/init.d/chef-server force-restart")
-      raise "Couldn't restart OSS chef server"
-    end
+    system "/etc/init.d/chef-server force-restart"
   end
 end
 
