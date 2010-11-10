@@ -12,7 +12,7 @@ SERVICES_TO_RESTART = {
   "opscode-chef" => ["opscode-chef", "opscode-webui"],
   "opscode-account" => ["opscode-account"],
   "opscode-authz" => ["opscode-authz"],
-  "chef" => ["chef-server", "opscode-solr"]  # platform services are bundler-ized
+  "chef" => ["chef-server", "opscode-solr", "opscode-solr-indexer", "opscode-expander"]  # platform services are bundler-ized
 }
 
 def usage
@@ -33,6 +33,33 @@ EXAMPLES:
   #{$0} --branch chef=master chef rake spec
   
   EOM
+end
+
+def wait_for_solr_to_listen(project_name)
+  max_wait = 120
+  num_waited = 0
+  
+  puts "--- #{project_name}: waiting up to #{max_wait} seconds for SOLR to start on port 8983"
+  STDOUT.sync = true
+  solr_running = false
+  while !solr_running && num_waited <= max_wait
+    begin
+      sock = TCPSocket.open('127.0.0.1', 8983)
+      sock.close
+      solr_running = true
+    rescue Errno::ECONNREFUSED
+      # it's ok..loop
+      print "."
+      sleep 1
+      num_waited += 1
+    end
+  end
+  
+  if solr_running
+    puts "\n--- #{project_name}: waited #{num_waited} seconds before SOLR was ready on port 8983"
+  else
+    puts "\n--- #{project_name}: SOLR wasn't running on port 8983 after #{max_wait} seconds... moving on."
+  end
 end
 
 # Switches to remote_wanted/branch_wanted.
@@ -85,31 +112,7 @@ def switch_branch(project_name, remote_wanted, branch_wanted)
 
       # Wait up to two minutes for SOLR to be listening on 8983.
       if service == 'opscode-solr'
-        max_wait = 120
-        num_waited = 0
-        
-        puts "--- #{project_name}: waiting up to #{max_wait} seconds for SOLR to start on port 8983"
-        STDOUT.sync = true
-        solr_running = false
-        while !solr_running && num_waited <= max_wait
-          begin
-            sock = TCPSocket.open('127.0.0.1', 8983)
-            sock.close
-            solr_running = true
-          rescue Errno::ECONNREFUSED
-            # it's ok..loop
-            print "."
-            sleep 1
-            num_waited += 1
-          end
-        end
-        
-        if solr_running
-          puts "\n--- #{project_name}: waited #{num_waited} seconds before SOLR was ready on port 8983"
-        else
-          puts "\n--- #{project_name}: SOLR wasn't running on port 8983 after #{max_wait} seconds... moving on."
-        end
-        
+        wait_for_solr_to_listen(project_name)
       end
     end
   end
