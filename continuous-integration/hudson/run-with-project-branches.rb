@@ -12,6 +12,10 @@ SERVICES_TO_RESTART = {
   "opscode-chef" => ["opscode-chef", "opscode-webui"],
   "opscode-account" => ["opscode-account"],
   "opscode-authz" => ["opscode-authz"],
+  
+  # TODO, tim 2010-11-10: Always restart opscode-solr-indexer and opscode-expander 
+  # when changing chef branches, even though it's really an either/or option
+  # (solr-indexer goes with 'master'; expander goes with 'pl-master')
   "chef" => ["chef-server", "opscode-solr", "opscode-solr-indexer", "opscode-expander"]  # platform services are bundler-ized
 }
 
