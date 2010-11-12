@@ -100,7 +100,7 @@ def switch_branch(project_name, remote_wanted, branch_wanted)
       # sometimes there are .nfs lock files. So move the directory then try 
       # to remove it.
       if service == 'opscode-solr'
-        do_system "mv /srv/opscode-solr/shared/system/solr /srv/opscode-solr/shared/system/solr.bak   # move out of the way before nuking it, as NFS may make the rm -rf not work"
+        do_system "mv /srv/opscode-solr/shared/system/solr /srv/opscode-solr/shared/system/solr.bak"
         do_system "rm -fr /srv/opscode-solr/shared/system/solr.bak"
         do_system "mkdir /srv/opscode-solr/shared/system/solr"
         Dir.chdir("/srv/opscode-solr/shared/system/solr") do |dir|
