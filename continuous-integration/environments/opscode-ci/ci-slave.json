@@ -25,7 +25,7 @@
       "hosted_page_secret":"2Qy-lnJQPRnlJXIzTl2U",
       "api_secret":"mTTHZMYQZyR72g-bGkux",
       "site":"opscode-dev"
-    }
+    },
     "apps": {
       "opscode-solr": {
         "group": "opscode",
