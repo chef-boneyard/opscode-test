@@ -19,9 +19,11 @@ directory app['deploy_to'] do
   recursive true
 end
 
+opscode_solr_revision = env['opscode-solr-revision'] || env['default-revision']
+
 deploy_revision app['id'] do
   #action :force_deploy
-  revision env['opscode-solr-revision'] || env['default-revision']
+  revision opscode_solr_revision
   repository 'git://github.com/' + (env['opscode-solr-remote'] || env['default-remote']) + '/chef.git'
   remote (env['opscode-solr-remote'] || env['default-remote'])
   ##restart_command "if test -L /etc/init.d/opscode-solr; then (/etc/init.d/opscode-solr restart && /etc/init.d/opscode-solr-indexer restart) ; fi"
@@ -30,6 +32,18 @@ deploy_revision app['id'] do
   group app['group']
   deploy_to app['deploy_to']
   migrate false
+end
+
+script "install_solr_config_#{opscode_solr_revision}" do
+  interpreter "bash"
+  user "root"
+  action :nothing
+  code <<-EOH
+    cd /srv/opscode-solr/shared/system/solr
+    tar zxvf /srv/chef/current/chef-solr/solr/solr-home.tar.gz
+  EOH
+  
+  subscribes :run, resources(:deploy => app['id']), :immediately
 end
 
 couchdb_servers = [ node ] 

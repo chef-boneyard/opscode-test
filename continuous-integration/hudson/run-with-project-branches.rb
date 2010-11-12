@@ -66,6 +66,11 @@ def wait_for_solr_to_listen(project_name)
   end
 end
 
+def do_system(project_name, cmd)
+  puts "--- #{project_name}: #{cmd}"
+  system cmd
+end
+
 # Switches to remote_wanted/branch_wanted.
 def switch_branch(project_name, remote_wanted, branch_wanted)
   branch_str = remote_wanted ? "#{remote_wanted}/#{branch_wanted}" : branch_wanted
@@ -73,24 +78,18 @@ def switch_branch(project_name, remote_wanted, branch_wanted)
   puts "+++ Switching branch for #{project_name} to #{branch_str}"
   Dir.chdir("/srv/#{project_name}/current") do |dir|
     if remote_wanted
-      cmd = "git fetch #{remote_wanted}"
-      puts "--- #{project_name}: #{cmd}"
-      if !(system cmd)
+      if !(do_system "git fetch #{remote_wanted}")
         raise "Couldn't fetch from remote #{remote_wanted}"
       end
     end
     
-    cmd = "git checkout -f #{branch_str}"
-    puts "--- #{project_name}: #{cmd}"
-    if !(system cmd)
+    if !(do_system "git checkout -f #{branch_str}")
       raise "Couldn't switch to branch #{branch_str}"
     end
     
     if File.exist?("Gemfile.lock")
-      cmd = "bundle install --deployment"
-      puts "--- #{project_name}: #{cmd}"
-      if !(system cmd)
-        raise "Couldn't run #{cmd}"
+      if !(do_system "bundle install --deployment")
+        raise "Couldn't run bundler"
       end
     end
 
@@ -101,18 +100,17 @@ def switch_branch(project_name, remote_wanted, branch_wanted)
       # sometimes there are .nfs lock files. So move the directory then try 
       # to remove it.
       if service == 'opscode-solr'
-        cmd = "mv /srv/opscode-solr/shared/system/solr /srv/opscode-solr/shared/system/solr.bak"
-        puts "--- #{project_name}: #{cmd}   # move out of the way before nuking it, as NFS may make the rm -rf not work"
-        system cmd
+        do_system "mv /srv/opscode-solr/shared/system/solr /srv/opscode-solr/shared/system/solr.bak   # move out of the way before nuking it, as NFS may make the rm -rf not work"
+        do_system "rm -fr /srv/opscode-solr/shared/system/solr.bak"
+        do_system "mkdir /srv/opscode-solr/shared/system/solr"
+        Dir.chdir("/srv/opscode-solr/shared/system/solr") do |dir|
+          puts "--- #{project_name}: Untarring SOLR home in #{dir}"
+          do_system "tar zxvf /srv/chef/current/chef-solr/solr/solr-home.tar.gz"
+        end
         
-        cmd = "rm -fr /srv/opscode-solr/shared/system/solr.bak"
-        puts "--- #{project_name}: #{cmd}"
-        system cmd
       end
       
-      cmd = "/etc/init.d/#{service} force-restart"
-      puts "--- #{project_name}: #{cmd}"
-      system cmd
+      do_system "/etc/init.d/#{service} force-restart"
 
       # Wait up to two minutes for SOLR to be listening on 8983.
       if service == 'opscode-solr'
@@ -197,7 +195,7 @@ begin
   # Run run-rake/run-cucumber.
   cmdline = ["/srv/opscode-test/current/continuous-integration/hudson/#{$rake_or_cucumber}", $project_name, *ARGV]
   cmdline_str = cmdline.map {|arg| (arg =~ /\s+/) ? "\"#{arg}\"" : arg}.join(" ")
-  puts "*** cmdline_str = #{cmdline_str}"
+  puts "*** Running test #{cmdline_str}"
   
   system *cmdline
   
