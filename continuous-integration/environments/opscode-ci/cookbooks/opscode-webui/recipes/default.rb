@@ -55,17 +55,17 @@ template "/srv/opscode-chef/current/chef-server-webui/config/environments/cucumb
     :chargify => chargify
   )
 end
-
-template "/srv/opscode-chef/current/chef-server-webui/config/environments/#{node[:app_environment]}.rb" do
-  source "opscode-webui-config.rb.erb"
-  owner "opscode"
-  group "opscode"
-  mode "644"
-  variables(
-    :int_lb_dns => env['int-lb-dns'],
-    :community_servername => env['community_servername']
-  )
-end
+#
+# template "/srv/opscode-chef/current/chef-server-webui/config/environments/#{node[:app_environment]}.rb" do
+#   source "opscode-webui-config.rb.erb"
+#   owner "opscode"
+#   group "opscode"
+#   mode "644"
+#   variables(
+#     :int_lb_dns => env['int-lb-dns'],
+#     :community_servername => env['community_servername']
+#   )
+# end
 
 template "/srv/opscode-chef/current/chef-server-webui/config.ru" do
   source "opscode-webui-config.ru.erb"
@@ -87,4 +87,4 @@ end
 runit_service "opscode-webui"
 service = resources(:service => "opscode-webui")
 service.subscribes(:restart, resources(:template => "/etc/unicorn/opscode-webui.rb"))
-service.subscribes(:restart, resources(:template => "/srv/opscode-chef/current/chef-server-webui/config/environments/#{node[:app_environment]}.rb"))
+service.subscribes(:restart, resources(:template => "/srv/opscode-chef/current/chef-server-webui/config/environments/cucumber.rb"))
