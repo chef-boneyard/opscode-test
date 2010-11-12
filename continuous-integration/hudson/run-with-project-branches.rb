@@ -88,9 +88,7 @@ def switch_branch(project_name, remote_wanted, branch_wanted)
     end
     
     if File.exist?("Gemfile.lock")
-      if !(do_system "bundle install --deployment")
-        raise "Couldn't run bundler"
-      end
+      do_system "bundle install --deployment"
     end
 
     services_to_restart = SERVICES_TO_RESTART[project_name]
