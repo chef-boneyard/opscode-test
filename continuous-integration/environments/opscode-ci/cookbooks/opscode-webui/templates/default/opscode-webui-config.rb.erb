@@ -3,6 +3,13 @@ Chef::Config[:chef_server_host_uri] = 'http://<%= @int_lb_dns %>:4001'
 Chef::Config[:web_ui_proxy_user]    = 'platform-superuser'
 Chef::Config[:web_ui_private_key]   = '/etc/opscode/webui_priv.pem'
 
+##
+## TODO: the chargify config values are environment dependent - set the environments up with chargify
+##
+Chef::Config[:chargify_hosted_page_secret] = '<%= @chargify['hosted_page_secret'] %>'
+Chef::Config[:chargify_api_secret]         = '<%= @chargify['api_secret'] %>'
+Chef::Config[:chargify_site]               = '<%= @chargify['site'] %>'
+
 Merb::Config.use do |c|
   # if you need to test single sign on with community site, change this to the common domain
   # e.g. c[:default_cookie_domain] = '.localhost.localdomain'
@@ -12,7 +19,7 @@ Merb::Config.use do |c|
   c[:default_cookie_domain] = nil
 <% end -%>
   c[:exception_details] = false
-  c[:reload_classes] = false 
+  c[:reload_classes] = false
 end
 
 Merb::Mailer.delivery_method = :sendmail

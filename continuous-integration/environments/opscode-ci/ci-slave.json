@@ -1,143 +1,148 @@
 {
-	"name": "ci-slave",
-	"run_list": [ "recipe[opscode-ci-piab]", "recipe[parkplace]", "recipe[opscode-test-repos]", "recipe[opscode-org-creator]", "recipe[nginx::piab]", "recipe[opscode-webui]", "recipe[chef-server]", "recipe[opscode-solr::opscode-expander]" ],
-	"json_class": "Chef::Role",
-	"chef_type": "role",
-	"default_attributes": {
-		"app_environment": "master",
-		"environment": {
-			"default-remote": "opscode",
-			"opscode-certificate-remote": "opscode",
-			"default-revision": "master",
-			"opscode-certificate-revision": "master",
-			"int-lb-dns": "127.0.0.1",
-			"couchdb_fqdn": "127.0.0.1",
-			"org_creator_max_workers": 1,
-			"org_creator_ready_org_depth": 10,
-			"org_creator_create_wait_ms": 2000,
-			"org_creator_create_splay_ms": 1500,
-			"community_servername": "ubuntu-ci-slave",
+  "name": "ci-slave",
+  "run_list": [ "recipe[opscode-ci-piab]", "recipe[parkplace]", "recipe[opscode-test-repos]", "recipe[opscode-org-creator]", "recipe[nginx::piab]", "recipe[opscode-webui]", "recipe[chef-server]", "recipe[opscode-solr::opscode-expander]" ],
+  "json_class": "Chef::Role",
+  "chef_type": "role",
+  "default_attributes": {
+    "app_environment": "master",
+    "environment": {
+      "default-remote": "opscode",
+      "opscode-certificate-remote": "opscode",
+      "default-revision": "master",
+      "opscode-certificate-revision": "master",
+      "int-lb-dns": "127.0.0.1",
+      "couchdb_fqdn": "127.0.0.1",
+      "org_creator_max_workers": 1,
+      "org_creator_ready_org_depth": 10,
+      "org_creator_create_wait_ms": 2000,
+      "org_creator_create_splay_ms": 1500,
+      "community_servername": "ubuntu-ci-slave",
 
-			"chef-remote": "opscode",
-			"chef-revision": "pl-master"
-		},
-		"apps": {
-			"opscode-solr": {
-				"group": "opscode",
-				"repository": "git@github.com:opscode/opscode-chef.git",
-				"server_roles": [
-					"opscode-solr"
-				],
-				"migrate": {
-					"production": false,
-					"staging": false
-				},
-				"id": "opscode-solr",
-				"type": "derderder",
-				"deploy_to": "/srv/opscode-solr",
-				"owner": "opscode"
-			},
-			"opscode-certificate": {
-				"group": "opscode",
-				"repository": "git@github.com:opscode/opscode-cert-erlang.git",
-				"server_roles": [
-					"opscode-chef",
-					"opscode-account",
-					"opscode-certificate"
-				],
-				"id": "opscode-certificate",
-				"type": "unicorn",
-				"deploy_to": "/srv/opscode-certificate",
-				"owner": "opscode"
-			},
-			"opscode-authz": {
-				"group": "opscode",
-				"repository": "git@github.com:opscode/opscode-authz.git",
-				"server_roles": [
-					"opscode-authz"
-				],
-				"migrate": {
-					"production": false,
-					"internal": false,
-					"staging": false
-				},
-				"id": "opscode-authz",
-				"type": "derderder",
-				"user": "root",
-				"deploy_to": "/srv/opscode-authz"
-			},
-			"opscode-account": {
-				"group": "opscode",
-				"server_roles": [
-					"opscode-account",
-					"opscode-webui"
-				],
-				"repository": "git@github.com:opscode/opscode-account.git",
-				"id": "opscode-account",
-				"deploy_to": "/srv/opscode-account",
-				"owner": "opscode"
-			},
-			"opscode-chef": {
-				"group": "opscode",
-				"server_roles": [
-					"opscode-chef",
-					"opscode-account",
-					"opscode-webui"
-				],
-				"repository": "git@github.com:opscode/opscode-chef.git",
-				"migrate": {
-					"production": false,
-					"staging": false
-				},
-				"id": "opscode-chef",
-				"type": "unicorn",
-				"owner": "opscode",
-				"deploy_to": "/srv/opscode-chef"
-			},
-			"parkplace": {
-				"group": "opscode",
-				"repository": "git@github.com:opscode/parkplace.git",
-				"migrate": {
-					"production": false,
-					"staging": false
-				},
-				"id": "parkplace",
-				"type": "derderder",
-				"deploy_to": "/srv/parkplace",
-				"owner": "opscode"
-			},
-			"opscode-test-repos": {
-				"group": "opscode",
-				"repository_opscode-test": "git@github.com:opscode/opscode-test.git",
-				"repository_opscode-cucumber": "git@github.com:opscode/opscode-cucumber.git",
-				"migrate": {
-					"production": false,
-					"staging": false
-				},
-				"id": "opscode-test",
-				"type": "derderder",
-				"deploy_to_opscode-test": "/srv/opscode-test",
-				"deploy_to_opscode-cucumber": "/srv/opscode-cucumber",
-				"owner": "opscode"
-			},
-			"opscode-org-creator": {
-			  "id": "opscode-org-creator",
-			  "deploy_to": "/srv/opscode-org-creator",
-			  "owner": "opscode",
-			  "group": "opscode"
-			},
-			"rabbitmq": {
-				"users": {
-					"mapper": "testing",
-					"chef": "testing"
-				},
-				"vhosts": {
-					"/chef": {
-						"mapper": "\".*\" \".*\" \".*\"",
-						"chef": "\".*\" \".*\" \".*\""
-					}
-				}
-			}
-		}
-	}
+      "chef-remote": "opscode",
+      "chef-revision": "pl-master"
+    },
+    "chargify": {
+      "hosted_page_secret":"2Qy-lnJQPRnlJXIzTl2U",
+      "api_secret":"mTTHZMYQZyR72g-bGkux",
+      "site":"opscode-dev"
+    }
+    "apps": {
+      "opscode-solr": {
+        "group": "opscode",
+        "repository": "git@github.com:opscode/opscode-chef.git",
+        "server_roles": [
+          "opscode-solr"
+        ],
+        "migrate": {
+          "production": false,
+          "staging": false
+        },
+        "id": "opscode-solr",
+        "type": "derderder",
+        "deploy_to": "/srv/opscode-solr",
+        "owner": "opscode"
+      },
+      "opscode-certificate": {
+        "group": "opscode",
+        "repository": "git@github.com:opscode/opscode-cert-erlang.git",
+        "server_roles": [
+          "opscode-chef",
+          "opscode-account",
+          "opscode-certificate"
+        ],
+        "id": "opscode-certificate",
+        "type": "unicorn",
+        "deploy_to": "/srv/opscode-certificate",
+        "owner": "opscode"
+      },
+      "opscode-authz": {
+        "group": "opscode",
+        "repository": "git@github.com:opscode/opscode-authz.git",
+        "server_roles": [
+          "opscode-authz"
+        ],
+        "migrate": {
+          "production": false,
+          "internal": false,
+          "staging": false
+        },
+        "id": "opscode-authz",
+        "type": "derderder",
+        "user": "root",
+        "deploy_to": "/srv/opscode-authz"
+      },
+      "opscode-account": {
+        "group": "opscode",
+        "server_roles": [
+          "opscode-account",
+          "opscode-webui"
+        ],
+        "repository": "git@github.com:opscode/opscode-account.git",
+        "id": "opscode-account",
+        "deploy_to": "/srv/opscode-account",
+        "owner": "opscode"
+      },
+      "opscode-chef": {
+        "group": "opscode",
+        "server_roles": [
+          "opscode-chef",
+          "opscode-account",
+          "opscode-webui"
+        ],
+        "repository": "git@github.com:opscode/opscode-chef.git",
+        "migrate": {
+          "production": false,
+          "staging": false
+        },
+        "id": "opscode-chef",
+        "type": "unicorn",
+        "owner": "opscode",
+        "deploy_to": "/srv/opscode-chef"
+      },
+      "parkplace": {
+        "group": "opscode",
+        "repository": "git@github.com:opscode/parkplace.git",
+        "migrate": {
+          "production": false,
+          "staging": false
+        },
+        "id": "parkplace",
+        "type": "derderder",
+        "deploy_to": "/srv/parkplace",
+        "owner": "opscode"
+      },
+      "opscode-test-repos": {
+        "group": "opscode",
+        "repository_opscode-test": "git@github.com:opscode/opscode-test.git",
+        "repository_opscode-cucumber": "git@github.com:opscode/opscode-cucumber.git",
+        "migrate": {
+          "production": false,
+          "staging": false
+        },
+        "id": "opscode-test",
+        "type": "derderder",
+        "deploy_to_opscode-test": "/srv/opscode-test",
+        "deploy_to_opscode-cucumber": "/srv/opscode-cucumber",
+        "owner": "opscode"
+      },
+      "opscode-org-creator": {
+        "id": "opscode-org-creator",
+        "deploy_to": "/srv/opscode-org-creator",
+        "owner": "opscode",
+        "group": "opscode"
+      },
+      "rabbitmq": {
+        "users": {
+          "mapper": "testing",
+          "chef": "testing"
+        },
+        "vhosts": {
+          "/chef": {
+            "mapper": "\".*\" \".*\" \".*\"",
+            "chef": "\".*\" \".*\" \".*\""
+          }
+        }
+      }
+    }
+  }
 }

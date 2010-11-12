@@ -15,6 +15,9 @@ require 'couchrest'
 # OPSCODE & CHEF
 require 'chef/log'
 
+# CHARGIFY
+require 'chargify'
+
 #merb_gems_version = "1.0.15"
 #dependency "merb-haml", merb_gems_version
 #dependency "merb-assets", merb_gems_version
@@ -42,7 +45,7 @@ Merb::Config.use do |c|
   # so enable template reloading by default.
   c[:reload_templates] = false
   c[:reload_classes] = false
-  
+
   # only set default log level if it's not been set by 'opscode-account'
   c[:log_level] = :debug unless c[:log_level]
 
@@ -75,7 +78,7 @@ couchrest.default_database = account_database
 couchrest_internal = CouchRest.new(couchdb_uri)
 couchrest_internal.database!(internal_database)
 couchrest_internal.default_database = internal_database
-  
+
 require 'mixlib/authorization'
 Mixlib::Authorization::Config.couchdb_uri = couchdb_uri
 Mixlib::Authorization::Config.default_database = couchrest.default_database
