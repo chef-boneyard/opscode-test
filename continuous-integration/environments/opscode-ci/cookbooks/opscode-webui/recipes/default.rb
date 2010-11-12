@@ -37,10 +37,23 @@ gems.each do |name,version|
   end
 end
 
+chargify = node["chargify"]
 env = node["environment"]
 
 link "/etc/opscode/webui_priv.pem" do
   to "/srv/opscode-chef/current/chef-server-webui/lib/webui_priv.pem"
+end
+
+template "/srv/opscode-chef/current/chef-server-webui/config/environments/cucumber.rb" do
+  source "opscode-webui-config.rb.erb"
+  owner "opscode"
+  group "opscode"
+  mode "644"
+  variables(
+    :int_lb_dns => env['int-lb-dns'],
+    :community_servername => env['community_servername'],
+    :chargify => chargify
+  )
 end
 
 template "/srv/opscode-chef/current/chef-server-webui/config/environments/#{node[:app_environment]}.rb" do

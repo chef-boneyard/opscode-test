@@ -11,7 +11,7 @@ include_recipe "unicorn"
 include_recipe "chef"
 
 include_recipe "opscode-account::library"
-
+chargify = node["chargify"]
 env = node["environment"]
 
 couchdb_servers = [ node ]
@@ -31,6 +31,16 @@ template "/srv/opscode-account/current/config/init.rb" do
     :rabbitmq_host => audit_servers[0],
     :rabbitmq_user => "chef",
     :rabbitmq_password => node["apps"]["rabbitmq"]["users"]["chef"]
+  )
+end
+
+template "/srv/opscode-account/current/config/environments/cucumber.rb" do
+  source "opscode-account-config.rb.erb"
+  owner "opscode"
+  group "opscode"
+  mode "644"
+  variables(
+    :chargify => chargify
   )
 end
 
