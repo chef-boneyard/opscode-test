@@ -43,7 +43,7 @@ def wait_for_solr_to_listen(project_name)
   max_wait = 120
   num_waited = 0
   
-  puts "--- #{project_name}: waiting up to #{max_wait} seconds for SOLR to start on port 8983"
+  puts "--- waiting up to #{max_wait} seconds for SOLR to start on port 8983"
   STDOUT.sync = true
   solr_running = false
   while !solr_running && num_waited <= max_wait
@@ -60,14 +60,14 @@ def wait_for_solr_to_listen(project_name)
   end
   
   if solr_running
-    puts "\n--- #{project_name}: waited #{num_waited} seconds before SOLR was ready on port 8983"
+    puts "\n--- waited #{num_waited} seconds before SOLR was ready on port 8983"
   else
-    puts "\n--- #{project_name}: SOLR wasn't running on port 8983 after #{max_wait} seconds... moving on."
+    puts "\n--- SOLR wasn't running on port 8983 after #{max_wait} seconds... moving on."
   end
 end
 
-def do_system(project_name, cmd)
-  puts "--- #{project_name}: #{cmd}"
+def do_system(cmd)
+  puts "--- #{cmd}"
   system cmd
 end
 
@@ -104,7 +104,7 @@ def switch_branch(project_name, remote_wanted, branch_wanted)
         do_system "rm -fr /srv/opscode-solr/shared/system/solr.bak"
         do_system "mkdir /srv/opscode-solr/shared/system/solr"
         Dir.chdir("/srv/opscode-solr/shared/system/solr") do |dir|
-          puts "--- #{project_name}: Untarring SOLR home in #{dir}"
+          puts "--- Untarring SOLR home in #{dir}"
           do_system "tar zxvf /srv/chef/current/chef-solr/solr/solr-home.tar.gz"
         end
         
