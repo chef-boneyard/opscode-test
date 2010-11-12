@@ -107,7 +107,7 @@ def switch_branch(project_name, remote_wanted, branch_wanted)
           puts "--- Untarring SOLR home in #{dir}"
           do_system "tar zxvf /srv/chef/current/chef-solr/solr/solr-home.tar.gz"
         end
-        
+        do_system "chown -R opscode:opscode /srv/opscode-solr/shared/system/solr"
       end
       
       do_system "/etc/init.d/#{service} force-restart"

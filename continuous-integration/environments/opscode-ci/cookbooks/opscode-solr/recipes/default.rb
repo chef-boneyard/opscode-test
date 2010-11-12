@@ -36,7 +36,8 @@ end
 
 script "install_solr_config_#{opscode_solr_revision}" do
   interpreter "bash"
-  user "root"
+  user "opscode"
+  group "opscode"
   action :nothing
   code <<-EOH
     cd /srv/opscode-solr/shared/system/solr
