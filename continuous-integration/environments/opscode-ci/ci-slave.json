@@ -4,7 +4,7 @@
   "json_class": "Chef::Role",
   "chef_type": "role",
   "default_attributes": {
-    "app_environment": "master",
+    "app_environment": "cucumber",
     "environment": {
       "default-remote": "opscode",
       "opscode-certificate-remote": "opscode",
