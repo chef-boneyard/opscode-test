@@ -1,0 +1,25 @@
+#
+# this config file is managed by chef, are you?
+#
+$: << File.expand_path(File.join(File.dirname(__FILE__), "lib"))
+Dir.chdir File.expand_path(File.join(File.dirname(__FILE__)))
+__DIR__ = Dir.getwd
+
+require 'rubygems'
+require 'merb-core'
+require 'chef'
+
+Merb::Config.setup(:merb_root   => File.expand_path(File.dirname(__FILE__)),
+                   :fork_for_class_load => false,
+                   :environment => '<%= node[:app_environment] %>',
+                   :init_file => File.expand_path(File.join(File.dirname(__FILE__), "config", "init.rb")))
+Merb.environment = Merb::Config[:environment]
+Merb.root = Merb::Config[:merb_root]
+Merb::BootLoader.run
+
+# Uncomment if your app is mounted at a suburi
+#if prefix = ::Merb::Config[:path_prefix]
+#  use Merb::Rack::PathPrefix, prefix
+#end
+
+run Merb::Rack::Application.new

@@ -44,6 +44,13 @@ template "/srv/opscode-account/current/config/environments/cucumber.rb" do
   )
 end
 
+template "/srv/opscode-account/current/config.ru" do
+  source "opscode-account-config.ru.erb"
+  owner "opscode"
+  group "opscode"
+  mode "644"
+end
+
 runit_service "opscode-account" do
   only_if !File.exist?("/srv/opscode-account/current/bin/opscode-account")
 end
