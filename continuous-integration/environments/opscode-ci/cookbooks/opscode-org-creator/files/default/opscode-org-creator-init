@@ -1,6 +1,3 @@
 #!/bin/sh
-export GEM_HOME=/srv/localgems
-export GEM_PATH=/srv/localgems
-export PATH="/srv/localgems/bin:$PATH"
 cd /srv/opscode-org-creator/current/rel/org_app
 ./bin/org_app $1

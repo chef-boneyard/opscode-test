@@ -24,7 +24,8 @@
       {max_workers, <%= @max_workers %>},
       {org_create_wait, <%= @org_create_wait_ms %>}, 
       {org_create_splay, <%= @org_create_splay_ms %>}, 
-      {bootstraptool_executable, "/srv/opscode-account/current/bin/bootstraptool"},
+      {account_system_dir, "/srv/opscode-account/current"},
+      {bootstraptool_executable, "bin/bootstraptool"},
       {account_service_base_url, "http://localhost:4042"},
       {superuser_name, "platform-superuser"}, 
       {superuser_key_path, "/tmp/opscode-platform-test/superuser.pem"}
