@@ -1,0 +1,118 @@
+GIT
+  remote: git://github.com/opscode/chef.git
+  revision: c6ab55d074aa51b45fd7807e46f54453f42ba025
+  branch: pl-master
+  specs:
+    chef (0.9.13)
+      bunny (>= 0.6.0)
+      erubis
+      extlib
+      highline
+      json (>= 1.4.4, <= 1.4.6)
+      mixlib-authentication (>= 1.1.0)
+      mixlib-cli (>= 1.1.0)
+      mixlib-config (>= 1.1.2)
+      mixlib-log (>= 1.2.0)
+      moneta
+      ohai (>= 0.5.7)
+      rest-client (>= 1.0.4, < 1.7.0)
+      uuidtools
+    chef-solr (0.9.13)
+      chef (= 0.9.13)
+      libxml-ruby (>= 1.1.3)
+      uuidtools (>= 2.0.0)
+
+GIT
+  remote: git://github.com/opscode/couchrest.git
+  revision: 7dc3fa25e678c602641e29908fe9e31fbc7388df
+  specs:
+    couchrest (0.23)
+      json (>= 1.1.2)
+      mime-types (>= 1.15)
+      rest-client (>= 0.5)
+
+GIT
+  remote: git@github.com:opscode/aws-s3.git
+  revision: c2665dba96b203c036d4fe917cc4beb02e94f8ac
+  specs:
+    aws-s3 (0.6.2.1272580952)
+      builder
+      mime-types
+      xml-simple
+
+GIT
+  remote: git@github.com:opscode/mixlib-authorization.git
+  revision: 6d73e3d77850e379e9ffcad62f62b4581a8111a5
+  branch: master
+  specs:
+    mixlib-authorization (1.2.0)
+      mixlib-authentication
+      mixlib-config
+      mixlib-log
+
+GIT
+  remote: git@github.com:opscode/mixlib-localization.git
+  revision: fb6b876bf17a498dec5f3049ff42fd01bf514cce
+  specs:
+    mixlib-localization (1.0.1)
+      mixlib-log
+
+GIT
+  remote: git@github.com:opscode/opscode-billing
+  revision: ef20537128e1ca3c2c810988745e401a568c6858
+  specs:
+    opscode-billing (0.1.0)
+
+GEM
+  remote: http://rubygems.org/
+  specs:
+    abstract (1.0.0)
+    builder (3.0.0)
+    bunny (0.6.0)
+    coderay (0.9.6)
+    erubis (2.6.6)
+      abstract (>= 1.0.0)
+    extlib (0.9.15)
+    highline (1.6.1)
+    json (1.4.6)
+    libxml-ruby (1.1.3)
+    mime-types (1.16)
+    mixlib-authentication (1.1.4)
+      mixlib-log
+    mixlib-cli (1.2.0)
+    mixlib-config (1.1.2)
+    mixlib-log (1.2.0)
+    moneta (0.6.0)
+    ohai (0.5.8)
+      extlib
+      json (>= 1.4.4, <= 1.4.6)
+      mixlib-cli
+      mixlib-config
+      mixlib-log
+      systemu
+    rake (0.8.7)
+    rest-client (1.6.1)
+      mime-types (>= 1.16)
+    rspec (1.3.1)
+    systemu (1.2.0)
+    uuidtools (2.1.1)
+    xml-simple (1.0.12)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  aws-s3!
+  chef!
+  chef-solr!
+  coderay
+  couchrest!
+  json (= 1.4.6)
+  libxml-ruby (= 1.1.3)
+  mixlib-authorization!
+  mixlib-cli
+  mixlib-localization!
+  opscode-billing!
+  rake
+  rest-client (~> 1.6.0)
+  rspec (~> 1.0)
