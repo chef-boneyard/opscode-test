@@ -1,10 +1,3 @@
-require 'fileutils'
-require 'tempfile'
-
-require 'chef/shell_out'
-require 'chef/mixin/shell_out'
-
-include Chef::Mixin::ShellOut
 
 PLATFORM_TEST_DIR = '/tmp/opscode-platform-test/'
 
@@ -253,9 +246,56 @@ def check_platform_files
   end
 end
 
+task :load_deps do
+  require 'pp'
+  require 'tmpdir'
+  require 'fileutils'
+  require 'tempfile'
+
+  require 'rubygems'
+  require 'chef'
+  require 'chef/config'
+  require 'chef/client'
+  require 'chef/streaming_cookbook_uploader'
+  require 'chef/shell_out'
+  require 'chef/mixin/shell_out'
+
+  include Chef::Mixin::ShellOut
+
+  require 'couchrest'
+  # For couchdb manual replication.
+  require File.join(OPSCODE_PROJECT_DIR, 'chef', OPSCODE_PROJECT_SUFFIX, 'features', 'support', 'couchdb_replicate')
+
+  OPCODE_COMMUNITY_PATH = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-community-site"))
+
+  couchrest = CouchRest.new(Chef::Config[:couchdb_url])
+  couchrest.database!('opscode_account')
+  couchrest.default_database = 'opscode_account'
+
+  couchrest_int = CouchRest.new(Chef::Config[:couchdb_url])
+  couchrest_int.database!('opscode_account_internal')
+  couchrest_int.default_database = 'opscode_account_internal'
+
+  require 'mixlib/authorization'
+  Mixlib::Authorization::Config.couchdb_uri = Chef::Config[:couchdb_url]
+  Mixlib::Authorization::Config.default_database = couchrest.default_database
+  Mixlib::Authorization::Config.internal_database = couchrest_int.default_database
+  Mixlib::Authorization::Config.private_key = OpenSSL::PKey::RSA.new(File.read('/etc/opscode/azs.pem'))
+  Mixlib::Authorization::Config.authorization_service_uri = 'http://localhost:5959'
+  Mixlib::Authorization::Config.certificate_service_uri = "http://localhost:5140/certificates"
+  require 'mixlib/authorization/auth_join'
+  require 'mixlib/authorization/models'
+
+  if ENV["DEBUG"]=="true"
+    Chef::Log.level = :debug
+  else
+    Chef::Log.level = :info
+  end
+end
+
 namespace :setup do
   desc "Setup the test environment, including creating the organization, users, and uploading the fixture cookbooks"
-  task :test =>[:check_platform_files] do
+  task :test =>[:load_deps, :check_platform_files] do
     setup_test_harness
   end
 
@@ -283,6 +323,7 @@ namespace :setup do
     create_credentials_dir
     create_local_test
   end
+
 end
 
 task :check_platform_files do
@@ -309,4 +350,9 @@ namespace :cleanup do
   task :cookbooks do
     cleanup_cookbooks
   end
+end
+
+# This makes the setup and cleanup tasks load the required libs
+Rake::Task.tasks.select { |t| t.name[/(setup|cleanup)/] }.each do |t|
+  task(t.name => :load_deps)
 end
