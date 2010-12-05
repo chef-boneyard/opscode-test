@@ -24,4 +24,4 @@ gem "aws-s3", :git => 'git@github.com:opscode/aws-s3.git', :require => 'aws/s3'
 # Work around bug in libxml-ruby causing invalid ELF header
 gem "libxml-ruby", "1.1.3"
 
-gem "rspec", "~> 1.0", :require => "spec"
+gem "rspec", "1.3.0", :require => "spec"
