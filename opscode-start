@@ -8,29 +8,28 @@ require 'mixlib/cli'
 class OpscodeStart
   include Mixlib::CLI
   include Appscript
-  
+
   option :community,
     :short => '-c',
     :long => '--community',
     :boolean => true,
     :description => 'Start the community site'
-    
+
   option :environment,
     :short => '-e ENV',
     :long => '--environment ENV',
     :default => 'test',
     :description => 'Set the environment (test|dev), defaults to test'
-  
+
   def run
     @srcdir = File.expand_path(File.dirname(__FILE__))
-    @delay  = 1
-    
+
     @base_cmd = case config[:environment]
-      when 'test' 
+      when 'test'
         "cd #{@srcdir} && rake dev:features:start:"
       when 'dev'
         "cd #{@srcdir} && rake dev:start:"
-      else 
+      else
         puts "--environment must be set to either 'test' or 'dev'"
         puts @opt_parser
         exit 1
@@ -39,46 +38,49 @@ class OpscodeStart
     tasks = {}
     tasks['platform'] = %w{couchdb rabbitmq parkplace chef_solr cert_erlang opscode_authz opscode_account opscode_org_creator opscode_expander chef_server chef_server_webui nginx}
     tasks['community']= tasks['platform'] + %w{community:mysql community:solr community:webui}
-    
+
     services = config[:community] ? 'community' : 'platform'
     STDOUT.puts "Starting services:"
     pp service_list = tasks[services]
     start_services(service_list)
   end
-  
+
   def auth_up
-    system("sudo echo")  
+    system("sudo -v")
   end
-  
+
   def create_tab
+    @window.activate
     app("System Events").application_processes["Terminal.app"].keystroke("t", :using=>:command_down)
   end
-  
-  def activate_terminal
-    app("/Applications/Utilities/Terminal.app").windows.first.activate  
+
+  def terminal_app
+    @terminal_app ||= app("Terminal")
+  end
+
+  def create_term_window
+    terminal_app.windows.first.activate
     app("System Events").application_processes["Terminal.app"].keystroke("n", :using=>:command_down)
-    app('Terminal')  
+    @window = terminal_app.windows.first.get
   end
-  
-  def start_service_in_last_tab(window,service)
+
+  def start_service_in_tab(service, tab)
     # use xterm escape codes to set the tab title to the service running in the tab.
-    cmd = 
-      "unset PROMPT_COMMAND; echo -e \"\\033]0;#{service}\\007\"; " + 
-      @base_cmd +
-      service
-  
-    app('Terminal').do_script(cmd, :in => window.tabs.last.get)
-    sleep @delay  
+    cmd = "unset PROMPT_COMMAND; echo -e \"\\033]0;#{service}\\007\"; #{@base_cmd}#{service}"
+    app('Terminal').do_script(cmd, :in => @window.tabs[tab].get)
   end
-  
+
   def start_services(services)
     auth_up
-    term = activate_terminal
-    window = term.windows.first.get
-  
+    create_term_window
+
+    tab_index = 1 # applescript indexes from 1 instead of 0
+
+    (services.size - 1).times { create_tab }
+
     services.each do |service|
-      create_tab
-      start_service_in_last_tab(window,service)
+      start_service_in_tab(service, tab_index)
+      tab_index += 1
     end
   end
 end
