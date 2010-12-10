@@ -18,7 +18,7 @@
 # limitations under the License.
 #
 
-include_recipe "erlang"
+include_recipe "erlang_binary"
 
 app = node["apps"]["parkplace"]
 env = node["environment"]

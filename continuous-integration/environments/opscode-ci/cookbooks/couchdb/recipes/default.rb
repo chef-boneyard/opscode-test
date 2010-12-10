@@ -18,7 +18,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include_recipe "erlang"
+include_recipe "erlang_binary"
 include_recipe "build-essential"
 
 if node[:platform_version].to_f < 9.10

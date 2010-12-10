@@ -10,5 +10,5 @@ recipe            "opscode-certificate", "Installs Opscode Certificate service"
 depends           "opscode-base"
 depends           "opscode-github"
 depends           "runit"
-depends           "erlang"
+depends           "erlang_binary"
 

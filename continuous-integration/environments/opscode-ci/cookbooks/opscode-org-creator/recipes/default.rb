@@ -6,7 +6,7 @@
 # Copyright 2010, Opscode, Inc.
 #
 
-include_recipe "erlang" 
+include_recipe "erlang_binary" 
 include_recipe "opscode-base"
 include_recipe "opscode-org-creator::library"
 

@@ -18,7 +18,7 @@
 # limitations under the License.
 #
 
-include_recipe "erlang"
+include_recipe "erlang_binary"
 
 group "rabbitmq" do
   gid 5050

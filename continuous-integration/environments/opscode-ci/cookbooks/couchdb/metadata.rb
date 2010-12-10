@@ -12,7 +12,8 @@ version           "0.7"
 recipe            "couchdb", "Installs CouchDB 0.9.0 from tarball"
 recipe            "couchdb::master", "Installs CouchDB"
 depends           "runit"
-depends           "erlang"
+depends           "erlang_binary"
+depends           "build-essential"
 depends           "perl"
 
 attribute "couchdb/dir",

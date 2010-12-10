@@ -7,7 +7,7 @@ Installs authz directly from source.
 EOH
 version           "0.7"
 recipe            "opscode-authz", "Installs Opscode authz from source"
-depends           "erlang"
+depends           "erlang_binary"
 depends           "opscode-base"
 depends           "opscode-github"
 depends           "runit"

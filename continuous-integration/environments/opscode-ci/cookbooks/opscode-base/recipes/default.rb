@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-include_recipe "erlang"
+include_recipe "erlang_binary"
 include_recipe "runit"
 
 execute "add_opscode_gemrepo" do

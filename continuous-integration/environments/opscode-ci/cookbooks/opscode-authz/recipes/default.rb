@@ -5,7 +5,7 @@
 #
 # Copyright 2009, Opscode, Inc.
 
-include_recipe "erlang"
+include_recipe "erlang_binary"
 include_recipe "opscode-base"
 include_recipe "opscode-authz::piab-dbs-setup-test"
 
