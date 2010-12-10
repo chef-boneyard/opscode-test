@@ -68,7 +68,7 @@ bash "recompile_authz" do
   cwd "/srv/opscode-authz"
   code <<-EOH
     export HOME=/tmp
-    cd /srv/opscode-authz/current/
+    cd /srv/opscode-authz/
     make clean
     make
   EOH
