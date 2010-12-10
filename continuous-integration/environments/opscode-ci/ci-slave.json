@@ -55,22 +55,6 @@
         "deploy_to": "/srv/opscode-certificate",
         "owner": "opscode"
       },
-      "opscode-authz": {
-        "group": "opscode",
-        "repository": "git@github.com:opscode/opscode-authz.git",
-        "server_roles": [
-          "opscode-authz"
-        ],
-        "migrate": {
-          "production": false,
-          "internal": false,
-          "staging": false
-        },
-        "id": "opscode-authz",
-        "type": "derderder",
-        "user": "root",
-        "deploy_to": "/srv/opscode-authz"
-      },
       "opscode-account": {
         "group": "opscode",
         "server_roles": [

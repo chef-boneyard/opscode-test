@@ -10,81 +10,69 @@ include_recipe "opscode-base"
 include_recipe "opscode-authz::piab-dbs-setup-test"
 
 env = node["environment"]
-app = node["apps"]["opscode-authz"]
+app = {
+  'id' => "opscode-authz",
+  'deploy_to' => "/srv/opscode-authz",
+  'owner' => 'opscode',
+  'group' => 'opscode'
+}
 
-runit_service "opscode-authz"
-
-execute "echo authz_shut_down_service" do
-  notifies :stop, resources(:service => "opscode-authz")
-  not_if do File.exist?("/srv/opscode-authz/current/start.sh") end
-end
-
-directory app['deploy_to'] do
-  owner app['owner']
-  group app['group']
-  mode '0755'
-  recursive true
-end
+# BUG in the git provider prevents us from cloning the repo into an
+# existing directory :(
+# directory app['deploy_to'] do
+#   owner app['owner']
+#   group app['group']
+#   mode '0755'
+#   recursive true
+# end
 
 authz_rev = env['opscode-authz-revision'] || env['default-revision']
 
 ## Then, deploy
-deploy_revision app['id'] do
-  #action :force_deploy
+myrevision = env['opscode-authz-revision'] || env['default-revision']
+
+git "opscode-authz" do
+
+  action(:sync)
+
+  destination "/srv/opscode-authz"
   revision env['opscode-authz-revision'] || env['default-revision']
   repository 'git@github.com:' + (env['opscode-authz-remote'] || env['default-remote']) + '/opscode-authz.git'
   remote (env['opscode-authz-remote'] || env['default-remote'])
-  restart_command "if test -L /etc/init.d/opscode-authz; then /etc/init.d/opscode-authz restart; fi"
-  symlink_before_migrate Hash.new
-  user app['owner']
-  group app['group']
-  deploy_to app['deploy_to']
-  migrate false
-  before_symlink do
-    bash "finalize_update" do
-      user "root"
-      #user "opscode"
-      cwd "#{release_path}"
-      code <<-EOH
-            export GEM_HOME=/srv/localgems
-            export GEM_PATH=/srv/localgems
-            export PATH=/srv/localgems/bin:$PATH
-            export HOME=/tmp
-            cd #{release_path} && make clean  && touch made-clean
-            cd #{release_path} && make && touch made-it
-      EOH
-
-    end
-
-  end
+  #user app['owner']
+  #group app['group']
+  notifies :run, "execute[git-reset-hard-authz-code]", :immediately
+  notifies(:run, "bash[recompile_authz]", :immediately)
 end
 
-couchdb_servers = [ node ]
+execute "git-reset-hard-authz-code" do
+  command "git reset --hard"
+  cwd "/srv/opscode-authz"
+end
+
+couchdb_authz_server = 'localhost'
+
+template "/srv/opscode-authz/authz.config" do
+  source "authz.config.erb"
+  owner "opscode"
+  group "opscode"
+  mode "644"
+  variables(:couchdb_authz_server => couchdb_authz_server)
+  notifies(:restart, "service[opscode-authz]")
+end
 
 bash "recompile_authz" do
   #run "no"
   action :nothing
   user "root"
-  cwd "/srv/opscode-authz/current"
+  cwd "/srv/opscode-authz"
   code <<-EOH
-    export GEM_HOME=/srv/localgems
-    export GEM_PATH=/srv/localgems
-    export PATH=/srv/localgems/bin:$PATH
     export HOME=/tmp
-    cd /srv/opscode-authz/current/ && make
-    /etc/init.d/opscode-authz restart
+    cd /srv/opscode-authz/current/
+    make clean
+    make
   EOH
+  notifies(:restart, "service[opscode-authz]")
 end
 
-template "/srv/opscode-authz/current/deps/opscode-authz-internal/lib/opscode_authz/include/auth.hrl" do
-  source "auth.hrl.erb"
-  owner "opscode"
-  group "opscode"
-  mode "644"
-  variables(
-    :couchdb_server => couchdb_servers[0],
-    :int_lb_dns => env['int-lb-dns']
-  )
-  notifies :run, resources(:bash => "recompile_authz"), :immediately
-end
-
+runit_service "opscode-authz"
