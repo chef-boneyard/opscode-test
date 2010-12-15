@@ -9,7 +9,16 @@ export GEM_HOME=/srv/localgems
 export GEM_PATH=/srv/localgems
 export PATH=/srv/localgems/bin:$PATH
 
-cd /srv/"$1"/current
+# Try the standard .../current directory then the one without .../current.
+# If neither are found, print an error and bomb out.
+if [ -d "/srv/$1/current" ]; then
+    cd /srv/"$1"/current
+else if [ -d "/srv/$1" ]; then
+    cd /srv/"$1"
+else
+    echo Cannot find directory in /srv for project: $1 1>&2
+    exit 1
+end    
 shift
 
 # make sure the output directory exists..
