@@ -17,15 +17,3 @@ execute "echo cert_shut_down_service" do
   not_if do File.exist?("/srv/opscode-certificate/current/start.sh") end
 end
 
-#r = resources(:service => "opscode-certificate")
-#unicorn_config "/etc/unicorn/opscode-certificate.rb" do
-#  listen 5140 => { :backlog => 1024, :tcp_nodelay => true }
-#  worker_timeout 3600
-#  preload_app false
-#  worker_processes node.cpu.total.to_i * 4
-#  owner "opscode"
-#  group "opscode"
-#  mode "0644"
-#  notifies :restart, r
-#end
-

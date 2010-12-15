@@ -17,7 +17,7 @@
       "org_creator_create_wait_ms": 2000,
       "org_creator_create_splay_ms": 1500,
       "community_servername": "ubuntu-ci-slave",
-
+      
       "chef-remote": "opscode",
       "chef-revision": "pl-master"
     },
@@ -40,19 +40,6 @@
         "id": "opscode-solr",
         "type": "derderder",
         "deploy_to": "/srv/opscode-solr",
-        "owner": "opscode"
-      },
-      "opscode-certificate": {
-        "group": "opscode",
-        "repository": "git@github.com:opscode/opscode-cert-erlang.git",
-        "server_roles": [
-          "opscode-chef",
-          "opscode-account",
-          "opscode-certificate"
-        ],
-        "id": "opscode-certificate",
-        "type": "unicorn",
-        "deploy_to": "/srv/opscode-certificate",
         "owner": "opscode"
       },
       "opscode-account": {

@@ -9,7 +9,12 @@
 include_recipe "opscode-base"
 
 env = node["environment"]
-app = node["apps"]["opscode-certificate"]
+app = {
+  'deploy_to' => '/srv/opscode-certificate',
+  'owner' => 'opscode',
+  'group' => 'opscode',
+  'id' => 'opscode-certificate'
+}
 
 directory app['deploy_to'] do
   owner app['owner']
@@ -33,18 +38,19 @@ end
 
 #r = resources(:service => "opscode-certificate")
 deploy_revision app['id'] do
+  use_remote = (env['opscode-certificate-remote'] || env['default-remote'])
+  
   #action :force_deploy
-  #revision env['certificate-revision']
   revision env['opscode-certificate-revision'] || env['default-revision']
-  #repository app['repository']
-  repository 'git@github.com:' + (env['opscode-certificate-remote'] || env['default-remote']) + '/opscode-cert-erlang.git'
-  remote (env['opscode-certificate-remote'] || env['default-remote'])
+  repository "git@github.com:#{use_remote}/opscode-cert-erlang.git"
+  remote use_remote
   restart_command "if test -L /etc/sv/opscode-certificate; then sudo /etc/init.d/opscode-certificate restart; fi"
   symlink_before_migrate Hash.new
   user app['owner']
   group app['group']
   deploy_to app['deploy_to']
   migrate false
+
   before_symlink do
     bash "finalize_update" do
       user "root"
@@ -61,7 +67,7 @@ deploy_revision app['id'] do
       EOH
     end
   end
-  #notifies :restart resources(:service => "opscode-certificate")
-  #notifies :restart, r
+  
+  notifies :restart, "service[opscode-certificate]"
 end
 
