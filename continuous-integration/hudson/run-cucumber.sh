@@ -22,7 +22,7 @@ killall couchjs
 # If neither are found, print an error and bomb out.
 if [ -d "/srv/$1/current" ]; then
     cd /srv/"$1"/current
-else if [ -d "/srv/$1" ]; then
+elif [ -d "/srv/$1" ]; then
     cd /srv/"$1"
 else
     echo Cannot find directory in /srv for project: $1 1>&2
