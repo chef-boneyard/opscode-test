@@ -18,9 +18,16 @@ echo "Existing couchjs processes:"
 ps uxaw | grep couchjs | grep -v grep
 killall couchjs
 
-
-
-cd /srv/"$1"/current
+# Try the standard .../current directory then the one without .../current.
+# If neither are found, print an error and bomb out.
+if [ -d "/srv/$1/current" ]; then
+    cd /srv/"$1"/current
+else if [ -d "/srv/$1" ]; then
+    cd /srv/"$1"
+else
+    echo Cannot find directory in /srv for project: $1 1>&2
+    exit 1
+end    
 shift
 
 # Remove all the junit output files first so no stale results are around.
