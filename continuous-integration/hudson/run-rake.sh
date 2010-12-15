@@ -18,7 +18,7 @@ elif [ -d "/srv/$1" ]; then
 else
     echo Cannot find directory in /srv for project: $1 1>&2
     exit 1
-end    
+fi    
 shift
 
 # make sure the output directory exists..
