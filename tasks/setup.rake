@@ -330,6 +330,11 @@ task :check_platform_files do
   check_platform_files
 end
 
+desc "Charge like a cowboy into the battlefield"
+task :leeroy_jenkins do
+  Rake::Task['cleanup:cleanup'].execute
+end
+
 namespace :cleanup do
   desc "Delete all chef integration & replica databases"
   task :cleanup do
@@ -353,6 +358,6 @@ namespace :cleanup do
 end
 
 # This makes the setup and cleanup tasks load the required libs
-Rake::Task.tasks.select { |t| t.name[/(setup|cleanup)/] }.each do |t|
+Rake::Task.tasks.select { |t| t.name[/(setup|cleanup|leeroy_jenkins)/] }.each do |t|
   task(t.name => :load_deps)
 end
