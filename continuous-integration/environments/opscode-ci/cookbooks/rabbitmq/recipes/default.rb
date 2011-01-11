@@ -32,30 +32,23 @@ user "rabbitmq" do
   shell "/bin/sh"
 end
 
-#unless FileTest.exists?("/usr/local/lib/erlang/lib/rabbitmq_server-1.6.0/sbin/rabbitmq-server")
-unless FileTest.exists?("/usr/local/lib/erlang/lib/rabbitmq_server-1.7.0/sbin/rabbitmq-server")
-
-  #install rabbitmq-server (build from source)
-
-  #remote_file "/usr/local/lib/erlang/lib/rabbitmq-server-generic-unix-1.6.0.tar.gz" do
-  #  source "rabbitmq-server-generic-unix-1.6.0.tar.gz"
-  #end
-
-  remote_file "/usr/local/lib/erlang/lib/rabbitmq-server-generic-unix-1.7.0.tar.gz" do
-    source "http://www.rabbitmq.com/releases/rabbitmq-server/v1.7.0/rabbitmq-server-generic-unix-1.7.0.tar.gz"
+unless FileTest.exists?("/usr/local/lib/erlang/lib/rabbitmq_server-2.2.0/sbin/rabbitmq-server")
+  remote_file "/usr/local/lib/erlang/lib/rabbitmq-server-generic-unix-2.2.0.tar.gz" do
+    source "http://www.rabbitmq.com/releases/rabbitmq-server/v2.2.0/rabbitmq-server-generic-unix-2.2.0.tar.gz"
   end
 
   script "install_rabbitmq" do
     interpreter "bash"
     user "root"
-    cwd "/usr/local/lib/erlang/lib/"
+    cwd "/usr/local/lib/erlang/lib"
     code <<-EOH
       export HOME=/tmp
-      tar -zxf rabbitmq-server-generic-unix-1.7.0.tar.gz
+      tar -zxf rabbitmq-server-generic-unix-2.2.0.tar.gz
     EOH
   end
 
 end
+
 
 %w{/srv/rabbitmq /srv/rabbitmq/db /srv/rabbitmq/log}.each do |d|
   directory d do
@@ -67,7 +60,7 @@ end
 %w{rabbitmqctl rabbitmq-server rabbitmq-multi rabbitmq-env}.each do |script|
   link "/usr/local/sbin/#{script}" do
    #to "/usr/local/lib/erlang/lib/rabbitmq_server-1.6.0/sbin/#{script}" 
-   to "/usr/local/lib/erlang/lib/rabbitmq_server-1.7.0/sbin/#{script}" 
+   to "/usr/local/lib/erlang/lib/rabbitmq_server-2.2.0/sbin/#{script}" 
    action :create
   end
 end
