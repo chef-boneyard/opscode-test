@@ -11,7 +11,7 @@ end
 
 def start_community_solr
   @community_solr_pid = fork do
-    Dir.chdir(OPCODE_COMMUNITY_PATH) do
+    Dir.chdir(OPSCODE_COMMUNITY_PATH) do
       exec "rake solr:start:foreground"
     end
   end
@@ -20,7 +20,7 @@ end
 def start_community_webui(type="normal")
   set_rails_env_for_type(type)
   @community_webui_pid = fork do
-    Dir.chdir(OPCODE_COMMUNITY_PATH) do
+    Dir.chdir(OPSCODE_COMMUNITY_PATH) do
       exec "script/server thin"
     end
   end

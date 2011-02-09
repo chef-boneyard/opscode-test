@@ -2,6 +2,8 @@
 
 $: << File.join(File.dirname(__FILE__), '..', 'opscode-chef', 'chef', 'lib')
 
+OPSCODE_COMMUNITY_PATH = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-community-site"))
+
 if File.exists?(File.dirname(__FILE__) + "/../opscode-test")
   # local dev environment
   OPSCODE_PROJECT_DIR = File.expand_path(File.dirname(__FILE__) + '/../')

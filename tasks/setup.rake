@@ -266,8 +266,6 @@ task :load_deps do
   # For couchdb manual replication.
   require File.join(OPSCODE_PROJECT_DIR, 'chef', OPSCODE_PROJECT_SUFFIX, 'features', 'support', 'couchdb_replicate')
 
-  OPCODE_COMMUNITY_PATH = File.expand_path(File.join(File.dirname(__FILE__), "..", "opscode-community-site"))
-
   couchrest = CouchRest.new(Chef::Config[:couchdb_url])
   couchrest.database!('opscode_account')
   couchrest.default_database = 'opscode_account'
