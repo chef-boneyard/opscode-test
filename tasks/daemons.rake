@@ -219,7 +219,7 @@ end
 
 def configure_rabbitmq(type="normal")
   # hack. wait for rabbit to come up.
-  sleep 2
+  sleep 5
 
   puts `rabbitmqctl add_vhost /chef`
 
