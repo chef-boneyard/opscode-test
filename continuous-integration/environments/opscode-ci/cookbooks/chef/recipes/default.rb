@@ -11,8 +11,8 @@ include_recipe "opscode-base"
 env = node["environment"]
 
 directory "/srv/chef" do
-  owner "root"
-  group "root"
+  owner "opscode"
+  group "opscode"
   mode '0755'
   recursive true
 end
@@ -23,8 +23,8 @@ deploy_revision 'chef' do
   repository 'git://github.com/' + (env['chef-remote'] || env['default-remote']) + '/chef.git'
   remote (env['chef-remote'] || env['default-remote'])
   symlink_before_migrate Hash.new
-  user "root"
-  group "root"
+  user "opscode"
+  group "opscode"
   deploy_to "/srv/chef"
   migrate false
   before_symlink do

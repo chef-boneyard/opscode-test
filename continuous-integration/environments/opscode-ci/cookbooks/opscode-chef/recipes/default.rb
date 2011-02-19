@@ -52,9 +52,17 @@ opscode_chef_init = template "/srv/opscode-chef/current/chef-server-api/config/i
   )
 end
 
+opscode_chef_rackup = template "/srv/opscode-chef/current/chef-server-api/config.ru" do
+  source "opscode-chef-config.ru.erb"
+  owner "opscode"
+  group "opscode"
+  mode "644"
+end
+
 runit_service "opscode-chef"
 resources(:service => "opscode-chef").subscribes(:restart, opscode_chef_conf)
 resources(:service => "opscode-chef").subscribes(:restart, opscode_chef_init)
+resources(:service => "opscode-chef").subscribes(:restart, opscode_chef_rackup)
 resources(:service => "opscode-chef").subscribes(:restart, resources(:deploy => "opscode-chef"))
 
 r = resources(:service => "opscode-chef")

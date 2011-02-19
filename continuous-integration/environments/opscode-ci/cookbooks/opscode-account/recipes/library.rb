@@ -16,7 +16,13 @@ directory app['deploy_to'] do
   recursive true
 end
 
-directory "/srv/opscode-account/shared/vendor" do
+directory "#{app['deploy_to']}/shared" do
+  mode "0755"
+  owner "opscode"
+  group "opscode"
+end
+
+directory "#{app['deploy_to']}/shared/vendor" do
   mode "0755"
   owner "opscode"
   group "opscode"

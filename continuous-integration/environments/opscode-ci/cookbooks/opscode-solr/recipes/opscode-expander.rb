@@ -1,3 +1,5 @@
+# opscode-expander should be run on release.
+
 node.set[:opscode_expander_workers] = 2
 
 directory("/srv/opscode-expander") do

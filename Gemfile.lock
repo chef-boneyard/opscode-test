@@ -42,7 +42,7 @@ GIT
 
 GIT
   remote: git@github.com:opscode/mixlib-authorization.git
-  revision: 6d73e3d77850e379e9ffcad62f62b4581a8111a5
+  revision: 93e8b0b2de16fabeca4e27d6a81a63ebbe424223
   branch: master
   specs:
     mixlib-authorization (1.2.0)
@@ -52,7 +52,7 @@ GIT
 
 GIT
   remote: git@github.com:opscode/mixlib-localization.git
-  revision: fb6b876bf17a498dec5f3049ff42fd01bf514cce
+  revision: c90658b9727a051e1a5db2fe09bbe9570528ff9b
   specs:
     mixlib-localization (1.0.1)
       mixlib-log
@@ -77,10 +77,10 @@ GEM
     json (1.4.6)
     libxml-ruby (1.1.3)
     mime-types (1.16)
-    mixlib-authentication (1.1.4)
+    mixlib-authentication (1.1.5)
       mixlib-log
     mixlib-cli (1.2.0)
-    mixlib-config (1.1.2)
+    mixlib-config (1.1.3)
     mixlib-log (1.2.0)
     moneta (0.6.0)
     ohai (0.5.8)
@@ -95,7 +95,7 @@ GEM
       mime-types (>= 1.16)
     rspec (1.3.0)
     systemu (1.2.0)
-    uuidtools (2.1.1)
+    uuidtools (2.1.2)
     xml-simple (1.0.12)
 
 PLATFORMS

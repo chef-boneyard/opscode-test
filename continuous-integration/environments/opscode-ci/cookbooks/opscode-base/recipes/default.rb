@@ -102,7 +102,7 @@ package "libsqlite3-dev"
 package "libxslt1-dev"
 package "libxml-simple-ruby"
 
-gems = {
+__gems = {
   "net-ssh-multi" => nil,
   "rack" => '1.1.0',
   "actionpack" => "2.3.8",
@@ -138,7 +138,34 @@ gems = {
   "mongrel" => nil,
   "camping" => '1.5.180',
   "sqlite3-ruby" => '1.2.4',
-  "ci_reporter" => '1.6.2'
+  "ci_reporter" => '1.6.2',
+}
+
+# These GEM's are used for chef-server and parkplace, but not needed for other 
+# packages like opscode-chef or opscode-account, as they use bundler.
+gems = {
+  'rspec' => '1.3.0',
+  'rspec-rails' => '1.3.2',
+  'gemcutter' => '0.6.1',
+  'jeweler' => '1.4.0',
+  'cucumber' => '0.8.5',
+  'ci_reporter' => '1.6.2',
+  'bunny' => '0.6.0',
+  'moneta' => '0.6.0',
+  'uuidtools' => '2.1.1',
+  'merb-slices' => '1.1.3',
+  'merb-assets' => '1.1.3',
+  'merb-helpers' => '1.1.3',
+  'merb-haml' => '1.1.3',
+  'merb-param-protection' => '1.1.3',
+  'treetop' => '1.4.9',
+  'unicorn' => '2.0.1',
+  
+  # parkplace
+  'mongrel' => '1.1.5',
+  'metaid' => '1.0',
+  'camping' => '1.5.180',
+  'sqlite3-ruby' => '1.2.4',
 }
 
 gem_dir = Dir['/srv/localgems/gems/*']
@@ -159,32 +186,7 @@ gems.each do |name,version|
   end
 end
 
-rubyforge_gems = {
-  'activesupport' => 'http://rubyforge.org/frs/download.php/47166/activesupport-2.2.2.gem',
-  'activerecord' => 'http://rubyforge.org/frs/download.php/47169/activerecord-2.2.2.gem',
-  'activeresource' => 'http://rubyforge.org/frs/download.php/47178/activeresource-2.2.2.gem'
-}
-# parkplace needs this specific version of activesupport
-rubyforge_gems.each do |name, url|
-  unless gem_dir.find{|d|d=~/#{name}/}
-    filename = "/tmp/rubyforge-gem-#{name}.gem"
-    remote_file filename do
-      source url
-    end
-  
-    script "install activesupport gem" do
-      interpreter "bash"
-      user "root"
-      code <<-EOH
-        export GEM_HOME=/srv/localgems
-        export GEM_PATH=/srv/localgems
-        export PATH="/srv/localgems/bin:$PATH"
-        gem install #{filename}
-      EOH
-    end
-  end
-end
-
+# These are also just needed by chef-server.
 opscode_gems = [
   "mixlib-log",
   "mixlib-cli",
@@ -195,7 +197,8 @@ opscode_gems = [
   "ohai",
   "couchrest",
   "mixlib-localization",
-  "aws-s3"
+  "aws-s3",
+  "ohai"
 ]
 
 opscode_gems.each do |name|

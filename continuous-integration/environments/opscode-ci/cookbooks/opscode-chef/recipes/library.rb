@@ -20,7 +20,13 @@ directory app['deploy_to'] do
   recursive true
 end
 
-directory "/srv/opscode-chef/shared/vendor" do
+directory "#{app['deploy_to']}/shared" do
+  mode "0755"
+  owner "opscode"
+  group "opscode"
+end
+
+directory "#{app['deploy_to']}/shared/vendor" do
   mode "0755"
   owner "opscode"
   group "opscode"
@@ -34,8 +40,8 @@ deploy_revision app['id'] do
   ##restart_command "if test -L /etc/init.d/opscode-chef; then sudo /etc/init.d/opscode-chef restart; fi"
   symlinks("system" => "public/system", "pids" => "tmp/pids", "log" => "log", "vendor" => "vendor")
   symlink_before_migrate Hash.new
-  #user app['owner']
-  #group app['group']
+  user app['owner']
+  group app['group']
   deploy_to app['deploy_to']
   migrate false
 

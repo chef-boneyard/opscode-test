@@ -1,9 +1,9 @@
 #
-# Author:: Nathan Haneysmith <nathan@opscode.com>
-# Cookbook Name:: rabbitmq
+# Author:: Tim Hinderliter <tim@opscode.com>
+# Cookbook Name:: parkplace
 # Recipe:: default
 #
-# Copyright 2009, Opscode, Inc.
+# Copyright 2010, 2011, Opscode, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,10 +18,35 @@
 # limitations under the License.
 #
 
-include_recipe "erlang_binary"
-
 app = node["apps"]["parkplace"]
 env = node["environment"]
+
+# parkplace needs this specific version of activesupport
+gem_dir = Dir['/srv/localgems/gems/*']
+rubyforge_gems = {
+  'activesupport' => 'http://rubyforge.org/frs/download.php/47166/activesupport-2.2.2.gem',
+  'activerecord' => 'http://rubyforge.org/frs/download.php/47169/activerecord-2.2.2.gem',
+  'activeresource' => 'http://rubyforge.org/frs/download.php/47178/activeresource-2.2.2.gem'
+}
+rubyforge_gems.each do |name, url|
+  unless gem_dir.find{|d|d=~/#{name}/}
+    filename = "/tmp/rubyforge-gem-#{name}.gem"
+    remote_file filename do
+      source url
+    end
+  
+    script "install activesupport gem #{name}" do
+      interpreter "bash"
+      user "root"
+      code <<-EOH
+        export GEM_HOME=/srv/localgems
+        export GEM_PATH=/srv/localgems
+        export PATH="/srv/localgems/bin:$PATH"
+        gem install #{filename}
+      EOH
+    end
+  end
+end
 
 directory app['deploy_to'] do
   owner app['owner']

@@ -34,19 +34,6 @@ deploy_revision app['id'] do
   migrate false
 end
 
-script "install_solr_config_#{opscode_solr_revision}" do
-  interpreter "bash"
-  user "opscode"
-  group "opscode"
-  action :nothing
-  code <<-EOH
-    cd /srv/opscode-solr/shared/system/solr
-    tar zxvf /srv/chef/current/chef-solr/solr/solr-home.tar.gz
-  EOH
-  
-  subscribes :run, resources(:deploy => app['id']), :immediately
-end
-
 couchdb_servers = [ node ] 
 audit_servers = [ node ] 
 solr_conf = "/srv/opscode-solr/current/chef-solr/opscode-solr.conf"
@@ -69,6 +56,19 @@ template solr_conf do
   #notifies :restart, resources(:service => "opscode-solr", :service => "opscode-solr-indexer")
   ##notifies :restart, resources(:service => "opscode-solr")
   ##notifies :restart, resources(:service => "opscode-solr-indexer")
+end
+
+script "install_solr_config_#{opscode_solr_revision}" do
+  interpreter "bash"
+  user "opscode"
+  group "opscode"
+  action :nothing
+  code <<-EOH
+    cd /srv/chef/current/chef-solr
+    bin/chef-solr-installer -c #{solr_conf} -p /srv/opscode-solr/shared/system/ --force
+  EOH
+
+  subscribes :run, resources(:deploy => app['id']), :immediately
 end
 
 runit_service "opscode-solr"
