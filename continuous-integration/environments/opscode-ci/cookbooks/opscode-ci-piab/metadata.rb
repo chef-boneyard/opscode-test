@@ -8,7 +8,7 @@ version          "0.1"
 depends 'couchdb'
 depends 'opscode-base'
 depends 'rabbitmq'
-depends 'opscode-solr'
+depends 'chef-solr'
 depends 'opscode-certificate'
 depends 'opscode-authz'
 depends 'opscode-account'

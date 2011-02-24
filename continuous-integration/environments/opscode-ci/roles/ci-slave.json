@@ -1,6 +1,6 @@
 {
   "name": "ci-slave",
-  "run_list": [ "recipe[opscode-ci-piab]", "recipe[parkplace]", "recipe[opscode-test-repos]", "recipe[opscode-org-creator]", "recipe[nginx::piab]", "recipe[opscode-webui]", "recipe[chef-server]", "recipe[opscode-solr::opscode-expander]" ],
+  "run_list": [ "recipe[opscode-ci-piab]", "recipe[parkplace]", "recipe[opscode-test-repos]", "recipe[opscode-org-creator]", "recipe[nginx::piab]", "recipe[opscode-webui]", "recipe[chef-server]", "recipe[chef-solr]", "recipe[chef-solr::chef-expander]" ],
   "json_class": "Chef::Role",
   "chef_type": "role",
   "default_attributes": {
@@ -27,19 +27,19 @@
       "site":"opscode-dev"
     },
     "apps": {
-      "opscode-solr": {
+      "chef-solr": {
         "group": "opscode",
         "repository": "git@github.com:opscode/opscode-chef.git",
         "server_roles": [
-          "opscode-solr"
+          "chef-solr"
         ],
         "migrate": {
           "production": false,
           "staging": false
         },
-        "id": "opscode-solr",
+        "id": "chef-solr",
         "type": "derderder",
-        "deploy_to": "/srv/opscode-solr",
+        "deploy_to": "/srv/chef-solr",
         "owner": "opscode"
       },
       "opscode-account": {

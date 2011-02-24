@@ -1,0 +1,3 @@
+#!/bin/sh
+cd /srv/chef/current/chef-expander/
+exec chpst -u opscode -U opscode bundle exec /srv/chef/current/chef-expander/bin/chef-expander-cluster -n <%= node['chef_expander_workers'] %>

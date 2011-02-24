@@ -1,4 +1,0 @@
-#!/bin/sh
-cd /srv/opscode-expander/
-exec echo "Start time: `date` Revision: `git rev-parse HEAD`" | mail -s "RUNIT STARTING opscode-expander on <%= node[:hostname] %>" deployments-<%= node[:app_environment] %>@opscode.com
-exec chpst -u opscode -U opscode /srv/opscode-expander/bin/opscode-expander-cluster -n <%= node['opscode_expander_workers'] %>

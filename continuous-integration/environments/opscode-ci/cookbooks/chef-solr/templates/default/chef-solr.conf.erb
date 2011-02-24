@@ -6,9 +6,9 @@ http_retry_count 5
 http_retry_delay 5
 log_level :info
 log_location STDOUT
-solr_jetty_path "/srv/opscode-solr/shared/system/solr-jetty"
-solr_data_path  "/srv/opscode-solr/shared/system/solr/data"
-solr_home_path  "/srv/opscode-solr/shared/system/solr"
+solr_jetty_path "/srv/chef-solr/shared/system/solr-jetty"
+solr_data_path  "/srv/chef-solr/shared/system/solr/data"
+solr_home_path  "/srv/chef-solr/shared/system/solr"
 solr_heap_size "1024M"
 solr_java_opts nil
 amqp_host '<%= @rabbitmq_host['ipaddress'] %>'
@@ -19,5 +19,5 @@ amqp_vhost '/chef'
 amqp_identity '<%= @rabbitmq_identity %>'
 amqp_consumer_id 'hotsauce'
 cache_type "BasicFile"
-cache_options({ :path => "/srv/opscode-solr/shared/cache/checksums", :skip_expires => true })
+cache_options({ :path => "/srv/chef-solr/shared/cache/checksums", :skip_expires => true })
 

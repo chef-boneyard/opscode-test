@@ -160,6 +160,7 @@ gems = {
   'merb-param-protection' => '1.1.3',
   'treetop' => '1.4.9',
   'unicorn' => '2.0.1',
+  'fog' => '0.2.30',
   
   # parkplace
   'mongrel' => '1.1.5',
