@@ -69,9 +69,11 @@ def start_chef_solr(type="normal")
     Dir.chdir(path) do
       case type
       when "normal"
-        exec("bundle exec chef-solr -l debug")
+        exec("bin/chef-solr -l debug")
       when "features"
-        exec("bundle exec chef-solr -c #{File.expand_path(File.join(File.dirname(__FILE__), "..", "features", "data", "config", "server.rb"))} -l debug")
+        p = fork { exec("bin/chef-solr-installer -p /tmp/opscode-platform-test --force") }
+        Process.wait(p)
+        exec("bin/chef-solr -c #{File.expand_path(File.join(File.dirname(__FILE__), "..", "features", "data", "config", "server.rb"))} -l debug")
       end
     end
   end
