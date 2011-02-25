@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+
+# kills all processes associated with development PIAB
+# started via ./opscode-start
+#
+# all processes are sent a SIGINT.  This turns out to matter for the
+# current configuration of merb.  If a TERM is sent (default for
+# kill), then merb workers are left behind.
+
+all_pids = `ps -ef`.split("\n").map do |x|
+  parts = x.strip.split(/ +/, 8)
+  {:pid => parts[1], :parent => parts[2], :command => parts.last}
+end
+
+piab_pids_set = all_pids.inject({}) do |h, x|
+  if x[:command] =~ /dev:features:/
+    h[x[:pid]] = x
+  end
+  h
+end
+
+
+to_kill = all_pids.select { |x| piab_pids_set.has_key?(x[:parent]) }
+
+to_kill.each do |x|
+  puts "kill -s INT #{x[:pid]} #{x[:command].split.first}"
+  `kill -s INT #{x[:pid]}`
+end
+
+piab_pids_set.each do |pid, x|
+  cmd = "kill -s INT #{pid}"
+  puts cmd + " " + x[:command]
+  `#{cmd}`
+end
+
