@@ -1,6 +1,6 @@
 require 'tmpdir'
 
-PLATFORM_TEST_DIR = File.join(Dir.tmpdir, "opscode-platform-test")
+PLATFORM_TEST_DIR = "/tmp/opscode-platform-test"
 OPEN_SOURCE_TEST_DIR =  File.join(Dir.tmpdir, "chef_integration")
 
 def create_credentials_dir(setup_test = true)
@@ -15,8 +15,6 @@ def create_local_test
   Chef::Log.debug "Tmpdir: #{PLATFORM_TEST_DIR}"
   path = File.join(OPSCODE_PROJECT_DIR, "opscode-account", OPSCODE_PROJECT_SUFFIX, "bin")
   Dir.chdir(path) do
-    puts Dir.pwd
-    puts File.exists?("./account-whacker")
     shell_out!("./account-whacker -c #{PLATFORM_TEST_DIR}/superuser.pem -d platform-superuser -e platform-cukes-superuser@opscode.com -f PlatformSuperuser -l PlatformCukeSuperuser -m cuker -u platform-superuser -p p@ssw0rd1")
     Chef::Log.info("Creating global containers")
     system("./global-containers platform-superuser")
