@@ -126,8 +126,8 @@ query :role, 'key:456', ['web']
 query :role, 'key:[1 TO 5000]', ['web', 'prod']
 
 # Negation:
-query :node, '(run_list:recipe\[bravo\] AND NOT run_list:recipe\[alpha\])', ["b"]
-query :node, "(NOT tag:apples AND tag:ap*)", ["b", "c"]
+query :node, '(run_list:recipe\[bravo\] NOT run_list:recipe\[alpha\])', ["b"]
+query :node, "(tag:ap* NOT tag:apples)", ["b", "c"]
 
 # Prefix searches:
 
@@ -149,8 +149,9 @@ query :node, 'value:[5 TO *]', []
 # exclusive range
 query :node, 'value:{1 TO 3}', ['b']
 # more negation tests
-query :node, '(value:[1 TO 3] AND NOT value:[1 TO 2])', ['c']
-query :node, '(NOT value:[1 TO 2] AND value:[1 TO 3])', ['c']
+query :node, '(value:[1 TO 3] NOT value:[1 TO 2])', ['c']
+# BUGBUG
+query :node, '((!value:[1 TO 2]) AND value:[1 TO 3])', ['c']
 
 # Quotes
 query :node, 'multi_word:"foo bar baz"', ['a']
