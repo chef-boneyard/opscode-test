@@ -9,6 +9,7 @@
 require 'rubygems'
 require 'chef'
 require 'chef/mixin/language'
+require 'uri'
 
 USAGE =<<EOH
 Usage: #{$0} SHEF_CONFIG
@@ -151,7 +152,9 @@ query :node, 'value:{1 TO 3}', ['b']
 # more negation tests
 query :node, '(value:[1 TO 3] NOT value:[1 TO 2])', ['c']
 # BUGBUG
-query :node, '((!value:[1 TO 2]) AND value:[1 TO 3])', ['c']
+query :node, '((NOT value:[1 TO 2]) AND value:[1 TO 3])', ['c']
+# This one is the same as the one above. They both don't work right (not returning expected result.)
+query :node, URI.escape('((!value:[1 TO 2]) && value:[1 TO 3])', Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")), ['c']
 
 # Quotes
 query :node, 'multi_word:"foo bar baz"', ['a']
