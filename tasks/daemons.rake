@@ -54,7 +54,7 @@ def start_parkplace(type="normal")
     @parkplace_pid = cid
   else
     Dir.chdir(path) do
-      exec("./bin/parkplace")
+      exec("bundle exec ./bin/parkplace")
     end
   end
 end
