@@ -1,4 +1,9 @@
 % authz app config
 [
- {authorization, [{couchdb_ip, {"<%= @couchdb_authz_server %>", 5984}}]}
+ {authorization,
+  [ {couchdb_ip, {"<%= @couchdb_authz_server %>", 5984}},
+    {authz_port, 5959},
+    {authz_db_name, "authorization"} ]
+ }
 ].
+ 
