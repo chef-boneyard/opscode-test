@@ -4,7 +4,8 @@
 $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), "..", "chef", "lib")))
 $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), "lib")))
 require 'rubygems'
-require 'rest-client'
+# uncomment the following line when deploying webui from master
+# require 'restclient'
 require 'merb-core'
 require 'chef'
 
@@ -15,7 +16,52 @@ Merb.environment = Merb::Config[:environment]
 Merb.root = Merb::Config[:merb_root]
 Merb::BootLoader.run
 
-# to make unicorn serve static content
+require 'chef-server-webui/seekret_injector'
+require 'chef-server-webui/rails_sessions'
+
+use Rack::Head
+
+# Correctly set a content length.
+use Merb::Rack::ContentLength
+
+# use PathPrefix Middleware if :path_prefix is set in Merb::Config
+if prefix = ::Merb::Config[:path_prefix]
+  use Merb::Rack::PathPrefix, prefix
+end
+
+# comment this out if you are running merb behind a load balancer
+# that serves static files
 use Merb::Rack::Static, Merb.dir_for(:public)
 
+use SeekretInjector, :secret => "<%= @cookie_secret %>"
+
+# After a request has been processed, this middleware looks in the rack env Hash
+# under the key 'action_dispatch.cookies' for an ActionDispatch::Cookies::CookieJar
+# (or subclass) object. If it finds one, it converts that object's data to the
+# necessary response Headers to set the cookie in the browser.
+# See: action_dispatch/middleware/cookies
+use ActionDispatch::Cookies
+
+# This middleware creates an ActionDispatch::Session::AbstractStore::SessionHash
+# object from the incoming request and adds it to the Rack env under the key
+# ActionDispatch::Session::AbstractStore::ENV_SESSION_KEY ('rack.session'). It
+# also adds the session options under the key ENV_SESSION_OPTIONS_KEY ('rack.session.options').
+# After the request, it adds a unique session id to the SessionHash object and sets
+# expire time.
+# See:  action_dispatch/middleware/session/abstract_store
+#       action_dispatch/middleware/session/cookie_store
+#
+# == Parameters
+# :key::: The community site uses _sandbox_session, so we have to match for SSO to work.
+# All other parameters are defaults.
+use ActionDispatch::Session::CookieStore, :key =>           '_sandbox_session',
+                                          :path =>          '/',
+                                          :domain =>        ".opscode.com",
+                                          :expire_after =>  nil,
+                                          :secure =>        false,
+                                          :httponly =>      true,
+                                          :cookie_only =>   true
+
+
+# this is our main merb application
 run Merb::Rack::Application.new

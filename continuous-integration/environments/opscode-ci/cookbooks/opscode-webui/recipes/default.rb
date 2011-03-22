@@ -72,6 +72,8 @@ template "/srv/opscode-chef/current/chef-server-webui/config.ru" do
   owner "opscode"
   group "opscode"
   mode "644"
+
+  variables(:cookie_secret => "continuous-integration-1234abcd")
 end
 
 unicorn_config "/etc/unicorn/opscode-webui.rb" do

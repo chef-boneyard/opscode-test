@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/opscode/chef.git
-  revision: bab33da3c614effe6dd16764cb12c1a10e653465
+  revision: d119cc690a69925d26da937648d785af6901052b
   branch: master
   specs:
     chef (0.10.0.beta.0)
@@ -11,7 +11,7 @@ GIT
       mixlib-authentication (>= 1.1.0)
       mixlib-cli (>= 1.1.0)
       mixlib-config (>= 1.1.2)
-      mixlib-log (>= 1.2.0)
+      mixlib-log (>= 1.3.0)
       moneta
       ohai (>= 0.5.7)
       rest-client (>= 1.0.4, < 1.7.0)
@@ -82,8 +82,8 @@ GEM
     libxml-ruby (1.1.3)
     mime-types (1.16)
     mixlib-cli (1.2.0)
-    mixlib-config (1.1.2)
-    mixlib-log (1.2.0)
+    mixlib-config (1.1.3)
+    mixlib-log (1.3.0)
     moneta (0.6.0)
     ohai (0.5.8)
       extlib

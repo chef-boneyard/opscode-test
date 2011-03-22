@@ -162,6 +162,13 @@ gems = {
   'unicorn' => '2.0.1',
   'fog' => '0.2.30',
   
+  # opscode-authz cukes
+  'couchrest' => '0.23',
+  
+  # mixlib-authorization spec
+  'uuid' => '2.3.1',
+  'yajl-ruby' => '0.7.8',
+  
   # parkplace
   'mongrel' => '1.1.5',
   'metaid' => '1.0',
