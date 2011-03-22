@@ -55,6 +55,7 @@ script "install_solr_config" do
   #action :nothing
   code <<-EOH
     cd /srv/chef/current/chef-solr
+    /etc/init.d/chef-solr force-stop
     bin/chef-solr-installer -c #{solr_conf} -p /srv/chef-solr/shared/system/ --force
   EOH
 
@@ -67,7 +68,7 @@ solr_conf_res = resources(:template => solr_conf)
 solr_installer_res = resources(:script => "install_solr_config")
 chef_deploy_res = resources(:deploy => "chef")
 
-chef_solr_service = resources(:service => 'chef-solr')
+chef_solr_service = resources(:service => "chef-solr")
 chef_solr_service.subscribes(:restart, solr_conf_res)
 chef_solr_service.subscribes(:restart, chef_deploy_res)
 chef_solr_service.subscribes(:restart, solr_installer_res)

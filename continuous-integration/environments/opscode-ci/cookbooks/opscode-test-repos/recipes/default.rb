@@ -22,7 +22,6 @@ directory app["deploy_to_opscode-test"] do
 end
 
 deploy_revision "deploy-opscode-test" do
-  #action :force_deploy
   revision env["opscode-test-revision"] || env['default-revision']
   repository 'git@github.com:' + (env["opscode-test-remote"] || env['default-remote']) + "/opscode-test.git"
   remote (env["opscode-test-remote"] || env['default-remote'])
@@ -31,6 +30,13 @@ deploy_revision "deploy-opscode-test" do
   group app['group']
   deploy_to app["deploy_to_opscode-test"]
   migrate false
+
+  after_symlink do
+    exec("bundle install --deployment") do
+      user "root"
+      cwd "/srv/opscode-test/current"
+    end
+  end
 end
 
 # ----------------
