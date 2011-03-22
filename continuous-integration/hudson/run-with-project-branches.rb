@@ -13,10 +13,7 @@ SERVICES_TO_RESTART = {
   "opscode-account" => ["opscode-account"],
   "opscode-authz" => ["opscode-authz"],
   
-  # TODO, tim 2010-11-10: Always restart opscode-solr-indexer and opscode-expander 
-  # when changing chef branches, even though it's really an either/or option
-  # (solr-indexer goes with 'master'; expander goes with 'pl-master')
-  "chef" => ["chef-server", "opscode-solr", "opscode-solr-indexer", "opscode-expander"]  # platform services are bundler-ized
+  "chef" => ["chef-server"]
 }
 
 def usage
@@ -37,33 +34,6 @@ EXAMPLES:
   #{$0} --branch chef=master chef rake spec
   
   EOM
-end
-
-def wait_for_solr_to_listen(project_name)
-  max_wait = 120
-  num_waited = 0
-  
-  puts "--- waiting up to #{max_wait} seconds for SOLR to start on port 8983"
-  STDOUT.sync = true
-  solr_running = false
-  while !solr_running && num_waited <= max_wait
-    begin
-      sock = TCPSocket.open('127.0.0.1', 8983)
-      sock.close
-      solr_running = true
-    rescue Errno::ECONNREFUSED
-      # it's ok..loop
-      print "."
-      sleep 1
-      num_waited += 1
-    end
-  end
-  
-  if solr_running
-    puts "\n--- waited #{num_waited} seconds before SOLR was ready on port 8983"
-  else
-    puts "\n--- SOLR wasn't running on port 8983 after #{max_wait} seconds... moving on."
-  end
 end
 
 def do_system(cmd)
@@ -93,27 +63,7 @@ def switch_branch(project_name, remote_wanted, branch_wanted)
 
     services_to_restart = SERVICES_TO_RESTART[project_name]
     services_to_restart.each do |service|
-      # Remove the SOLR directory so it regenerates its schema. We can't just
-      # remove the directory, though, as /srv on Hudson is NFS-mounted, and 
-      # sometimes there are .nfs lock files. So move the directory then try 
-      # to remove it.
-      if service == 'opscode-solr'
-        do_system "mv /srv/opscode-solr/shared/system/solr /srv/opscode-solr/shared/system/solr.bak"
-        do_system "rm -fr /srv/opscode-solr/shared/system/solr.bak"
-        do_system "mkdir /srv/opscode-solr/shared/system/solr"
-        Dir.chdir("/srv/opscode-solr/shared/system/solr") do |dir|
-          puts "--- Untarring SOLR home in #{dir}"
-          do_system "tar zxvf /srv/chef/current/chef-solr/solr/solr-home.tar.gz"
-        end
-        do_system "chown -R opscode:opscode /srv/opscode-solr/shared/system/solr"
-      end
-      
       do_system "/etc/init.d/#{service} force-restart"
-
-      # Wait up to two minutes for SOLR to be listening on 8983.
-      if service == 'opscode-solr'
-        wait_for_solr_to_listen(project_name)
-      end
     end
   end
   puts
