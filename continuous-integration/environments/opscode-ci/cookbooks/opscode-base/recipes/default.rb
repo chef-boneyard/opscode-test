@@ -69,14 +69,14 @@ directory "/etc/opscode" do
   group "opscode"
 end
 
-remote_file "/etc/opscode/azs.pem" do
+cookbook_file "/etc/opscode/azs.pem" do
   source "azs.pem"
   owner "opscode"
   group "opscode"
   mode "0600"
 end
 
-remote_file "/etc/opscode/webui_pub.pem" do
+cookbook_file "/etc/opscode/webui_pub.pem" do
   source "webui_pub.pem"
   owner "opscode"
   group "opscode"
@@ -102,45 +102,6 @@ package "libsqlite3-dev"
 package "libxslt1-dev"
 package "libxml-simple-ruby"
 
-__gems = {
-  "net-ssh-multi" => nil,
-  "rack" => '1.1.0',
-  "actionpack" => "2.3.8",
-#  "chef" => nil,
-  "fog" => nil,
-  #"couchrest" => '0.23',
-  #"aws-s3" => nil,
-  "ruby-hmac" => nil,
-  "uuidtools" => nil,
-#  "merb-slices" => '1.0.15',
-#  "merb-assets" => '1.0.15',
-#  "merb-helpers" => '1.0.15',
-#  "merb-haml" => '1.0.15',
-#  "merb-param-protection" => "1.0.15",
-  "merb-slices" => '1.1.3',
-  "merb-assets" => '1.1.3',
-  "merb-helpers" => '1.1.3',
-  "merb-haml" => '1.1.3',
-  "merb-param-protection" => "1.1.3",
-  "rspec" => '1.3.0',
-  "libxml-ruby" => nil,
-  "rake" => nil,
-  "rack-test" => '0.5.4',
-  "thin" => nil,
-  "amqp" => nil,
-  "open4" => nil,
-  "cucumber" => nil,
-  "gherkin" => '2.1.4',
-  "rest-client" => nil,
-  "jeweler" => nil,
-  "json" => '1.4.2',
-  "coderay" => nil,
-  "mongrel" => nil,
-  "camping" => '1.5.180',
-  "sqlite3-ruby" => '1.2.4',
-  "ci_reporter" => '1.6.2',
-}
-
 # These GEM's are used for chef-server and parkplace, but not needed for other 
 # packages like opscode-chef or opscode-account, as they use bundler.
 gems = {
@@ -149,7 +110,7 @@ gems = {
   'gemcutter' => '0.6.1',
   'jeweler' => '1.4.0',
   'cucumber' => '0.8.5',
-  'ci_reporter' => '1.6.2',
+  'ci_reporter' => '1.6.4',
   'bunny' => '0.6.0',
   'moneta' => '0.6.0',
   'uuidtools' => '2.1.1',
@@ -161,6 +122,7 @@ gems = {
   'treetop' => '1.4.9',
   'unicorn' => '2.0.1',
   'fog' => '0.2.30',
+  'dep_selector' => nil,
   
   # opscode-authz cukes
   'couchrest' => '0.23',
@@ -188,7 +150,7 @@ gems.each do |name,version|
         export GEM_HOME=/srv/localgems
         export GEM_PATH=/srv/localgems
         export PATH="/srv/localgems/bin:$PATH"
-        gem install #{name} #{version.nil? ? '' : "--version #{version}" }
+        gem install #{name} #{version.nil? ? '' : "--version #{version}"}
       EOH
     end
   end

@@ -26,7 +26,7 @@ cookbook_file "/root/.ssh/github" do
   owner 'root'
 end
 
-remote_file "/root/.ssh/config" do
+cookbook_file "/root/.ssh/config" do
   source "ssh_config"
 end
 
@@ -51,14 +51,14 @@ directory "/home/opscode/.ssh" do
   group "opscode"
 end
 
-remote_file "/home/opscode/.ssh/github" do
+cookbook_file "/home/opscode/.ssh/github" do
   source "opscode-github-sshkey"
   owner "opscode"
   group "opscode"
   mode 0600
 end
 
-remote_file "/home/opscode/.ssh/config" do
+cookbook_file "/home/opscode/.ssh/config" do
   source "ssh_config"
   owner "opscode"
   group "opscode"

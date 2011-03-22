@@ -64,13 +64,15 @@ end
 runit_service "chef-solr"
 
 solr_conf_res = resources(:template => solr_conf)
-chef_deploy_res = resources(:deploy => 'chef')
+solr_installer_res = resources(:script => "install_solr_config")
+chef_deploy_res = resources(:deploy => "chef")
 
 chef_solr_service = resources(:service => 'chef-solr')
 chef_solr_service.subscribes(:restart, solr_conf_res)
 chef_solr_service.subscribes(:restart, chef_deploy_res)
+chef_solr_service.subscribes(:restart, solr_installer_res)
 
-execute "echo shut_down #{daemon}" do
+execute "echo shut_down chef_solr" do
   notifies :stop, chef_solr_service
   not_if do File.exist?("/srv/chef/current/chef-solr/bin/chef-solr") end
 end

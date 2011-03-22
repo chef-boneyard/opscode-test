@@ -34,19 +34,19 @@ couchdb_prereq.each do |n|
   package n 
 end
 
-remote_file "/etc/cron.weekly/compact_couchdb" do
+cookbook_file "/etc/cron.weekly/compact_couchdb" do
   source "compact_couchdb.rb"
   mode "0755"
   backup false
 end
 
-remote_file "/usr/local/bin/org_cleanup" do
+cookbook_file "/usr/local/bin/org_cleanup" do
   source "org_cleanup"
   mode "0755"
   backup false
 end
 
-remote_file "/etc/cron.d/org_cleanup_cron" do
+cookbook_file "/etc/cron.d/org_cleanup_cron" do
   source "org_cleanup_cron"
   mode "0755"
   backup false
@@ -60,7 +60,7 @@ unless FileTest.exists?("#{dest_dir}/bin/couchdb")
 
   #install couchdb (build from source)
 
-  remote_file "/tmp/#{tarball_name}" do
+  cookbook_file "/tmp/#{tarball_name}" do
     source tarball_name
   end
  

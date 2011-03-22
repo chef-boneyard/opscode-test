@@ -29,7 +29,7 @@ fi
 export CI_CAPTURE=on
 export CI_REPORTS="$STARTING_PWD"/spec_reports
 
-rake -f /srv/localgems/gems/ci_reporter-1.6.2/stub.rake ci:setup:rspec "$@"
+rake -f /srv/localgems/gems/ci_reporter-1.6.4/stub.rake ci:setup:rspec "$@"
 RESULT=$?
 
 ruby /srv/opscode-test/current/continuous-integration/hudson/touch-files.rb "$STARTING_PWD/spec_reports/"

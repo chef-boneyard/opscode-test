@@ -31,7 +31,7 @@ rubyforge_gems = {
 rubyforge_gems.each do |name, url|
   unless gem_dir.find{|d|d=~/#{name}/}
     filename = "/tmp/rubyforge-gem-#{name}.gem"
-    remote_file filename do
+    cookbook_file filename do
       source url
     end
   
