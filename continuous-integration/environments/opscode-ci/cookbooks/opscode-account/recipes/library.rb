@@ -33,6 +33,7 @@ deploy_revision app['id'] do
   revision env['opscode-account-revision'] || env['default-revision']
   repository 'git@github.com:' + (env['opscode-account-remote'] || env['default-remote']) + '/opscode-account.git'
   remote (env['opscode-account-remote'] || env['default-remote'])
+
   # Add 'vendor' => 'vendor' to the default symlinks so we won't have to rebuild
   # the bundle for each deploy.
   symlinks("system" => "public/system", "pids" => "tmp/pids", "log" => "log", "vendor" => "vendor")

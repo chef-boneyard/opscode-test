@@ -38,12 +38,18 @@ deploy_revision app['id'] do
   repository 'git@github.com:' + (env['opscode-chef-remote'] || env['default-remote']) + '/opscode-chef.git'
   remote (env['opscode-chef-remote'] || env['default-remote'])
   ##restart_command "if test -L /etc/init.d/opscode-chef; then sudo /etc/init.d/opscode-chef restart; fi"
-  symlinks("system" => "public/system", "pids" => "tmp/pids", "log" => "log", "vendor" => "vendor")
-  symlink_before_migrate Hash.new
+
   user app['owner']
   group app['group']
   deploy_to app['deploy_to']
   migrate false
+
+  # set it up so that /srv/opscode-chef/1234abcd/vendor (which changes
+  # with code) points to /srv/opscode-chef/shared/chef, so we don't
+  # have to re-download the world every code deploy ('vendor' is
+  # updated by the below bundle install step).
+  symlinks("system" => "public/system", "pids" => "tmp/pids", "log" => "log", "vendor" => "vendor")
+  symlink_before_migrate Hash.new
 
   before_restart do
     execute("bundle install --deployment") do

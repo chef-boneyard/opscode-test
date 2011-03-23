@@ -1,9 +1,9 @@
 #
 # Author:: Tim Hinderliter <tim@opscode.com>
-# Cookbook Name:: opscode-test
-# Recipe:: client
+# Cookbook Name:: opscode-test-repos
+# Recipe:: default
 #
-# Copyright 2010, Opscode, Inc.
+# Copyright (c) 2010, 2011, Opscode, Inc.
 #
 
 include_recipe "opscode-base"
@@ -21,6 +21,18 @@ directory app["deploy_to_opscode-test"] do
   recursive true
 end
 
+directory "#{app['deploy_to_opscode-test']}/shared" do
+  mode "0755"
+  owner "opscode"
+  group "opscode"
+end
+
+directory "#{app['deploy_to_opscode-test']}/shared/vendor" do
+  mode "0755"
+  owner "opscode"
+  group "opscode"
+end
+
 deploy_revision "deploy-opscode-test" do
   revision env["opscode-test-revision"] || env['default-revision']
   repository 'git@github.com:' + (env["opscode-test-remote"] || env['default-remote']) + "/opscode-test.git"
@@ -31,8 +43,15 @@ deploy_revision "deploy-opscode-test" do
   deploy_to app["deploy_to_opscode-test"]
   migrate false
 
-  after_symlink do
-    exec("bundle install --deployment") do
+  # set it up so that /srv/opscode-test/1234abcd/vendor (which changes
+  # with code) points to /srv/opscode-test/shared/vendor, so we don't
+  # have to re-download the world every code deploy ('vendor' is
+  # updated by the below bundle install step).
+  symlinks("vendor" => "vendor")
+  symlink_before_migrate Hash.new
+
+  before_restart do
+    execute("bundle install --deployment") do
       user "root"
       cwd "/srv/opscode-test/current"
     end

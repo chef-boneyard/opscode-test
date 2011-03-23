@@ -7,7 +7,6 @@ echo "Running opscode-test setup:test"
 echo "*******************************"
 
 (cd /srv/opscode-test/current && 
-    sudo env GEM_HOME=/srv/localgems GEM_PATH=/srv/localgems PATH=/srv/localgems/bin:$PATH bundle update &&
     sudo env GEM_HOME=/srv/localgems GEM_PATH=/srv/localgems PATH=/srv/localgems/bin:$PATH bundle exec rake setup:from_platform &&
     sudo env GEM_HOME=/srv/localgems GEM_PATH=/srv/localgems PATH=/srv/localgems/bin:$PATH bundle exec rake setup:test)
 
