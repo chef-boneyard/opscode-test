@@ -1,34 +1,39 @@
 #
 # Author:: Nathan Haneysmith <nathan@opscode.com>
+# Author:: Tim Hinderliter <tim@opscode.com>
 # Cookbook Name:: chef
 # Recipe:: default
 #
-# Copyright 2009, Opscode, Inc.
+# Copyright 2009, 2011, Opscode, Inc.
 #
 
 include_recipe "opscode-base"
 
 env = node["environment"]
 
-directory "/srv/chef" do
-  owner "opscode"
-  group "opscode"
-  mode '0755'
-  recursive true
+["/srv/chef", "/srv/chef/shared", "/srv/chef/shared/vendor_chef_expander"].each do |dirname|
+  directory dirname do
+    owner "opscode"
+    group "opscode"
+    mode '0755'
+  end
 end
 
 deploy_revision 'chef' do
-  #action :force_deploy
   revision env['chef-revision'] || env['default-revision']
   repository 'git://github.com/' + (env['chef-remote'] || env['default-remote']) + '/chef.git'
   remote (env['chef-remote'] || env['default-remote'])
-  symlink_before_migrate Hash.new
+
   user "opscode"
   group "opscode"
   deploy_to "/srv/chef"
+
+  symlink_before_migrate Hash.new
+  symlinks("vendor_chef_expander" => "chef-expander/vendor")
+
   migrate false
   before_symlink do
-    bash "install_gem_local" do
+    bash "install_localgems_chef" do
       user "root"
       cwd "#{release_path}"
       code <<-EOH

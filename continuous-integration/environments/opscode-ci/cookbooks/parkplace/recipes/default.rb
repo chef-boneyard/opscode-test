@@ -18,68 +18,53 @@
 # limitations under the License.
 #
 
-app = node["apps"]["parkplace"]
+include_recipe "runit"
+
 env = node["environment"]
 
-# parkplace needs this specific version of activesupport
-gem_dir = Dir['/srv/localgems/gems/*']
-rubyforge_gems = {
-  'activesupport' => 'http://rubyforge.org/frs/download.php/47166/activesupport-2.2.2.gem',
-  'activerecord' => 'http://rubyforge.org/frs/download.php/47169/activerecord-2.2.2.gem',
-  'activeresource' => 'http://rubyforge.org/frs/download.php/47178/activeresource-2.2.2.gem'
-}
-rubyforge_gems.each do |name, url|
-  unless gem_dir.find{|d|d=~/#{name}/}
-    filename = "/tmp/rubyforge-gem-#{name}.gem"
-    cookbook_file filename do
-      source url
-    end
-  
-    script "install activesupport gem #{name}" do
-      interpreter "bash"
-      user "root"
-      code <<-EOH
-        export GEM_HOME=/srv/localgems
-        export GEM_PATH=/srv/localgems
-        export PATH="/srv/localgems/bin:$PATH"
-        gem install #{filename}
-      EOH
-    end
+# Park place home can't be in /srv if it's an NFS mount, as Parkplace
+# uses SQLite3 database, whose locking model doesn't work over NFS.
+directory "/var/run/parkplace-home" do
+  mode "0755"
+  owner "root"
+  group "root"
+  recursive true
+end
+
+["/srv/parkplace", "/srv/parkplace/shared", "/srv/parkplace/shared/vendor"].each do |dirname|
+  directory dirname do
+    mode "0755"
+    owner "root"
+    group "root"
   end
 end
 
-directory app['deploy_to'] do
-  owner app['owner']
-  group app['group']
-  mode '2775'
-  recursive true
-end
-
-# Park place home can't be in /srv if it's an NFS mount, as Parkplace uses SQLite3 
-# database, whose locking model doesn't work over NFS.
-#directory "/srv/parkplace/shared/home" do
-directory "/var/run/parkplace-home" do
-  mode "0755"
-  owner app['owner']
-  group app['group']
-  recursive true
-end
-
-
-deploy_revision app['id'] do
+deploy_revision "parkplace" do
   #action :force_deploy
   revision env['parkplace-revision'] || env['default-revision']
   repository 'git@github.com:' + (env['parkplace-remote'] || env['default-remote']) + '/parkplace.git'
   remote (env['parkplace-remote'] || env['default-remote'])
-  symlink_before_migrate Hash.new
-  user app['owner']
-  group app['group']
-  deploy_to app['deploy_to']
+
+  user "root"
+  group "root"
+  deploy_to "/srv/parkplace"
   migrate false
+
+  # set it up so that /srv/parkplace/1234abcd/vendor (which changes
+  # with code) points to /srv/parkplace/shared/vendor, so we don't
+  # have to re-download the world every code deploy ('vendor' is
+  # updated by the below bundle install step).
+  symlinks("vendor" => "vendor")
+  symlink_before_migrate Hash.new
+
+  before_restart do
+    execute("bundle install --deployment") do
+      user "root"
+      cwd "/srv/parkplace/current"
+    end
+  end
 end
 
-
-include_recipe "runit"
 
 runit_service "parkplace"
 

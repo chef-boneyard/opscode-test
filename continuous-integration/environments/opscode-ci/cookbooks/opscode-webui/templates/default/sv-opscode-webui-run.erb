@@ -1,9 +1,5 @@
 #!/bin/sh
-export GEM_HOME=/srv/localgems
-export GEM_PATH=/srv/localgems
-export PATH="/srv/localgems/bin:$PATH"
 cd /srv/opscode-chef/current/chef-server-webui
 
 exec 2>&1
-#exec env MERB_ENV=foo ./chef-server/bin/chef-server-webui
 exec /usr/bin/env HOME="/srv/opscode-chef/shared" bundle exec unicorn -c /etc/unicorn/opscode-webui.rb -E cucumber config.ru

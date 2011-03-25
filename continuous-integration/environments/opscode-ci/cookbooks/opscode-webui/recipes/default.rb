@@ -11,32 +11,6 @@ include_recipe "opscode-account::library"
 include_recipe "opscode-chef::library"
 include_recipe "unicorn"
 
-gems = {
-  "merb-param-protection" => '1.1.0',
-  "merb-mailer" => '1.1.0',
-  "syntax" => nil,
-  "coderay" => nil,
-  "ruby-openid" => nil
-}
-
-gem_dir = Dir['/srv/localgems/gems/*']
-
-gems.each do |name,version|
-  unless gem_dir.find{|d|d=~/\/#{name}-/}
-    script "install_#{name}_local" do
-      interpreter "bash"
-      user "root"
-        #gem install -i /srv/localgems #{name} #{version.nil? ? '' : "--version #{version}" }
-      code <<-EOH
-        export GEM_HOME=/srv/localgems
-        export GEM_PATH=/srv/localgems
-        export PATH="/srv/localgems/bin:$PATH"
-        gem install #{name} #{version.nil? ? '' : "--version #{version}" }
-      EOH
-    end
-  end
-end
-
 chargify = node["chargify"]
 env = node["environment"]
 
@@ -55,17 +29,6 @@ template "/srv/opscode-chef/current/chef-server-webui/config/environments/cucumb
     :chargify => chargify
   )
 end
-#
-# template "/srv/opscode-chef/current/chef-server-webui/config/environments/#{node[:app_environment]}.rb" do
-#   source "opscode-webui-config.rb.erb"
-#   owner "opscode"
-#   group "opscode"
-#   mode "644"
-#   variables(
-#     :int_lb_dns => env['int-lb-dns'],
-#     :community_servername => env['community_servername']
-#   )
-# end
 
 template "/srv/opscode-chef/current/chef-server-webui/config.ru" do
   source "opscode-webui-config.ru.erb"

@@ -9,28 +9,17 @@
 include_recipe "opscode-base"
 include_recipe "java"
 
-app = node["apps"]["chef-solr"]
 env = node["environment"]
 
 couchdb_servers = [ node ] 
 audit_servers = [ node ] 
 
-directory "/srv/chef-solr" do
-  owner "opscode"
-  group "opscode"
-  mode "0755"
-end
-
-directory "/srv/chef-solr/shared" do
-  owner "opscode"
-  group "opscode"
-  mode "0755"
-end
-
-directory "/srv/chef-solr/shared/system" do
-  owner "opscode"
-  group "opscode"
-  mode "0755"
+["/srv/chef-solr", "/srv/chef-solr/shared", "/srv/chef-solr/shared/system"].each do |dirname|
+  directory dirname do
+    owner "opscode"
+    group "opscode"
+    mode "0755"
+  end
 end
 
 solr_conf = "/srv/chef-solr/shared/chef-solr.conf"

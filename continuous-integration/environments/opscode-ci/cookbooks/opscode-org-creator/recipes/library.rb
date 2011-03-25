@@ -47,9 +47,6 @@ deploy_revision app['id'] do
       user "root"
       cwd "#{release_path}"
       code <<-EOH
-              export GEM_HOME=/srv/localgems
-              export GEM_PATH=/srv/localgems
-              export PATH=/srv/localgems/bin:$PATH
               export HOME=/tmp
               ln -s #{app['deploy_to']}/shared/log #{release_path}/rel/org_app/log
               touch #{release_path}/rel/org_app/etc/app.config

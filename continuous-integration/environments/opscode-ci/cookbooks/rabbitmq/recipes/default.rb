@@ -69,47 +69,48 @@ include_recipe "runit"
 
 runit_service "rabbitmq"
 
+
 ##
 # Initialize the rabbit vhosts
 ##
-
-unless File.exists?("/srv/rabbitmq/delete_me_to_update_perms")
-
-  ruby_block "sleepy" do
-    block do
-      sleep 10
-    end
+ruby_block "sleepy" do
+  block do
+    sleep 10
   end
+end
 
-  node[:apps][:rabbitmq][:vhosts].each do |vhost, perms|
-    execute "add_vhost" do
+node[:apps][:rabbitmq][:vhosts].each do |vhost, perms|
+  execute "add_vhost" do
+    environment "HOME" => "/srv/rabbitmq"
+    cwd "/srv/rabbitmq"
+    user "rabbitmq"
+    command "/usr/local/sbin/rabbitmqctl add_vhost #{vhost}"
+
+    # not_if runs at root
+    not_if "HOME=/srv/rabbitmq /usr/local/sbin/rabbitmqctl list_vhosts | grep -q #{vhost}"
+  end
+end
+
+node[:apps][:rabbitmq][:users].each do |user, pw|
+  execute "add_user" do
+    environment "HOME" => "/srv/rabbitmq"
+    cwd "/srv/rabbitmq"
+    user "rabbitmq"
+    command "/usr/local/sbin/rabbitmqctl add_user #{user} #{pw}"
+
+    # not_if runs at root
+    not_if "HOME=/srv/rabbitmq /usr/local/sbin/rabbitmqctl list_users | grep -q #{user}"
+  end
+end
+
+node[:apps][:rabbitmq][:vhosts].each do |vhost, perms|
+  perms.each do |user, priv|
+    execute "set_permissions" do
       environment "HOME" => "/srv/rabbitmq"
       cwd "/srv/rabbitmq"
       user "rabbitmq"
-      command "/usr/local/sbin/rabbitmqctl add_vhost #{vhost}"
+      command "/usr/local/sbin/rabbitmqctl set_permissions -p #{vhost} #{user} #{priv}"
     end
   end
-
-  node[:apps][:rabbitmq][:users].each do |user, pw|
-    execute "add_user" do
-      environment "HOME" => "/srv/rabbitmq"
-      cwd "/srv/rabbitmq"
-      user "rabbitmq"
-      command "/usr/local/sbin/rabbitmqctl add_user #{user} #{pw}" 
-    end
-  end
-
-  node[:apps][:rabbitmq][:vhosts].each do |vhost, perms|
-    perms.each do |user, priv|
-      execute "set_permissions" do
-        environment "HOME" => "/srv/rabbitmq"
-        cwd "/srv/rabbitmq"
-	user "rabbitmq"
-        command "/usr/local/sbin/rabbitmqctl set_permissions -p #{vhost} #{user} #{priv}"
-      end
-    end
-  end
-
-  file "/srv/rabbitmq/delete_me_to_update_perms"
 end
 

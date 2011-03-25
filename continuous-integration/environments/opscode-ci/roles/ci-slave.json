@@ -27,21 +27,6 @@
       "site":"opscode-dev"
     },
     "apps": {
-      "chef-solr": {
-        "group": "opscode",
-        "repository": "git@github.com:opscode/opscode-chef.git",
-        "server_roles": [
-          "chef-solr"
-        ],
-        "migrate": {
-          "production": false,
-          "staging": false
-        },
-        "id": "chef-solr",
-        "type": "derderder",
-        "deploy_to": "/srv/chef-solr",
-        "owner": "opscode"
-      },
       "opscode-account": {
         "group": "opscode",
         "server_roles": [
@@ -69,18 +54,6 @@
         "type": "unicorn",
         "owner": "opscode",
         "deploy_to": "/srv/opscode-chef"
-      },
-      "parkplace": {
-        "group": "opscode",
-        "repository": "git@github.com:opscode/parkplace.git",
-        "migrate": {
-          "production": false,
-          "staging": false
-        },
-        "id": "parkplace",
-        "type": "derderder",
-        "deploy_to": "/srv/parkplace",
-        "owner": "opscode"
       },
       "opscode-test-repos": {
         "group": "opscode",

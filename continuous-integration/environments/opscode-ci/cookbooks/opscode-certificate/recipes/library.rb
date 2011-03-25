@@ -56,9 +56,6 @@ deploy_revision app['id'] do
       user "root"
       cwd "#{release_path}"
       code <<-EOH
-              export GEM_HOME=/srv/localgems
-              export GEM_PATH=/srv/localgems
-              export PATH=/srv/localgems/bin:$PATH
               export HOME=/tmp
               cd #{release_path} && make clean
               cd #{release_path} && make

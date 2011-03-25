@@ -102,11 +102,11 @@ package "libsqlite3-dev"
 package "libxslt1-dev"
 package "libxml-simple-ruby"
 
-# These GEM's are used for chef-server and parkplace, but not needed for other 
-# packages like opscode-chef or opscode-account, as they use bundler.
+# These GEM's are used for chef-server and others, but not needed for
+# other packages like opscode-chef or opscode-account, as they use
+# bundler.
 gems = {
-  'rspec' => '1.3.0',
-  'rspec-rails' => '1.3.2',
+  'rspec' => '2.5.0',
   'gemcutter' => '0.6.1',
   'jeweler' => '1.4.0',
   'cucumber' => '0.8.5',
@@ -123,29 +123,28 @@ gems = {
   'unicorn' => '2.0.1',
   'fog' => '0.2.30',
   'dep_selector' => nil,
-  
+
   # opscode-authz cukes
   'couchrest' => '0.23',
   
   # mixlib-authorization spec
   'uuid' => '2.3.1',
   'yajl-ruby' => '0.7.8',
-  
-  # parkplace
-  'mongrel' => '1.1.5',
-  'metaid' => '1.0',
-  'camping' => '1.5.180',
-  'sqlite3-ruby' => '1.2.4',
 }
 
 gem_dir = Dir['/srv/localgems/gems/*']
 
 gems.each do |name,version|
-  unless gem_dir.find{|d|d=~/\/#{name}-/}
-    script "install_#{name}_local" do
+  have_version = if version
+                   gem_dir.find{|d|d=~/\/#{name}-#{version}/}
+                 else
+                   gem_dir.find{|d|d=~/\/#{name}-/}
+                 end
+
+  unless have_version
+    script "install_localgems_#{name}" do
       interpreter "bash"
       user "root"
-        #gem install -i /srv/localgems #{name} #{version.nil? ? '' : "--version #{version}" }
       code <<-EOH
         export GEM_HOME=/srv/localgems
         export GEM_PATH=/srv/localgems
@@ -156,7 +155,11 @@ gems.each do |name,version|
   end
 end
 
-# These are also just needed by chef-server.
+
+
+# Specs are run directly against these. Also, chef-server needs
+# them. We will install into /srv/#{gemname}, as well as
+# /srv/localgems
 opscode_gems = [
   "mixlib-log",
   "mixlib-cli",
@@ -176,8 +179,7 @@ opscode_gems.each do |name|
   directory "/srv/#{name}" do
     owner "root"
     group "root"
-    mode '2775'
-    recursive true
+    mode "0775"
   end
 
   deploy_revision "gem-#{name}-src" do
@@ -185,20 +187,20 @@ opscode_gems.each do |name|
     repository 'git@github.com:' + (node[:environment]["#{name}-remote"] || node[:environment]['default-remote']) + "/#{name}.git"
     remote (node[:environment]["#{name}-remote"] || node[:environment]['default-remote'])
     symlink_before_migrate Hash.new
-    #user "opscode"
-    #group "opscode"
+
+    deploy_to "/srv/#{name}"
     user "root"
     group "root"
-    deploy_to "/srv/#{name}"
+
     migrate false
     before_symlink do
       bash "install_#{name}_local" do
         user "root"
         cwd "#{release_path}"
         code <<-EOH
-          export "GEM_HOME=/srv/localgems"
-          export "GEM_PATH=/srv/localgems"
-          export "PATH=/srv/localgems/bin:$PATH"
+          export GEM_HOME=/srv/localgems
+          export GEM_PATH=/srv/localgems
+          export PATH=/srv/localgems/bin:$PATH
           rake repackage || rake build
           gem install pkg/*.gem 
         EOH
@@ -206,6 +208,4 @@ opscode_gems.each do |name|
     end
   end
 end
-
-
-
+ 
