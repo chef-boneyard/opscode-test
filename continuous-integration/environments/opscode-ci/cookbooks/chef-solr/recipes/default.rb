@@ -39,8 +39,8 @@ end
 
 script "install_solr_config" do
   interpreter "bash"
-  user "opscode"
-  group "opscode"
+  user "root"
+  group "root"
   #action :nothing
   code <<-EOH
     cd /srv/chef/current/chef-solr

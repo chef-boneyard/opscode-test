@@ -106,7 +106,8 @@ package "libxml-simple-ruby"
 # other packages like opscode-chef or opscode-account, as they use
 # bundler.
 gems = {
-  'rspec' => '2.5.0',
+  # TODO: tim, 2011/3/28: mixlib-authorization still requires rspec 1.3.0
+  'rspec' => ['2.5.0', '1.3.0'],
   'gemcutter' => '0.6.1',
   'jeweler' => '1.4.0',
   'cucumber' => '0.8.5',
@@ -134,23 +135,25 @@ gems = {
 
 gem_dir = Dir['/srv/localgems/gems/*']
 
-gems.each do |name,version|
-  have_version = if version
-                   gem_dir.find{|d|d=~/\/#{name}-#{version}/}
-                 else
-                   gem_dir.find{|d|d=~/\/#{name}-/}
-                 end
+gems.each do |name,versions|
+  Array(versions).flatten.each do |version|
+    have_version = if version
+                     gem_dir.find{|d|d=~/\/#{name}-#{version}/}
+                   else
+                     gem_dir.find{|d|d=~/\/#{name}-/}
+                   end
 
-  unless have_version
-    script "install_localgems_#{name}" do
-      interpreter "bash"
-      user "root"
-      code <<-EOH
+    unless have_version
+      script "install_localgems_#{name}" do
+        interpreter "bash"
+        user "root"
+        code <<-EOH
         export GEM_HOME=/srv/localgems
         export GEM_PATH=/srv/localgems
         export PATH="/srv/localgems/bin:$PATH"
         gem install #{name} #{version.nil? ? '' : "--version #{version}"}
       EOH
+      end
     end
   end
 end
@@ -164,22 +167,22 @@ opscode_gems = [
   "mixlib-log",
   "mixlib-cli",
   "mixlib-config",
-  "opscode-rest",
   "mixlib-authentication",
   "mixlib-authorization",
+  "mixlib-localization",
   "ohai",
   "couchrest",
-  "mixlib-localization",
-  "aws-s3",
-  "ohai"
+  "aws-s3"
 ]
 
 opscode_gems.each do |name|
 
-  directory "/srv/#{name}" do
-    owner "root"
-    group "root"
-    mode "0775"
+  ["/srv/#{name}", "/srv/#{name}/shared", "/srv/#{name}/shared/cached-copy"].each do |dirname|
+    directory dirname do
+      owner "root"
+      group "root"
+      mode "0775"
+    end
   end
 
   deploy_revision "gem-#{name}-src" do
