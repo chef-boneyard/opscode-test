@@ -16,8 +16,8 @@ audit_servers = [ node ]
 
 ["/srv/chef-solr", "/srv/chef-solr/shared", "/srv/chef-solr/shared/system"].each do |dirname|
   directory dirname do
-    owner "opscode"
-    group "opscode"
+    owner "root"
+    group "root"
     mode "0755"
   end
 end
@@ -25,8 +25,8 @@ end
 solr_conf = "/srv/chef-solr/shared/chef-solr.conf"
 template solr_conf do
   source "chef-solr.conf.erb"
-  owner "opscode"
-  group "opscode"
+  owner "root"
+  group "root"
   mode "644"
   variables(
     :int_lb_dns => env['int-lb-dns'],
