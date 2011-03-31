@@ -55,8 +55,8 @@ fi
 
 # Execute cucumber.
 if [ -f Gemfile.lock ]; then
-  echo RUN: bundle exec cucumber "$OSS_AGAINST_PLATFORM" "$@" --format junit --out "$STARTING_PWD/junit_output" --format pretty
-  bundle exec cucumber "$OSS_AGAINST_PLATFORM" "$@" --format junit --out "$STARTING_PWD/junit_output" --format pretty
+  echo RUN: bundle exec cucumber $OSS_AGAINST_PLATFORM "$@" --format junit --out "$STARTING_PWD/junit_output" --format pretty
+  bundle exec cucumber $OSS_AGAINST_PLATFORM "$@" --format junit --out "$STARTING_PWD/junit_output" --format pretty
 else
   echo RUN: cucumber "$@" --format junit --out "$STARTING_PWD/junit_output" --format pretty
   cucumber "$@" --format junit --out "$STARTING_PWD/junit_output" --format pretty

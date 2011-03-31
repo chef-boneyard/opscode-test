@@ -18,7 +18,7 @@ SERVICES_TO_RESTART = {
 
 def usage
   puts <<-EOM
-#{$0} [--branch PROJ1_NAME=[PROJ1_REMOTE/]PROJ1_BRANCH ...] RUN_PROJ_NAME (rake|cucumber) CUCUMBER_OPTIONS
+#{$0} [--branch PROJ1_NAME=[PROJ1_REMOTE/]PROJ1_BRANCH ...] RUN_PROJ_NAME (rake|cucumber) [RAKE_OR_CUCUMBER_OPTIONS]
 
   Runs cucumber or rake with the given CUCUMBER_OPTIONS for the given 
   RUN_PROJ_NAME, by executing 
@@ -61,7 +61,7 @@ def switch_branch(project_name, remote_wanted, branch_wanted)
       do_system "bundle install --deployment"
     end
 
-    services_to_restart = SERVICES_TO_RESTART[project_name]
+    services_to_restart = SERVICES_TO_RESTART[project_name] || []
     services_to_restart.each do |service|
       do_system "/etc/init.d/#{service} force-restart"
     end
