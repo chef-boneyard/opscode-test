@@ -44,7 +44,10 @@ rm -f "$STARTING_PWD/junit_output/"*
 # the cucumber arguments to use the bundled chef steps and features.
 if [ "$1" = "--oss-against-platform" ]; then
     CHEF_BUNDLED_DIR=`bundle show chef`
-    OSS_AGAINST_PLATFORM="-P -r features/support -r features/oss-support -r $CHEF_BUNDLED_DIR/features/steps $CHEF_BUNDLED_DIR/features"
+
+    # tack on ../ to the CHEF_BUNDLED_DIR, as it points into the
+    # 'chef' subdir, but features is in the root dir.
+    OSS_AGAINST_PLATFORM="-P -r features/support -r features/oss-support -r $CHEF_BUNDLED_DIR/../features/steps $CHEF_BUNDLED_DIR/../features"
     echo "Using bundled chef in $CHEF_BUNDLED_DIR..."
 
     # Eat the option argument
