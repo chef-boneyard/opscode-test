@@ -7,6 +7,10 @@
 # All rights reserved - Do Not Redistribute
 #
 
+# ------------------------
+# GET RID OF THIS COOKBOOK.
+# ------------------------
+
 gems = {
   "unicorn" => nil
 }

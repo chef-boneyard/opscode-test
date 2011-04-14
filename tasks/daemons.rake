@@ -60,7 +60,7 @@ def start_parkplace(type="normal")
 end
 
 def start_chef_solr(type="normal")
-  path = File.join(OPSCODE_PROJECT_DIR, "opscode-chef")
+  path = File.join(OPSCODE_PROJECT_DIR, "chef/chef-solr")
   @chef_solr_pid = nil
   cid = fork
   if cid

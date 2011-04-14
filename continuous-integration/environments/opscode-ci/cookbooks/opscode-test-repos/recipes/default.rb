@@ -79,19 +79,19 @@ deploy_revision "deploy-opscode-cucumber" do
   deploy_to app["deploy_to_opscode-cucumber"]
   migrate false
 
-  before_symlink do
-    bash "install_gem_local" do
-      user "root"
-      cwd "#{release_path}"
-      code <<-EOH
-          export "GEM_HOME=/srv/localgems"
-          export "GEM_PATH=/srv/localgems"
-          export "PATH=/srv/localgems/bin:$PATH"
-          cd chef
-          rake repackage || rake build
-          gem install pkg/*.gem 
-      EOH
-    end
-  end
+  # before_symlink do
+  #   bash "install_gem_local" do
+  #     user "root"
+  #     cwd "#{release_path}"
+  #     code <<-EOH
+  #         export "GEM_HOME=/srv/localgems"
+  #         export "GEM_PATH=/srv/localgems"
+  #         export "PATH=/srv/localgems/bin:$PATH"
+  #         cd chef
+  #         rake repackage || rake build
+  #         gem install pkg/*.gem 
+  #     EOH
+  #   end
+  # end
 end
 

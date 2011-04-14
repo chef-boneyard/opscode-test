@@ -11,5 +11,5 @@ depends           "erlang_binary"
 depends           "opscode-base"
 depends           "opscode-github"
 depends           "runit"
+# TODO tim 2011-3-23: get rid of this..
 depends           "capistrano"
-depends           "unicorn"

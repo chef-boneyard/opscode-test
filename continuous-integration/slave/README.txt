@@ -1,16 +1,14 @@
-A set of scripts for Hudson builder slave:
+A set of scripts for Hudson builder slave (where Hudson does tests):
 
 start-hudson-slave.sh
-	Run by Hudson via SSH to run chef-client, setup the database,
-	then run the slave jar.
-	
-	This runs chef-client, then runs the Hudson slave jar with
-	GEM_HOME/GEM_PATH set.
+	Run by Hudson (start-euca-vm.rb) via SSH to run chef-client,
+	setup the database, then run the slave jar. The hudson slave
+	jar is run with GEM_HOME/GEM_PATH set.
 
 run-cucumber.sh
 	Run on the slave as a convenience for running cucumber with JUnit 
 	output turned on, etc.
-	
+
 run-rake.sh
 	Run on the slave as a convenience for running rake with JUnit output
 	turned on, etc.

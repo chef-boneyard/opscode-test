@@ -19,7 +19,7 @@
       "community_servername": "ubuntu-ci-slave",
       
       "chef-remote": "opscode",
-      "chef-revision": "master"
+      "chef-revision": "pl-master"
     },
     "chargify": {
       "hosted_page_secret":"2Qy-lnJQPRnlJXIzTl2U",
