@@ -46,7 +46,10 @@ class OpscodeStart
   end
 
   def auth_up
-    system("sudo -v")
+    if not system("sudo -v")
+      STDOUT.puts "sudo cancelled, bailing"
+      exit 1
+    end
   end
 
   def create_tab
