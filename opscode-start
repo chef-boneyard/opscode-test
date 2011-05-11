@@ -64,7 +64,13 @@ class OpscodeStart
   def create_term_window
     terminal_app.windows.first.activate
     app("System Events").application_processes["Terminal.app"].keystroke("n", :using=>:command_down)
-    @window = terminal_app.windows.first.get
+    terminal_app.windows.get.each do |win|
+      if win.closeable.get
+        @window = win
+        return @window
+      end
+    end
+    raise 'Unable to find a closeable terminal window'
   end
 
   def start_service_in_tab(service, tab)
