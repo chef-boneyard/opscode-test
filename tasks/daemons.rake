@@ -73,7 +73,7 @@ def start_chef_solr(type="normal")
       when "features"
         p = fork { exec("bin/chef-solr-installer -p /tmp/opscode-platform-test --force") }
         Process.wait(p)
-        exec("bin/chef-solr -c #{File.expand_path(File.join(File.dirname(__FILE__), "..", "features", "data", "config", "server.rb"))} -l debug")
+        exec("bin/chef-solr -c #{File.join(OPSCODE_PROJECT_DIR, "opscode-chef", "features", "data", "config", "server.rb")} -l debug")
       end
     end
   end
