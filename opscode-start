@@ -21,6 +21,18 @@ class OpscodeStart
     :default => 'test',
     :description => 'Set the environment (test|dev), defaults to test'
 
+  option :rvm_version,
+    :short => '-r VERSION',
+    :long => '--rvm VERSION',
+    :default => nil,
+    :description => 'Use the specified RVM version when launching things'
+
+  option :parkplace_rvm_version,
+    :short => '-p VERSION',
+    :long => '--parkplace-rvm VERSION',
+    :default => nil,
+    :description => 'Use the specified RVM version when launching parkplace'
+
   def run
     @srcdir = File.expand_path(File.dirname(__FILE__))
 
@@ -35,6 +47,17 @@ class OpscodeStart
         exit 1
     end
 
+    parkplace_version = config[:parkplace_rvm_version] || config[:rvm_version]
+    if parkplace_version
+      @parkplace_base_cmd = "rvm use #{parkplace_version}; " + @base_cmd
+    else
+      @packplace_base_cmd = @base_cmd
+    end
+
+    if config[:rvm_version]
+      @base_cmd = "rvm use #{config[:rvm_version]}; " + @base_cmd
+    end
+
     tasks = {}
     tasks['platform'] = %w{couchdb rabbitmq parkplace chef_solr cert_erlang opscode_authz opscode_account opscode_org_creator opscode_expander chef_server chef_server_webui nginx}
     tasks['community']= tasks['platform'] + %w{community:mysql community:solr community:webui}
@@ -46,7 +69,10 @@ class OpscodeStart
   end
 
   def auth_up
-    system("sudo -v")
+    if not system("sudo -v")
+      STDOUT.puts "sudo cancelled, bailing"
+      exit 1
+    end
   end
 
   def create_tab
@@ -61,12 +87,24 @@ class OpscodeStart
   def create_term_window
     terminal_app.windows.first.activate
     app("System Events").application_processes["Terminal.app"].keystroke("n", :using=>:command_down)
-    @window = terminal_app.windows.first.get
+    terminal_app.windows.get.each do |win|
+      if win.closeable.get
+        @window = win
+        return @window
+      end
+    end
+    raise 'Unable to find a closeable terminal window'
   end
 
   def start_service_in_tab(service, tab)
+    # Special case for parkplace since it doesn't like 1.9.2
+    if service == 'parkplace'
+      base_cmd = @parkplace_base_cmd
+    else
+      base_cmd = @base_cmd
+    end
     # use xterm escape codes to set the tab title to the service running in the tab.
-    cmd = "unset PROMPT_COMMAND; echo -e \"\\033]0;#{service}\\007\"; #{@base_cmd}#{service}"
+    cmd = "unset PROMPT_COMMAND; echo -e \"\\033]0;#{service}\\007\"; #{base_cmd}#{service}"
     app('Terminal').do_script(cmd, :in => @window.tabs[tab].get)
   end
 

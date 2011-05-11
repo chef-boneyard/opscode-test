@@ -73,7 +73,7 @@ def start_chef_solr(type="normal")
       when "features"
         p = fork { exec("bin/chef-solr-installer -p /tmp/opscode-platform-test --force") }
         Process.wait(p)
-        exec("bin/chef-solr -c #{File.expand_path(File.join(File.dirname(__FILE__), "..", "features", "data", "config", "server.rb"))} -l debug")
+        exec("bin/chef-solr -c #{File.join(OPSCODE_PROJECT_DIR, "opscode-chef", "features", "data", "config", "server.rb")} -l debug")
       end
     end
   end
@@ -201,6 +201,9 @@ end
 
 def start_nginx(type="normal")
   path = File.join(OPSCODE_PROJECT_DIR, "nginx-sysoev")
+  if not File.exists? path
+    path = File.join(OPSCODE_PROJECT_DIR, "opscode-test", "nginx")
+  end
   nginx_pid_file = "/var/run/nginx.pid"
   @nginx_pid = nil
   cid = fork
@@ -214,7 +217,12 @@ def start_nginx(type="normal")
     exit(-1) unless @nginx_pid
   else # child
     Dir.chdir(path) do
-      exec("sudo", "./objs/nginx", "-c", "#{path}/conf/platform.conf")
+      if File.exists? "./objs/nginx"
+        nginx_path = "./objs/nginx"
+      else
+        nginx_path = "nginx"
+      end
+      exec("sudo", nginx_path, "-c", "#{path}/conf/platform.conf")
     end
   end
 end
