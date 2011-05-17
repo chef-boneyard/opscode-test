@@ -69,13 +69,6 @@ directory "/etc/opscode" do
   group "opscode"
 end
 
-cookbook_file "/etc/opscode/azs.pem" do
-  source "azs.pem"
-  owner "opscode"
-  group "opscode"
-  mode "0600"
-end
-
 cookbook_file "/etc/opscode/webui_pub.pem" do
   source "webui_pub.pem"
   owner "opscode"

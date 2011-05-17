@@ -66,7 +66,6 @@ Chef::Config.amqp_consumer_id 'hotsauce'
 couchdb_uri = '<%= @couchdb_server['ipaddress'] %>:5984'
 account_database = 'opscode_account'
 internal_database = 'opscode_account_internal'
-private_key = OpenSSL::PKey::RSA.new(File.read('/etc/opscode/azs.pem'))
 webui_public_key = OpenSSL::PKey::RSA.new(File.read('/etc/opscode/webui_pub.pem'))
 authorization_service_uri = 'http://<%= @int_lb_dns %>:5959'
 certificate_service_uri = 'http://localhost:5140/certificates'
@@ -83,7 +82,6 @@ require 'mixlib/authorization'
 Mixlib::Authorization::Config.couchdb_uri = couchdb_uri
 Mixlib::Authorization::Config.default_database = couchrest.default_database
 Mixlib::Authorization::Config.internal_database = couchrest_internal.default_database
-Mixlib::Authorization::Config.private_key = private_key
 Mixlib::Authorization::Config.web_ui_public_key = webui_public_key
 Mixlib::Authorization::Config.authorization_service_uri = authorization_service_uri
 Mixlib::Authorization::Config.certificate_service_uri = certificate_service_uri
