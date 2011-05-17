@@ -283,7 +283,6 @@ task :load_deps do
   Mixlib::Authorization::Config.couchdb_uri = Chef::Config[:couchdb_url]
   Mixlib::Authorization::Config.default_database = couchrest.default_database
   Mixlib::Authorization::Config.internal_database = couchrest_int.default_database
-  Mixlib::Authorization::Config.private_key = OpenSSL::PKey::RSA.new(File.read('/etc/opscode/azs.pem'))
   Mixlib::Authorization::Config.authorization_service_uri = 'http://localhost:5959'
   Mixlib::Authorization::Config.certificate_service_uri = "http://localhost:5140/certificates"
   require 'mixlib/authorization/auth_join'
