@@ -128,7 +128,7 @@ def cleanup_cookbook_tarballs
 end
 
 def delete_databases
-  %w{authorization authorization_integration opscode_account opscode_account_integration opscode_account_internal opscode_account_internal_integration test_harness_setup}.each do |db|
+  %w{authorization authorization_integration opscode_account opscode_account_integration opscode_account_internal opscode_account_internal_integration test_harness_setup jobs jobs_spec}.each do |db|
     begin
       chef_rest.delete_rest("#{db}/")
     rescue
