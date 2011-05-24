@@ -233,15 +233,23 @@ def configure_rabbitmq(type="normal")
 
   puts `rabbitmqctl add_vhost /chef`
 
+  # quick start jobs queue
+  puts `rabbitmqctl add_vhost /jobs`
+
   # create 'chef' user, give it the password 'testing'
   puts `rabbitmqctl add_user chef testing`
 
+  # create 'jobs' user, give it the password 'testing'
+  puts `rabbitmqctl add_user jobs testing`
+
   # the three regexes map to config, write, read permissions respectively
   puts `rabbitmqctl set_permissions -p /chef chef ".*" ".*" ".*"`
+  puts `rabbitmqctl set_permissions -p /jobs jobs ".*" ".*" ".*"`
 
   puts `rabbitmqctl list_users`
   puts `rabbitmqctl list_vhosts`
   puts `rabbitmqctl list_permissions -p /chef`
+  puts `rabbitmqctl list_permissions -p /jobs`
 end
 
 def start_dev_environment(type="normal")
