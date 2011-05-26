@@ -33,3 +33,9 @@ piab_pids_set.each do |pid, x|
   `#{cmd}`
 end
 
+all_pids.each do |process|
+  if process[:command] =~ /nginx: master process/ then
+    `sudo kill #{process[:pid]}`
+  end
+end
+
