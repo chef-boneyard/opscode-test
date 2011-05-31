@@ -199,6 +199,24 @@ def start_opscode_org_creator(type="normal")
   end  
 end
 
+def start_opscode_job_worker(type="normal")
+  path = File.join(OPSCODE_PROJECT_DIR, "opscode-job-worker")
+  @opscode_job_worker_pid = nil
+  cid = fork
+  if cid
+    @opscode_job_worker_pid = cid
+  else
+    Dir.chdir(path)
+    if File.exists?(File.join(path, "conf", "action_monkey.rb"))
+      conf_file = "action_monkey.rb"
+    else
+      conf_file = "action_monkey.rb.example"
+    end
+    exec("bundle exec bin/actionmonkey conf/#{conf_file}")
+  end
+end
+
+
 def start_nginx(type="normal")
   path = File.join(OPSCODE_PROJECT_DIR, "nginx-sysoev")
   if not File.exists? path
@@ -263,6 +281,7 @@ def start_dev_environment(type="normal")
   start_cert_erlang(type)
   start_opscode_authz(type)
   start_opscode_account(type)
+  start_opscode_job_worker(type)
   start_chef_server(type)
   start_chef_server_webui(type)
   start_nginx(type)
@@ -275,6 +294,7 @@ def start_dev_environment(type="normal")
   puts "Running Cert(Erlang) at #{@cert_erlang_pid}"
   puts "Running Opscode Authz at #{@opscode_authz_pid}"
   puts "Running Opscode Account at #{@opscode_account_pid}"
+  puts "Running Opscode Job Worker at #{@opscode_job_worker_pid}"
   puts "Running Chef at #{@chef_server_pid}"
   puts "Running nginx at #{@nginx_pid}"
 end
@@ -319,6 +339,10 @@ def stop_dev_environment
   if @nginx_pid
     puts "Stopping nginx"
     Process.kill("INT", @nginx_pid)
+  end
+  if @opscode_job_worker_pid
+    puts "Stopping Opscode Job Worker"
+    Process.kill("INT", @opscode_job_worker_pid)
   end
   puts "Have a nice day!"
 end
@@ -449,6 +473,12 @@ namespace :dev do
         wait_for_ctrlc
       end
 
+      desc "Start Opscode Job Worker for testing"
+      task :opscode_job_worker do
+        start_opscode_job_worker("features")
+        wait_for_ctrlc
+      end
+
       desc "Start Nginx for testing"
       task :nginx do
         start_nginx("features")
@@ -554,6 +584,12 @@ namespace :dev do
     desc "Start Opscode org creator"
     task :opscode_org_creator do
       start_opscode_org_creator
+      wait_for_ctrlc
+    end
+
+    desc "Start Opscode Job Worker"
+    task :opscode_job_worker do
+      start_opscode_job_worker
       wait_for_ctrlc
     end
 
