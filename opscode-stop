@@ -39,3 +39,8 @@ all_pids.each do |process|
   end
 end
 
+all_pids.each do |process|
+  if ( process[:command] =~ /merb :/ ) && ( process[:parent].to_i == 1 ) then 
+    `kill -9 #{process[:pid]}`
+  end
+end
