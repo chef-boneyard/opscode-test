@@ -33,6 +33,11 @@ class OpscodeStart
     :default => nil,
     :description => 'Use the specified RVM version when launching parkplace'
 
+  option :community_rvm_version,
+    :long => '--community-rvm VERSION',
+    :default => nil,
+    :description => 'Use the specified RVM version when launching the community site'
+
   def run
     @srcdir = File.expand_path(File.dirname(__FILE__))
 
@@ -52,6 +57,13 @@ class OpscodeStart
       @parkplace_base_cmd = "rvm use #{parkplace_version}; " + @base_cmd
     else
       @parkplace_base_cmd = @base_cmd
+    end
+
+    community_version = config[:community_rvm_version] || config[:rvm_version]
+    if community_version
+      @community_base_cmd = "rvm use #{community_version}; " + @base_cmd
+    else
+      @community_base_cmd = @base_cmd
     end
 
     if config[:rvm_version]
@@ -100,6 +112,8 @@ class OpscodeStart
     # Special case for parkplace since it doesn't like 1.9.2
     if service == 'parkplace'
       base_cmd = @parkplace_base_cmd
+    elsif service.start_with? 'community:'
+      base_cmd = @community_base_cmd
     else
       base_cmd = @base_cmd
     end
