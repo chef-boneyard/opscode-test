@@ -67,7 +67,7 @@ def backup_platform_client
 end
 
 def cleanup_replicas
-  chef_rest.get_rest('_all_dbs').each { |db| c.delete_rest("#{db}/") if db =~ /replica/ }
+  chef_rest.get_rest('_all_dbs').each { |db| chef_rest.delete_rest("#{db}/") if db =~ /replica/ }
 end
 
 def cleanup_chefs
