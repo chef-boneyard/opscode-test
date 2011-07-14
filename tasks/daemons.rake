@@ -109,22 +109,15 @@ def start_chef_server(type="normal")
   end
 end
 
-def start_chef_server_webui(type="normal")
-  path = File.join(OPSCODE_PROJECT_DIR, "opscode-chef", "chef-server-webui")
-  @chef_server_webui_pid = nil
+def start_opscode_webui(type="normal")
+  path = File.join(OPSCODE_PROJECT_DIR, "opscode-webui")
+  @opscode_webui_pid = nil
   mcid = fork
   if mcid # parent
-    @chef_server_webui_pid = mcid
+    @opscode_webui_pid = mcid
   else # child
     Dir.chdir(path) do
-      case type
-      when "normal"
-        ENV["MERB_ENV"] = "development"
-        exec "bin/chef-server-webui"
-      when "features"
-        ENV["MERB_ENV"] = "cucumber"
-        exec "bin/chef-server-webui"
-      end
+      exec ("bundle exec rails server thin")
     end
   end
 end
@@ -196,7 +189,7 @@ def start_opscode_org_creator(type="normal")
         exec("bin/org_app console test")
       end
     end
-  end  
+  end
 end
 
 def start_opscode_job_worker(type="normal")
@@ -283,7 +276,7 @@ def start_dev_environment(type="normal")
   start_opscode_account(type)
   start_opscode_job_worker(type)
   start_chef_server(type)
-  start_chef_server_webui(type)
+  start_opscode_webui(type)
   start_nginx(type)
   puts "Running CouchDB at #{@couchdb_server_pid}"
   puts "Running RabbitMQ at #{@rabbitmq_server_pid}"
@@ -387,7 +380,7 @@ namespace :dev do
           start_community_solr
           wait_for_ctrlc
         end
-        
+
         task :webui do
           start_community_webui("features")
           wait_for_ctrlc
@@ -438,8 +431,8 @@ namespace :dev do
       end
 
       desc "Start Chef Server Webui for testing"
-      task :chef_server_webui do
-        start_chef_server_webui("features")
+      task :opscode_webui do
+        start_opscode_webui("features")
         wait_for_ctrlc
       end
 
@@ -501,13 +494,13 @@ namespace :dev do
         start_community_solr
         wait_for_ctrlc
       end
-      
+
       task :webui do
         start_community_webui
         wait_for_ctrlc
       end
     end
-    
+
     desc "Start CouchDB"
     task :couchdb do
       start_couchdb
@@ -552,8 +545,8 @@ namespace :dev do
     end
 
     desc "Start Chef Server Webui"
-    task :chef_server_webui do
-      start_chef_server_webui
+    task :opscode_webui do
+      start_opscode_webui
       wait_for_ctrlc
     end
 
