@@ -117,7 +117,7 @@ def start_opscode_webui(type="normal")
     @opscode_webui_pid = mcid
   else # child
     Dir.chdir(path) do
-      exec ("bundle exec rails server thin")
+      exec ("bundle exec rails server thin -p 4500")
     end
   end
 end
