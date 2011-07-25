@@ -47,6 +47,16 @@ GIT
       mixlib-log
 
 GIT
+  remote: git@github.com:opscode/mixlib-authorization.git
+  revision: cbc611f5b983f4aa88b94424e8409637d1f9f81a
+  branch: master
+  specs:
+    mixlib-authorization (1.2.1)
+      mixlib-authentication
+      mixlib-config
+      mixlib-log
+
+GIT
   remote: git@github.com:opscode/mixlib-localization.git
   revision: 5dda67137a4dcd74dc3a144e92963509255eeb32
   specs:
@@ -58,14 +68,6 @@ GIT
   revision: ef20537128e1ca3c2c810988745e401a568c6858
   specs:
     opscode-billing (0.1.0)
-
-PATH
-  remote: /Users/ddeleo/opscode/mixlib-authorization
-  specs:
-    mixlib-authorization (1.2.1)
-      mixlib-authentication
-      mixlib-config
-      mixlib-log
 
 GEM
   remote: http://rubygems.org/
