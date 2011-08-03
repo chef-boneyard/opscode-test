@@ -1,6 +1,10 @@
 # A sample Gemfile
 source "http://rubygems.org"
 
+gem "sequel"
+gem "mysql2"
+gem "activemodel"
+
 #gem "mixlib-log", :git => "git://github.com/opscode/mixlib-log.git", :branch => "master"
 gem "chef", :git => "git://github.com/opscode/chef.git", :branch => "master"
 #gem "chef-solr", :git => "git://github.com/opscode/chef.git", :branch => "pl-master", :require => "chef/solr" 

@@ -15,9 +15,9 @@ def create_local_test
   Chef::Log.debug "Tmpdir: #{PLATFORM_TEST_DIR}"
   path = File.join(OPSCODE_PROJECT_DIR, "opscode-account", OPSCODE_PROJECT_SUFFIX, "bin")
   Dir.chdir(path) do
-    shell_out!("./account-whacker -c #{PLATFORM_TEST_DIR}/superuser.pem -d platform-superuser -e platform-cukes-superuser@opscode.com -f PlatformSuperuser -l PlatformCukeSuperuser -m cuker -u platform-superuser -p p@ssw0rd1")
+    shell_out!("bundle exec ./account-whacker -c #{PLATFORM_TEST_DIR}/superuser.pem -d platform-superuser -e platform-cukes-superuser@opscode.com -f PlatformSuperuser -l PlatformCukeSuperuser -m cuker -u platform-superuser -p p@ssw0rd1")
     Chef::Log.info("Creating global containers")
-    system("./global-containers platform-superuser")
+    shell_out!("./global-containers platform-superuser")
     output = create_public_user('local-test-user', 'Local', 'Test', 'User', 'Local Test User', 'local-test-user@opscode.com')
     Chef::Log.debug(output)
     output = create_public_org("local-test-org", "Local Test Org", "platform-superuser", "#{PLATFORM_TEST_DIR}/superuser.pem", "local-test-user", "#{PLATFORM_TEST_DIR}/local-test-org-validator.pem")
@@ -49,7 +49,7 @@ end
 
 def create_public_user(user_name, first_name, middle_name, last_name, display_name, email)
   Chef::Log.info("Creating user #{user_name}")
-  o = shell_out!("./createobjecttool -a 'http://localhost:4042' -o 'platform-superuser' -p '#{PLATFORM_TEST_DIR}/superuser.pem' -w 'user' -n '#{user_name}' -f '#{first_name}' -m '#{middle_name}' -l '#{last_name}' -d '#{display_name}' -e '#{email}' -k '#{PLATFORM_TEST_DIR}/#{user_name}.pem' -s 'p@ssw0rd1'", :env=>{"DEBUG"=>"true"})
+  o = shell_out!("bundle exec ./createobjecttool -a 'http://localhost:4042' -o 'platform-superuser' -p '#{PLATFORM_TEST_DIR}/superuser.pem' -w 'user' -n '#{user_name}' -f '#{first_name}' -m '#{middle_name}' -l '#{last_name}' -d '#{display_name}' -e '#{email}' -k '#{PLATFORM_TEST_DIR}/#{user_name}.pem' -s 'p@ssw0rd1'", :env=>{"DEBUG"=>"true"})
   puts o.format_for_exception if Chef::Log.debug?
 end
 
@@ -93,11 +93,13 @@ end
 
 def setup_test_harness
   create_credentials_dir
+  truncate_sql_tables
   delete_databases
   cleanup_after_naughty_run
   create_account_databases
   create_organization
   org_db_names = create_chef_databases
+  dump_sql_database
   prepare_feature_cookbooks
   create_test_harness_setup_database(org_db_names)
   replication_specs = (%w{authorization opscode_account opscode_account_internal} + org_db_names).map{|source_db| {:source_db => "#{Chef::Config[:couchdb_url]}/#{source_db}",:target_db => "#{Chef::Config[:couchdb_url]}/#{source_db}_integration"}}
@@ -107,6 +109,7 @@ end
 
 def setup_test_harness_no_cookbooks
   create_credentials_dir
+  truncate_sql_tables
   delete_databases
   cleanup_after_naughty_run
   create_account_databases
@@ -115,6 +118,7 @@ def setup_test_harness_no_cookbooks
   create_test_harness_setup_database(org_db_names)
   replication_specs = (%w{authorization opscode_account opscode_account_internal} + org_db_names).map{|source_db| {:source_db => "#{Chef::Config[:couchdb_url]}/#{source_db}",:target_db => "#{Chef::Config[:couchdb_url]}/#{source_db}_integration"}}
   replicate_dbs(replication_specs)
+  dump_sql_database
   cleanup_unassigned_orgs
 end
 
@@ -179,6 +183,22 @@ def create_chef_databases
     dbname
   end
 end
+
+def truncate_sql_tables
+  db = Sequel.connect("mysql2://root@localhost/#{Chef::Config[:sql_db_name]}")
+  Chef::Log.info "Truncating users table"
+  db[:users].truncate
+end
+
+def dump_sql_database
+  db_name = Chef::Config[:sql_db_name]
+  target = "#{PLATFORM_TEST_DIR}/#{db_name}.sql"
+
+  Chef::Log.info "Creating SQL DB Dump"
+
+  shell_out!("mysqldump -u root --databases opscode_chef > #{target}")
+end
+
 
 def create_test_harness_setup_database(org_db_names)
   db_names = %w{authorization opscode_account opscode_account_internal}.concat Array(org_db_names)
@@ -278,11 +298,16 @@ task :load_deps do
   require 'chef/shell_out'
   require 'chef/mixin/shell_out'
 
+  require 'sequel'
+  require 'mysql2'
+
   include Chef::Mixin::ShellOut
 
   require 'couchrest'
   # For couchdb manual replication.
   require File.join(OPSCODE_PROJECT_DIR, 'chef', OPSCODE_PROJECT_SUFFIX, 'features', 'support', 'couchdb_replicate')
+
+  Chef::Config[:sql_db_name] = 'opscode_chef'
 
   couchrest = CouchRest.new(Chef::Config[:couchdb_url])
   couchrest.database!('opscode_account')

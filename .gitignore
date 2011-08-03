@@ -2,3 +2,4 @@
 platform-client.rb
 metadata.json
 erl_crash.dump
+.bundle/config
