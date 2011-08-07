@@ -25,6 +25,7 @@ gem "mixlib-authentication", :git => "git@github.com:opscode/mixlib-authenticati
 gem "mixlib-authorization", :git => 'git@github.com:opscode/mixlib-authorization.git', :branch => 'master', :require => 'mixlib/authorization'
 gem "mixlib-localization", :git => 'git@github.com:opscode/mixlib-localization.git', :require => ['mixlib/localization', 'mixlib/localization/messages']
 gem "opscode-billing", :git => 'git@github.com:opscode/opscode-billing', :require => 'opscode/billing'
+gem "opscode-dark-launch", :git => "git@github.com:opscode/opscode-shared", :branch => "master"
 
 # OPSCODE PATCHED GEMS
 gem "couchrest", :git => "git://github.com/opscode/couchrest.git"

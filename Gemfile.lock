@@ -72,6 +72,14 @@ GIT
   specs:
     opscode-billing (0.1.0)
 
+GIT
+  remote: git@github.com:opscode/opscode-shared
+  revision: fb8b74258efea8b79985c4a5071b2eb14b424191
+  branch: master
+  specs:
+    opscode-dark-launch (0.0.3)
+      chef
+
 GEM
   remote: http://rubygems.org/
   specs:
@@ -137,6 +145,7 @@ DEPENDENCIES
   mixlib-localization!
   mysql2
   opscode-billing!
+  opscode-dark-launch!
   rake
   rb-appscript
   rest-client (~> 1.6.0)
