@@ -185,12 +185,14 @@ def create_chef_databases
 end
 
 def truncate_sql_tables
+  return false if !Opscode::DarkLaunch.is_feature_enabled?("sql_users", :GLOBALLY)
   db = Sequel.connect("mysql2://root@localhost/#{Chef::Config[:sql_db_name]}")
   Chef::Log.info "Truncating users table"
   db[:users].truncate
 end
 
 def dump_sql_database
+  return false if !Opscode::DarkLaunch.is_feature_enabled?("sql_users", :GLOBALLY)
   db_name = Chef::Config[:sql_db_name]
   target = "#{PLATFORM_TEST_DIR}/#{db_name}.sql"
 
@@ -285,6 +287,7 @@ def check_platform_files
 end
 
 task :load_deps do
+  require 'opscode/dark_launch'
   require 'pp'
   require 'tmpdir'
   require 'fileutils'
@@ -298,8 +301,10 @@ task :load_deps do
   require 'chef/shell_out'
   require 'chef/mixin/shell_out'
 
-  require 'sequel'
-  require 'mysql2'
+  if Opscode::DarkLaunch.is_feature_enabled?("sql_users", :GLOBALLY)
+    require 'sequel'
+    require 'mysql2'
+  end
 
   include Chef::Mixin::ShellOut
 
