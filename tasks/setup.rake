@@ -300,6 +300,7 @@ task :load_deps do
   require 'chef/streaming_cookbook_uploader'
   require 'chef/shell_out'
   require 'chef/mixin/shell_out'
+  Chef::Config[:dark_launch_config_filename] = "/etc/opscode/dark_launch_features.json"
 
   if Opscode::DarkLaunch.is_feature_enabled?("sql_users", :GLOBALLY)
     require 'sequel'
