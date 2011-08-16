@@ -2,6 +2,9 @@ require 'tmpdir'
 
 PLATFORM_TEST_DIR = "/tmp/opscode-platform-test"
 OPEN_SOURCE_TEST_DIR =  File.join(Dir.tmpdir, "chef_integration")
+SUPERUSER = "platform-superuser"
+ACCOUNT_URI = "http://localhost:4042"
+AUTHORIZATION_URI = 'http://localhost:5959'
 
 def create_credentials_dir(setup_test = true)
   [PLATFORM_TEST_DIR, OPEN_SOURCE_TEST_DIR].each do |dir|
@@ -11,16 +14,16 @@ def create_credentials_dir(setup_test = true)
 end
 
 def create_local_test
-  Chef::Log.info("Creating bootstrap user 'platform-superuser'")
+  Chef::Log.info("Creating bootstrap user '#{SUPERUSER}'")
   Chef::Log.debug "Tmpdir: #{PLATFORM_TEST_DIR}"
   path = File.join(OPSCODE_PROJECT_DIR, "opscode-account", OPSCODE_PROJECT_SUFFIX, "bin")
   Dir.chdir(path) do
-    shell_out!("bundle exec ./account-whacker -c #{PLATFORM_TEST_DIR}/superuser.pem -d platform-superuser -e platform-cukes-superuser@opscode.com -f PlatformSuperuser -l PlatformCukeSuperuser -m cuker -u platform-superuser -p p@ssw0rd1")
+    shell_out!("bundle exec ./account-whacker -c #{PLATFORM_TEST_DIR}/superuser.pem -d #{SUPERUSER} -e platform-cukes-superuser@opscode.com -f PlatformSuperuser -l PlatformCukeSuperuser -m cuker -u #{SUPERUSER} -p p@ssw0rd1")
     Chef::Log.info("Creating global containers")
-    shell_out!("./global-containers platform-superuser")
+    shell_out!("./global-containers #{SUPERUSER}")
     output = create_public_user('local-test-user', 'Local', 'Test', 'User', 'Local Test User', 'local-test-user@opscode.com')
     Chef::Log.debug(output)
-    output = create_public_org("local-test-org", "Local Test Org", "platform-superuser", "#{PLATFORM_TEST_DIR}/superuser.pem", "local-test-user", "#{PLATFORM_TEST_DIR}/local-test-org-validator.pem")
+    output = create_public_org("local-test-org", "Local Test Org", SUPERUSER, "#{PLATFORM_TEST_DIR}/superuser.pem", "local-test-user", "#{PLATFORM_TEST_DIR}/local-test-org-validator.pem")
     Chef::Log.debug(output)
   end
   FileUtils.copy("local-test-client.rb","/etc/chef/client.rb")
@@ -32,7 +35,7 @@ def create_public_org(org_name, org_fullname, opscode_username, opscode_pkey, cu
   result = ""
   waiting = true
   while waiting
-    result = `./createorgtool -a http://localhost:4042 -K "#{client_key_path}" -n "#{org_fullname}" -t Business -g "#{org_name}" -u "#{customer_username}" -p "#{opscode_pkey}" -o "#{opscode_username}"`
+    result = `./createorgtool -a #{ACCOUNT_URI} -K "#{client_key_path}" -n "#{org_fullname}" -t Business -g "#{org_name}" -u "#{customer_username}" -p "#{opscode_pkey}" -o "#{opscode_username}"`
     if $?.exitstatus == 53
       Chef::Log.info("...")
       sleep 10
@@ -49,7 +52,7 @@ end
 
 def create_public_user(user_name, first_name, middle_name, last_name, display_name, email)
   Chef::Log.info("Creating user #{user_name}")
-  o = shell_out!("bundle exec ./createobjecttool -a 'http://localhost:4042' -o 'platform-superuser' -p '#{PLATFORM_TEST_DIR}/superuser.pem' -w 'user' -n '#{user_name}' -f '#{first_name}' -m '#{middle_name}' -l '#{last_name}' -d '#{display_name}' -e '#{email}' -k '#{PLATFORM_TEST_DIR}/#{user_name}.pem' -s 'p@ssw0rd1'", :env=>{"DEBUG"=>"true"})
+  o = shell_out!("bundle exec ./createobjecttool -a '#{ACCOUNT_URI}' -o '#{SUPERUSER}' -p '#{PLATFORM_TEST_DIR}/superuser.pem' -w 'user' -n '#{user_name}' -f '#{first_name}' -m '#{middle_name}' -l '#{last_name}' -d '#{display_name}' -e '#{email}' -k '#{PLATFORM_TEST_DIR}/#{user_name}.pem' -s 'p@ssw0rd1'", :env=>{"DEBUG"=>"true"})
   puts o.format_for_exception if Chef::Log.debug?
 end
 
@@ -210,17 +213,17 @@ def create_test_harness_setup_database(org_db_names)
 end
 
 def create_organization
-  Chef::Log.info("Creating bootstrap user 'platform-superuser'")
+  Chef::Log.info("Creating bootstrap user '#{SUPERUSER}'")
   Chef::Log.debug "Tmpdir: #{PLATFORM_TEST_DIR}"
   oapath = File.join(OPSCODE_PROJECT_DIR, "opscode-account", OPSCODE_PROJECT_SUFFIX)
   Dir.chdir(oapath) do
-    shell_out! "./bin/account-whacker -c #{PLATFORM_TEST_DIR}/superuser.pem -d platform-superuser -e platform-cukes-superuser@opscode.com -f PlatformSuperuser -l PlatformCukeSuperuser -m cuker -u platform-superuser -p p@ssw0rd1"
+    shell_out! "./bin/account-whacker -c #{PLATFORM_TEST_DIR}/superuser.pem -d #{SUPERUSER} -e platform-cukes-superuser@opscode.com -f PlatformSuperuser -l PlatformCukeSuperuser -m cuker -u #{SUPERUSER} -p p@ssw0rd1"
   end
 
   oapath = File.join(OPSCODE_PROJECT_DIR, "opscode-account", OPSCODE_PROJECT_SUFFIX, "bin")
   Dir.chdir(oapath) do
     Chef::Log.info("Creating global containers")
-    output = `./global-containers platform-superuser`
+    output = `./global-containers #{SUPERUSER}`
     Chef::Log.debug(output)
 
     output = create_public_user('cooky', 'Cooky', 'the', 'Monkey', 'Cooky the Monkey', 'cooky@opscode.com')
@@ -229,13 +232,13 @@ def create_organization
     output = create_public_user('clownco-org-admin', 'ClowncoOrgAdmin', 'ClowncoOrgAdmin', 'ClowncoOrgAdmin', 'ClowncoOrgAdmin', 'clownco-org-admin@opscode.com')
     Chef::Log.debug(output)
 
-    output = create_public_org("clownco", "Clownco, Inc.", "platform-superuser", "#{PLATFORM_TEST_DIR}/superuser.pem", "clownco-org-admin", "#{PLATFORM_TEST_DIR}/clownco-org-validation.pem")
+    output = create_public_org("clownco", "Clownco, Inc.", SUPERUSER, "#{PLATFORM_TEST_DIR}/superuser.pem", "clownco-org-admin", "#{PLATFORM_TEST_DIR}/clownco-org-validation.pem")
     Chef::Log.debug(output)
 
     output = create_public_user('skynet-org-admin', 'SkynetOrgAdmin', 'SkynetOrgAdmin', 'SkynetOrgAdmin', 'SkynetOrgAdmin', 'skynet-org-admin@opscode.com')
     Chef::Log.debug(output)
 
-    output = create_public_org("skynet", "SkynetDotOrg", "platform-superuser", "#{PLATFORM_TEST_DIR}/superuser.pem", "skynet-org-admin", "#{PLATFORM_TEST_DIR}/skynet-org-validation.pem")
+    output = create_public_org("skynet", "SkynetDotOrg", SUPERUSER, "#{PLATFORM_TEST_DIR}/superuser.pem", "skynet-org-admin", "#{PLATFORM_TEST_DIR}/skynet-org-validation.pem")
     Chef::Log.debug(output)
   end
 
@@ -327,7 +330,7 @@ task :load_deps do
   Mixlib::Authorization::Config.couchdb_uri = Chef::Config[:couchdb_url]
   Mixlib::Authorization::Config.default_database = couchrest.default_database
   Mixlib::Authorization::Config.internal_database = couchrest_int.default_database
-  Mixlib::Authorization::Config.authorization_service_uri = 'http://localhost:5959'
+  Mixlib::Authorization::Config.authorization_service_uri = AUTHORIZATION_URI
   Mixlib::Authorization::Config.certificate_service_uri = "http://localhost:5140/certificates"
   require 'mixlib/authorization/auth_join'
   require 'mixlib/authorization/models'
