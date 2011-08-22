@@ -5,6 +5,7 @@ OPEN_SOURCE_TEST_DIR =  File.join(Dir.tmpdir, "chef_integration")
 SUPERUSER = "platform-superuser"
 ACCOUNT_URI = "http://localhost:4042"
 AUTHORIZATION_URI = 'http://localhost:5959'
+CHEF_API_URI = 'http://localhost'
 
 def create_credentials_dir(setup_test = true)
   [PLATFORM_TEST_DIR, OPEN_SOURCE_TEST_DIR].each do |dir|
@@ -254,7 +255,7 @@ def prepare_feature_cookbooks
     log_location             STDOUT
     node_name                'clownco-org-admin'
     client_key               "#{PLATFORM_TEST_DIR}/clownco-org-admin.pem"
-    chef_server_url          'http://localhost/organizations/clownco'
+    chef_server_url          '#{CHEF_API_URI}/organizations/clownco'
     cache_type               'BasicFile'
     cache_options( :path => '#{ENV['HOME']}/.chef/checksums' )
     cookbook_path            ["#{fcpath}"]
