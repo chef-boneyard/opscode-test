@@ -19,6 +19,14 @@ module Opscode::Test
 
   def self.configure
     yield config
+
+    # TODO: this is fucking ugly.
+    cdb_server = CouchRest::Server.new("http://#{config.couchdb_host}:#{config.couchdb_port}")
+    account_db = CouchRest::Database.new(cdb_server, 'opscode_account')
+
+    Mixlib::Authorization::Config.default_database          = account_db
+    Mixlib::Authorization::Config.authorization_service_uri = "http://#{config.authz_host}:#{config.authz_port}"
+    require 'mixlib/authorization/models'
   end
 
   module Configurable
@@ -86,24 +94,62 @@ config = Opscode::Test.config
 # that you are about to do some serious damage
 
 ######################################################################
-# re-usable things, like couchdb_servers
+# re-usable things, like couchdb_servers and mysql
 ######################################################################
 
-mysqldb = Sequel.connect("mysql2://#{config.mysql_user}:#{config.mysql_password}@#{config.mysql_host}/opscode_chef")
-couchdbauthz_server = CouchRest::Server.new("http://#{config.couchdbauthz_host}:#{config.couchdbauthz_port}")
-couchdb_server = CouchRest::Server.new("http://#{config.couchdb_host}:#{config.couchdb_port}")
+module Opscode::Test
 
-def couch_database(server, name)
-  CouchRest::Database.new(server,name)
+  def self.database_config
+    @database_config ||= DatabaseConfig.new
+  end
+
+  module DatabaseHelper
+    def mysql_db
+      Opscode::Test.database_config.mysql_db
+    end
+
+    def couchdb_database(server, name)
+      Opscode::Test.database_config.couchdb_database(server, name)
+    end
+
+    def couchdb_server(server)
+      Opscode::Test.database_config.couchdb_server(server)
+    end
+  end
+
+  class DatabaseConfig
+
+    include Configurable
+
+    attr_reader :mysql_db
+    attr_reader :couchdb_server
+    attr_reader :couchdbauthz_server
+
+    def initialize
+      @mysql_db = Sequel.connect("mysql2://#{config.mysql_user}:#{config.mysql_password}@#{config.mysql_host}/opscode_chef")
+      @couchdbauthz_server = CouchRest::Server.new("http://#{config.couchdbauthz_host}:#{config.couchdbauthz_port}")
+      @couchdb_server = CouchRest::Server.new("http://#{config.couchdb_host}:#{config.couchdb_port}")
+    end
+
+    def couchdb_database(server, name)
+      couchdb_server = case server
+                       when :authz; @couchdbauthz_server
+                       when :main; @couchdb_server
+                       end
+      CouchRest::Database.new(couchdb_server, name)
+    end
+
+    def couchdb_server(server)
+      case server
+      when :authz; @couchdbauthz_server
+      when :main; @couchdb_server
+      end
+    end
+
+  end
 end
 
-######################################################################
-# SHITTY, SHITTY, SHITTY
-######################################################################
-
-Mixlib::Authorization::Config.authorization_service_uri = "http://#{config.authz_host}:#{config.authz_port}"
-Mixlib::Authorization::Config.default_database = couch_database(couchdb_server, 'opscode_account')
-require 'mixlib/authorization/models'
+include Opscode::Test::DatabaseHelper
 
 ######################################################################
 # create the credentials dir
@@ -117,7 +163,7 @@ end
 # truncate the sql tables
 ######################################################################
 
-mysqldb[:users].truncate
+mysql_db[:users].truncate
 
 ######################################################################
 # delete the couchdb databases
@@ -130,11 +176,11 @@ authorization_integration
 
 couchdbauthz_databases.each do |name|
   begin
-    couch_database(couchdbauthz_server, name).delete!
+    couchdb_database(:authz, name).delete!
   rescue RestClient::ResourceNotFound; end
 end
 
-couch_databases = %w{
+couchdb_databases = %w{
 opscode_account
 opscode_account_integration
 opscode_account_internal
@@ -144,9 +190,9 @@ jobs
 jobs_spec
 }
 
-couch_databases.each do |name|
+couchdb_databases.each do |name|
   begin
-    couch_database(couchdb_server, name).delete!
+    couchdb_database(:main, name).delete!
   rescue RestClient::ResourceNotFound; end
 end
 
@@ -166,11 +212,11 @@ authorization
 }
 
 couchdbauthz_databases.each do |name|
-  couch_database(couchdbauthz_server, name).create!
+  couchdb_database(:authz, name).create!
 end
 
 # replicate the authz design docs
-authz_db = couch_database(couchdbauthz_server, 'authorization')
+authz_db = couchdb_database(:authz, 'authorization')
 replication_body = {
   :target => authz_db.uri,
   :source => 'authorization_design_documents'
@@ -178,18 +224,18 @@ replication_body = {
 replication_headers = {
   'Content-Type' => 'application/json'
 }
-RestClient.post("#{couchdbauthz_server.uri}/_replicate",
+RestClient.post("#{couchdb_server(:authz).uri}/_replicate",
                 replication_body,
                 replication_headers)
 
 # create the account databases
-couch_databases = %w{
+couchdb_databases = %w{
 opscode_account
 opscode_account_internal
 }
 
-couch_databases.each do |name|
-  couch_database(couchdb_server, name).create!
+couchdb_databases.each do |name|
+  couchdb_database(:main, name).create!
 end
 
 ######################################################################
@@ -211,7 +257,7 @@ user_key = OpenSSL::PKey::RSA.new(response['keypair'])
 mock_stats = Object.new
 def mock_stats.db_call; yield; end
 
-user_mapper = Opscode::Mappers::User.new(mysqldb, mock_stats, 0)
+user_mapper = Opscode::Mappers::User.new(mysql_db, mock_stats, 0)
 user_data = {
   :username => 'platform-superuser',
   :first_name => 'Clark',
@@ -232,8 +278,8 @@ end
 # create the global containers
 ######################################################################
 
-auth_database = couch_database(couchdbauthz_server, 'authorization')
-acct_database = couch_database(couchdb_server, 'opscode_account')
+auth_database = couchdb_database(:authz, 'authorization')
+acct_database = couchdb_database(:main, 'opscode_account')
 
 containersets = auth_database.get('containersets')['global_containerset']
 containersets.each do |name, path|
