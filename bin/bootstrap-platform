@@ -17,6 +17,10 @@ module Opscode::Test
     @config ||= Config.new
   end
 
+  def self.configure
+    yield config
+  end
+
   module Configurable
     def config
       Opscode::Test.config
@@ -52,25 +56,27 @@ module Opscode::Test
   end
 end
 
-include Opscode::Test::Configurable
+Opscode::Test.configure do |c|
+  c.output_directory = '/tmp/opscode-platform-test'
 
-config.output_directory = '/tmp/opscode-platform-test'
+  c.mysql_host = 'localhost'
+  c.mysql_user = 'root'
+  c.mysql_password = ''
 
-config.mysql_host = 'localhost'
-config.mysql_user = 'root'
-config.mysql_password = ''
+  c.couchdb_host = 'localhost'
+  c.couchdb_port = '5984'
 
-config.couchdb_host = 'localhost'
-config.couchdb_port = '5984'
+  c.couchdbauthz_host = 'localhost'
+  c.couchdbauthz_port = '5984'
 
-config.couchdbauthz_host = 'localhost'
-config.couchdbauthz_port = '5984'
+  c.authz_host = 'localhost'
+  c.authz_port = '5959'
 
-config.authz_host = 'localhost'
-config.authz_port = '5959'
+  c.cert_host = 'localhost'
+  c.cert_port = '5140'
+end
 
-config.cert_host = 'localhost'
-config.cert_port = '5140'
+config = Opscode::Test.config
 
 ######################################################################
 # warning, for Tim
