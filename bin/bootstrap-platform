@@ -11,29 +11,66 @@ require 'opscode/mappers'
 # config data
 ######################################################################
 
-output_directory = '/tmp/opscode-platform-test'
+module Opscode::Test
 
-mysql_host = 'localhost'
-mysql_user = 'root'
-mysql_password = ''
+  def self.config
+    @config ||= Config.new
+  end
 
-couchdb_host = 'localhost'
-couchdb_port = '5984'
+  module Configurable
+    def config
+      Opscode::Test.config
+    end
+  end
 
-couchdbauthz_host = 'localhost'
-couchdbauthz_port = '5984'
+  class Config
 
-account_host = 'localhost'
-account_port = '4000'
+    # config for writable data
+    attr_accessor :output_directory
 
-authz_host = 'localhost'
-authz_port = '5959'
+    # config for mysql
+    attr_accessor :mysql_host
+    attr_accessor :mysql_user
+    attr_accessor :mysql_password
 
-chef_host = 'localhost'
-chef_port = '4000'
+    # config for couchdb
+    attr_accessor :couchdb_host
+    attr_accessor :couchdb_port
 
-cert_host = 'localhost'
-cert_port = '5140'
+    # config for couchdbauthz
+    attr_accessor :couchdbauthz_host
+    attr_accessor :couchdbauthz_port
+
+    # config for authz
+    attr_accessor :authz_host
+    attr_accessor :authz_port
+
+    # config for cert
+    attr_accessor :cert_host
+    attr_accessor :cert_port
+
+  end
+end
+
+include Opscode::Test::Configurable
+
+config.output_directory = '/tmp/opscode-platform-test'
+
+config.mysql_host = 'localhost'
+config.mysql_user = 'root'
+config.mysql_password = ''
+
+config.couchdb_host = 'localhost'
+config.couchdb_port = '5984'
+
+config.couchdbauthz_host = 'localhost'
+config.couchdbauthz_port = '5984'
+
+config.authz_host = 'localhost'
+config.authz_port = '5959'
+
+config.cert_host = 'localhost'
+config.cert_port = '5140'
 
 ######################################################################
 # warning, for Tim
@@ -46,9 +83,9 @@ cert_port = '5140'
 # re-usable things, like couchdb_servers
 ######################################################################
 
-mysqldb = Sequel.connect("mysql2://#{mysql_user}:#{mysql_password}@#{mysql_host}/opscode_chef")
-couchdbauthz_server = CouchRest::Server.new("http://#{couchdbauthz_host}:#{couchdbauthz_port}")
-couchdb_server = CouchRest::Server.new("http://#{couchdb_host}:#{couchdb_port}")
+mysqldb = Sequel.connect("mysql2://#{config.mysql_user}:#{config.mysql_password}@#{config.mysql_host}/opscode_chef")
+couchdbauthz_server = CouchRest::Server.new("http://#{config.couchdbauthz_host}:#{config.couchdbauthz_port}")
+couchdb_server = CouchRest::Server.new("http://#{config.couchdb_host}:#{config.couchdb_port}")
 
 def couch_database(server, name)
   CouchRest::Database.new(server,name)
@@ -58,7 +95,7 @@ end
 # SHITTY, SHITTY, SHITTY
 ######################################################################
 
-Mixlib::Authorization::Config.authorization_service_uri = "http://#{authz_host}:#{authz_port}"
+Mixlib::Authorization::Config.authorization_service_uri = "http://#{config.authz_host}:#{config.authz_port}"
 Mixlib::Authorization::Config.default_database = couch_database(couchdb_server, 'opscode_account')
 require 'mixlib/authorization/models'
 
@@ -66,8 +103,8 @@ require 'mixlib/authorization/models'
 # create the credentials dir
 ######################################################################
 
-unless Dir.exists?(output_directory)
-  Dir.mkdir(output_directory)
+unless Dir.exists?(config.output_directory)
+  Dir.mkdir(config.output_directory)
 end
 
 ######################################################################
@@ -156,7 +193,7 @@ end
 # create the user certificate
 #
 # TODO: use a real guid for the cert common name
-cert_url = "http://#{cert_host}:#{cert_port}"
+cert_url = "http://#{config.cert_host}:#{config.cert_port}"
 common_name = "URI:http://opscode.com/GUIDS/poopypants"
 cert_hash = {:common_name => common_name}
 response = JSON.parse(RestClient.post(cert_url, cert_hash))
@@ -181,7 +218,7 @@ user_data = {
 user = Opscode::Models::User.new(user_data)
 user_mapper.create(user)
 
-File.open("#{output_directory}/superuser.pem", 'w') do |f|
+File.open("#{config.output_directory}/superuser.pem", 'w') do |f|
   f.puts user_key.to_s
 end
 
