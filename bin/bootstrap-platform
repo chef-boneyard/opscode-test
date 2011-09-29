@@ -152,6 +152,59 @@ end
 include Opscode::Test::DatabaseHelper
 
 ######################################################################
+# the user models
+######################################################################
+
+module Opscode::Test::Models
+  class User
+
+    attr_accessor :name
+    attr_accessor :first_name
+    attr_accessor :middle_name
+    attr_accessor :last_name
+    attr_accessor :display_name
+    attr_accessor :email
+    attr_accessor :password
+    attr_accessor :certificate
+
+    def create
+      # TODO: use the api to create a user
+    end
+
+    private
+
+    def to_hash
+      {
+        :username => name,
+        :first_name => first_name,
+        :middle_name => middle_name,
+        :last_name => last_name,
+        :display_name => display_name,
+        :email => email,
+        :password => password,
+        :certificate => certificate.to_s
+      }
+    end
+  end
+end
+
+module Opscode::Test::Models
+  class Superuser < User
+
+    attr_reader :authz_id
+
+    include Opscode::Test::DatabaseHelper
+
+    def create
+      user_mapper = Opscode::Mappers::User.new(mysql_db, nil, 0)
+      db_user = Opscode::Models::User.new(to_hash)
+      user_mapper.create(db_user)
+      @authz_id = db_user.authz_id
+    end
+  end
+end
+
+######################################################################
 # create the credentials dir
 ######################################################################
 
@@ -244,7 +297,11 @@ end
 
 # create the user certificate
 #
-# TODO: use a real guid for the cert common name
+# TODO:
+# generate and render the certificate way before we ever run
+# this. this way we won't have to juggle with chickens and eggs and
+# ckicken, chicken, chicken
+
 cert_url = "http://#{config.cert_host}:#{config.cert_port}"
 common_name = "URI:http://opscode.com/GUIDS/poopypants"
 cert_hash = {:common_name => common_name}
@@ -253,22 +310,18 @@ response = JSON.parse(RestClient.post(cert_url, cert_hash))
 user_cert = OpenSSL::X509::Certificate.new(response['cert'])
 user_key = OpenSSL::PKey::RSA.new(response['keypair'])
 
-# create the user object
-mock_stats = Object.new
-def mock_stats.db_call; yield; end
-
-user_mapper = Opscode::Mappers::User.new(mysql_db, mock_stats, 0)
-user_data = {
-  :username => 'platform-superuser',
-  :first_name => 'Clark',
-  :last_name => 'Kent',
-  :display_name => 'Clark Kent',
-  :email => 'kryptonite@opscode.com',
-  :password => 'kryptonite',
-  :certificate => user_cert.to_s
-}
-user = Opscode::Models::User.new(user_data)
-user_mapper.create(user)
+# just set this up for dsl-style blocks. looks dumb for now
+user = Opscode::Test::Models::Superuser.new
+user.tap do |u|
+  u.name = 'platform-superuser'
+  u.first_name = 'Clark'
+  u.last_name = 'Kent'
+  u.display_name = ' Clark Kent'
+  u.email = 'kryptonite@opscode.com'
+  u.password = 'kryptonite'
+  u.certificate = user_cert.to_s
+end
+user.create
 
 File.open("#{config.output_directory}/superuser.pem", 'w') do |f|
   f.puts user_key.to_s
