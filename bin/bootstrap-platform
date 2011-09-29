@@ -1,15 +1,15 @@
 #! /usr/bin/env ruby
 
-######################################################################
-# config data
-######################################################################
-
 require 'rubygems'
 require 'restclient'
 require 'json'
 require 'couchrest'
 require 'sequel'
 require 'opscode/mappers'
+
+######################################################################
+# config data
+######################################################################
 
 output_directory = '/tmp/opscode-platform-test'
 
@@ -181,7 +181,7 @@ user_data = {
 user = Opscode::Models::User.new(user_data)
 user_mapper.create(user)
 
-File.open('/tmp/opscode-platform-test/superuser.pem', 'w') do |f|
+File.open("#{output_directory}/superuser.pem", 'w') do |f|
   f.puts user_key.to_s
 end
 
