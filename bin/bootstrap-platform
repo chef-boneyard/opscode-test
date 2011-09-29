@@ -1,0 +1,203 @@
+#! /usr/bin/env ruby
+
+######################################################################
+# config data
+######################################################################
+
+require 'rubygems'
+require 'restclient'
+require 'json'
+require 'couchrest'
+require 'sequel'
+require 'opscode/mappers'
+
+output_directory = '/tmp/opscode-platform-test'
+
+mysql_host = 'localhost'
+mysql_user = 'root'
+mysql_password = ''
+
+couchdb_host = 'localhost'
+couchdb_port = '5984'
+
+couchdbauthz_host = 'localhost'
+couchdbauthz_port = '5984'
+
+account_host = 'localhost'
+account_port = '4000'
+
+authz_host = 'localhost'
+authz_port = '5959'
+
+chef_host = 'localhost'
+chef_port = '4000'
+
+cert_host = 'localhost'
+cert_port = '5140'
+
+######################################################################
+# warning, for Tim
+######################################################################
+
+# TODO: print out a warning with the configuration variables, stating
+# that you are about to do some serious damage
+
+######################################################################
+# re-usable things, like couchdb_servers
+######################################################################
+
+mysqldb = Sequel.connect("mysql2://#{mysql_user}:#{mysql_password}@#{mysql_host}/opscode_chef")
+couchdbauthz_server = CouchRest::Server.new("http://#{couchdbauthz_host}:#{couchdbauthz_port}")
+couchdb_server = CouchRest::Server.new("http://#{couchdb_host}:#{couchdb_port}")
+
+def couch_database(server, name)
+  CouchRest::Database.new(server,name)
+end
+
+######################################################################
+# SHITTY, SHITTY, SHITTY
+######################################################################
+
+Mixlib::Authorization::Config.authorization_service_uri = "http://#{authz_host}:#{authz_port}"
+Mixlib::Authorization::Config.default_database = couch_database(couchdb_server, 'opscode_account')
+require 'mixlib/authorization/models'
+
+######################################################################
+# create the credentials dir
+######################################################################
+
+unless Dir.exists?(output_directory)
+  Dir.mkdir(output_directory)
+end
+
+######################################################################
+# truncate the sql tables
+######################################################################
+
+mysqldb[:users].truncate
+
+######################################################################
+# delete the couchdb databases
+######################################################################
+
+couchdbauthz_databases = %w{
+authorization
+authorization_integration
+}
+
+couchdbauthz_databases.each do |name|
+  begin
+    couch_database(couchdbauthz_server, name).delete!
+  rescue RestClient::ResourceNotFound; end
+end
+
+couch_databases = %w{
+opscode_account
+opscode_account_integration
+opscode_account_internal
+opscode_account_internal_integration
+test_harness_setup
+jobs
+jobs_spec
+}
+
+couch_databases.each do |name|
+  begin
+    couch_database(couchdb_server, name).delete!
+  rescue RestClient::ResourceNotFound; end
+end
+
+######################################################################
+# clean up after naughty run
+######################################################################
+
+# hmmm... unlinking files? for what?
+
+######################################################################
+# create the couchdb databases
+######################################################################
+
+# create the authz databases
+couchdbauthz_databases = %w{
+authorization
+}
+
+couchdbauthz_databases.each do |name|
+  couch_database(couchdbauthz_server, name).create!
+end
+
+# replicate the authz design docs
+authz_db = couch_database(couchdbauthz_server, 'authorization')
+replication_body = {
+  :target => authz_db.uri,
+  :source => 'authorization_design_documents'
+}.to_json
+replication_headers = {
+  'Content-Type' => 'application/json'
+}
+RestClient.post("#{couchdbauthz_server.uri}/_replicate",
+                replication_body,
+                replication_headers)
+
+# create the account databases
+couch_databases = %w{
+opscode_account
+opscode_account_internal
+}
+
+couch_databases.each do |name|
+  couch_database(couchdb_server, name).create!
+end
+
+######################################################################
+# create the superuser
+######################################################################
+
+# create the user certificate
+#
+# TODO: use a real guid for the cert common name
+cert_url = "http://#{cert_host}:#{cert_port}"
+common_name = "URI:http://opscode.com/GUIDS/poopypants"
+cert_hash = {:common_name => common_name}
+response = JSON.parse(RestClient.post(cert_url, cert_hash))
+
+user_cert = OpenSSL::X509::Certificate.new(response['cert'])
+user_key = OpenSSL::PKey::RSA.new(response['keypair'])
+
+# create the user object
+mock_stats = Object.new
+def mock_stats.db_call; yield; end
+
+user_mapper = Opscode::Mappers::User.new(mysqldb, mock_stats, 0)
+user_data = {
+  :username => 'platform-superuser',
+  :first_name => 'Clark',
+  :last_name => 'Kent',
+  :display_name => 'Clark Kent',
+  :email => 'kryptonite@opscode.com',
+  :password => 'kryptonite',
+  :certificate => user_cert.to_s
+}
+user = Opscode::Models::User.new(user_data)
+user_mapper.create(user)
+
+File.open('/tmp/opscode-platform-test/superuser.pem', 'w') do |f|
+  f.puts user_key.to_s
+end
+
+######################################################################
+# create the global containers
+######################################################################
+
+auth_database = couch_database(couchdbauthz_server, 'authorization')
+acct_database = couch_database(couchdb_server, 'opscode_account')
+
+containersets = auth_database.get('containersets')['global_containerset']
+containersets.each do |name, path|
+  container = {
+    :containername => name,
+    :containerpath => path,
+    :requester_id  => user.authz_id
+  }
+  Mixlib::Authorization::Models::Container.on(acct_database).new(container).save
+end
