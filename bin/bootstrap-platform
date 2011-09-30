@@ -61,6 +61,8 @@ module Opscode::Test
     attr_accessor :cert_host
     attr_accessor :cert_port
 
+    attr_accessor :superuser_cert
+    attr_accessor :superuser_key
   end
 end
 
@@ -82,6 +84,9 @@ Opscode::Test.configure do |c|
 
   c.cert_host = 'localhost'
   c.cert_port = '5140'
+
+  c.superuser_cert = '/tmp/opscode-platform-test/superuser.cert'
+  c.superuser_key  = '/tmp/opscode-platform-test/superuser.pem'
 end
 
 config = Opscode::Test.config
@@ -295,20 +300,12 @@ end
 # create the superuser
 ######################################################################
 
-# create the user certificate
-#
-# TODO:
-# generate and render the certificate way before we ever run
-# this. this way we won't have to juggle with chickens and eggs and
-# ckicken, chicken, chicken
+# load the superuser cert and key from a file
+cert_file = File.read(config.superuser_cert)
+user_cert = OpenSSL::X509::Certificate.new(cert_file)
 
-cert_url = "http://#{config.cert_host}:#{config.cert_port}"
-common_name = "URI:http://opscode.com/GUIDS/poopypants"
-cert_hash = {:common_name => common_name}
-response = JSON.parse(RestClient.post(cert_url, cert_hash))
-
-user_cert = OpenSSL::X509::Certificate.new(response['cert'])
-user_key = OpenSSL::PKey::RSA.new(response['keypair'])
+key_file = File.read(config.superuser_key)
+user_key = OpenSSL::PKey::RSA.new(key_file)
 
 # just set this up for dsl-style blocks. looks dumb for now
 user = Opscode::Test::Models::Superuser.new
@@ -343,3 +340,4 @@ containersets.each do |name, path|
   }
   Mixlib::Authorization::Models::Container.on(acct_database).new(container).save
 end
+
