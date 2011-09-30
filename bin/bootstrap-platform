@@ -157,10 +157,6 @@ user.tap do |u|
 end
 user.create
 
-File.open("#{config.output_directory}/superuser.pem", 'w') do |f|
-  f.puts user_key.to_s
-end
-
 ######################################################################
 # create the global containers
 ######################################################################
