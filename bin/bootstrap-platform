@@ -7,6 +7,7 @@ require 'opscode/test'
 require 'opscode/test/config'
 require 'opscode/test/database_config'
 require 'opscode/test/database_helper'
+require 'opscode/test/models/superuser'
 require 'restclient'
 require 'json'
 require 'opscode/mappers'
@@ -44,59 +45,6 @@ config = Opscode::Test.config
 # that you are about to do some serious damage
 
 include Opscode::Test::DatabaseHelper
-
-######################################################################
-# the user models
-######################################################################
-
-module Opscode::Test::Models
-  class User
-
-    attr_accessor :name
-    attr_accessor :first_name
-    attr_accessor :middle_name
-    attr_accessor :last_name
-    attr_accessor :display_name
-    attr_accessor :email
-    attr_accessor :password
-    attr_accessor :certificate
-
-    def create
-      # TODO: use the api to create a user
-    end
-
-    private
-
-    def to_hash
-      {
-        :username => name,
-        :first_name => first_name,
-        :middle_name => middle_name,
-        :last_name => last_name,
-        :display_name => display_name,
-        :email => email,
-        :password => password,
-        :certificate => certificate.to_s
-      }
-    end
-  end
-end
-
-module Opscode::Test::Models
-  class Superuser < User
-
-    attr_reader :authz_id
-
-    include Opscode::Test::DatabaseHelper
-
-    def create
-      user_mapper = Opscode::Mappers::User.new(mysql_db, nil, 0)
-      db_user = Opscode::Models::User.new(to_hash)
-      user_mapper.create(db_user)
-      @authz_id = db_user.authz_id
-    end
-  end
-end
 
 ######################################################################
 # create the credentials dir
