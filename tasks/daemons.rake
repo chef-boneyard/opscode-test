@@ -9,6 +9,13 @@ def start_mysqld_safe
   end
 end
 
+def start_redis
+  @redis_pid = fork do
+    # This is for a basic Homebrew install of Redis
+    exec "redis-server /usr/local/etc/redis.conf"
+  end
+end
+
 def start_community_solr
   @community_solr_pid = fork do
     Dir.chdir(OPSCODE_COMMUNITY_PATH) do
@@ -272,6 +279,7 @@ def start_dev_environment(type="normal")
   start_chef_solr_indexer(type)
   #start_certificate(type)
   start_cert_erlang(type)
+  start_redis
   start_opscode_authz(type)
   start_opscode_account(type)
   start_opscode_job_worker(type)
@@ -337,6 +345,10 @@ def stop_dev_environment
     puts "Stopping Opscode Job Worker"
     Process.kill("INT", @opscode_job_worker_pid)
   end
+  if @redis_pid
+    puts "Stopping Redis"
+    Process.kill("INT", @redis_pid)
+  end
   puts "Have a nice day!"
 end
 
@@ -385,6 +397,12 @@ namespace :dev do
           start_community_webui("features")
           wait_for_ctrlc
         end
+      end
+
+      desc "Start Redis for testing"
+      task :redis do
+        start_redis
+        wait_for_ctrlc
       end
 
       desc "Start CouchDB for testing"
