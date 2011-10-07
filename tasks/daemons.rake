@@ -43,6 +43,31 @@ def start_couchdb(type="normal")
   end
 end
 
+# Using `opscode-start` to fire up the entire Opscode Platform
+# places a huge load on the machine; you're starting a bajillion
+# servers all at once.  As a result it takes a while for everything
+# to be up and running.  This causes problems for `opscode-expander`
+# and RabbitMQ (on which the former depends).
+#
+# Briefly, RabbitMQ must start, then must be properly configured
+# (proper users and queues added, etc.); only at this point should
+# `opscode-expander` connect to RabbitMQ.  Here we set up some sleep
+# times to try and properly space this sequence of events apart.
+# The configuration of RabbitMQ should take place after
+# `@rabbitmq_startup_sleep` seconds have elapsed, and `opscode-expander`
+# should follow after allowing sufficient time for the configuration
+# to take place (`@expander_startup_sleep`).
+#
+# Without this, we were basically trying to configure RabbitMQ before
+# it was running.  `opscode-expander` would also give up after a handful
+# of attempts to connect to a RabbitMQ server that hadn't even been
+# brought up yet.
+#
+# These values are a conservative heuristic; "it works for me".
+
+@rabbitmq_startup_sleep = 40
+@expander_startup_sleep = @rabbitmq_startup_sleep + 20
+
 def start_rabbitmq(type="normal")
   @rabbitmq_server_pid = nil
   cid = fork
@@ -51,6 +76,30 @@ def start_rabbitmq(type="normal")
   else
     exec("rabbitmq-server")
   end
+end
+
+def configure_rabbitmq(type="normal")
+  sleep @rabbitmq_startup_sleep
+
+  puts `rabbitmqctl add_vhost /chef`
+
+  # quick start jobs queue
+  puts `rabbitmqctl add_vhost /jobs`
+
+  # create 'chef' user, give it the password 'testing'
+  puts `rabbitmqctl add_user chef testing`
+
+  # create 'jobs' user, give it the password 'testing'
+  puts `rabbitmqctl add_user jobs testing`
+
+  # the three regexes map to config, write, read permissions respectively
+  puts `rabbitmqctl set_permissions -p /chef chef ".*" ".*" ".*"`
+  puts `rabbitmqctl set_permissions -p /jobs jobs ".*" ".*" ".*"`
+
+  puts `rabbitmqctl list_users`
+  puts `rabbitmqctl list_vhosts`
+  puts `rabbitmqctl list_permissions -p /chef`
+  puts `rabbitmqctl list_permissions -p /jobs`
 end
 
 def start_parkplace(type="normal")
@@ -94,6 +143,7 @@ def start_opscode_expander(type="normal")
     @opscode_expander = cid
   else
     Dir.chdir(path)
+    sleep @expander_startup_sleep
     exec("./bin/opscode-expander -n 1 -i 1")
   end
 end
@@ -243,31 +293,6 @@ def start_nginx(type="normal")
       exec("sudo", nginx_path, "-c", "#{path}/conf/platform.conf")
     end
   end
-end
-
-def configure_rabbitmq(type="normal")
-  # hack. wait for rabbit to come up.
-  sleep 5
-
-  puts `rabbitmqctl add_vhost /chef`
-
-  # quick start jobs queue
-  puts `rabbitmqctl add_vhost /jobs`
-
-  # create 'chef' user, give it the password 'testing'
-  puts `rabbitmqctl add_user chef testing`
-
-  # create 'jobs' user, give it the password 'testing'
-  puts `rabbitmqctl add_user jobs testing`
-
-  # the three regexes map to config, write, read permissions respectively
-  puts `rabbitmqctl set_permissions -p /chef chef ".*" ".*" ".*"`
-  puts `rabbitmqctl set_permissions -p /jobs jobs ".*" ".*" ".*"`
-
-  puts `rabbitmqctl list_users`
-  puts `rabbitmqctl list_vhosts`
-  puts `rabbitmqctl list_permissions -p /chef`
-  puts `rabbitmqctl list_permissions -p /jobs`
 end
 
 def start_dev_environment(type="normal")
