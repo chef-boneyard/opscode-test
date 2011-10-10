@@ -2,6 +2,8 @@
 # config data
 ######################################################################
 
+require 'mixlib/authorization'
+
 module Opscode::Test
 
   def self.config

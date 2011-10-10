@@ -2,6 +2,10 @@
 # the dsl module
 ######################################################################
 
+require 'openssl'
+require 'restclient'
+require 'json'
+require 'opscode/test/database_helper'
 require 'opscode/test/models/superuser'
 
 module Opscode::Test
@@ -17,6 +21,16 @@ module Opscode::Test
       su = Opscode::Test::Models::Superuser.new
       yield su
       su.create
+    end
+
+    def superuser_cert
+      cert_file = File.read(config.superuser_cert)
+      OpenSSL::X509::Certificate.new(cert_file)
+    end
+
+    def superuser_key
+      key_file = File.read(config.superuser_key)
+      OpenSSL::PKey::RSA.new(key_file)
     end
 
     #

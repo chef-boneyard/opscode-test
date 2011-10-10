@@ -2,6 +2,8 @@
 # the user model
 ######################################################################
 
+require 'opscode/mappers'
+
 module Opscode::Test::Models
   class User
 

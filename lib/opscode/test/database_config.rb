@@ -4,6 +4,7 @@
 
 require 'sequel'
 require 'couchrest'
+require 'opscode/test/config'
 
 module Opscode::Test
 

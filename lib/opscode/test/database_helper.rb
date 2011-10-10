@@ -5,7 +5,7 @@
 require 'opscode/test/database_config'
 
 module Opscode::Test
-    module DatabaseHelper
+  module DatabaseHelper
     def mysql_db
       Opscode::Test.database_config.mysql_db
     end
@@ -19,3 +19,4 @@ module Opscode::Test
     end
   end
 end
+
