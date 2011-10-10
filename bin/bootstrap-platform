@@ -3,63 +3,82 @@
 require 'rubygems'
 $:.unshift(File.expand_path('../../lib', __FILE__))
 
+require 'mixlib/cli'
 require 'opscode/test'
-require 'opscode/test/dsl'
+require 'opscode/test/bootstrapper'
 
-Opscode::Test.configure do |c|
-  c.output_directory = '/tmp/opscode-platform-test'
+class BootstrapPlatform
+  include Mixlib::CLI
 
-  c.mysql_host = 'localhost'
-  c.mysql_user = 'root'
-  c.mysql_password = ''
+  option(:config_file,
+         :short => '-c CONFIG',
+         :long => '--config CONFIG',
+         :description => 'Path to the config file [REQUIRED]')
 
-  c.couchdb_host = 'localhost'
-  c.couchdb_port = '5984'
+  option(:bootstrap_script,
+         :short => '-s SCRIPT',
+         :long => '--script SCRIPT',
+         :description => 'Path to the bootstrap script [REQUIRED]')
 
-  c.couchdbauthz_host = 'localhost'
-  c.couchdbauthz_port = '5984'
+  def run
+    validate_options!
+    configure
+    confirm
+    bootstrap
+  end
 
-  c.authz_host = 'localhost'
-  c.authz_port = '5959'
+  def configure
+    Opscode::Test.configure do |c|
+      c.instance_eval(File.read(config[:config_file]))
+    end
+  end
 
-  c.cert_host = 'localhost'
-  c.cert_port = '5140'
+  def confirm
+    ######################################################################
+    # warning, for Tim
+    ######################################################################
 
-  c.superuser_cert = '/tmp/opscode-platform-test/superuser.cert'
-  c.superuser_key  = '/tmp/opscode-platform-test/superuser.pem'
+    # TODO: print out a warning with the configuration variables, stating
+    # that you are about to do some serious damage
+  end
+
+  def bootstrap
+    Opscode::Test::Bootstrapper.new.bootstrap(config[:bootstrap_script])
+  end
+
+  # check that the config file and bootstrap scripts are specified
+  # and that they exist
+  def validate_options!
+    parse_options
+
+    if config[:config_file]
+      if !File.exists?(config[:config_file])
+        STDERR.puts "ERROR: Config file #{config[:config_file]} does not exist."
+        print_usage_and_exit
+      end
+    else
+      STDERR.puts "ERROR: Please specify a config file."
+      print_usage_and_exit
+    end
+
+    if config[:bootstrap_script]
+      if !File.exists?(config[:bootstrap_script])
+        STDERR.puts "ERROR: Bootstrap script #{config[:bootstrap_script]} does not exist."
+        print_usage_and_exit
+      end
+    else
+      STDERR.puts "ERROR: Please specify a bootstrap script"
+      print_usage_and_exit
+    end
+  end
+
+  def print_usage_and_exit
+    STDERR.puts self.opt_parser
+    exit(1)
+  end
 end
 
-config = Opscode::Test.config
-include Opscode::Test::DSL
-
-######################################################################
-# warning, for Tim
-######################################################################
-
-# TODO: print out a warning with the configuration variables, stating
-# that you are about to do some serious damage
-
-######################################################################
-# from this point on, this should be an eval'd script
-######################################################################
-
-create_credentials_dir
-
-truncate_sql_tables
-
-delete_couchdb_databases
-
-create_couchdb_databases
-
-su_authz_id = superuser do |u|
-  u.name = 'platform-superuser'
-  u.first_name = 'Clark'
-  u.last_name = 'Kent'
-  u.display_name = ' Clark Kent'
-  u.email = 'kryptonite@opscode.com'
-  u.password = 'kryptonite'
-  u.certificate = superuser_cert
+if __FILE__ == $0
+  BootstrapPlatform.new.run
 end
-
-create_global_containers(su_authz_id)
 

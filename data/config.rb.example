@@ -1,0 +1,24 @@
+#
+# example bootstrap-platform config file for local platform
+#
+
+self.output_directory = '/tmp/opscode-platform-test'
+
+self.mysql_host = 'localhost'
+self.mysql_user = 'root'
+self.mysql_password = ''
+
+self.couchdb_host = 'localhost'
+self.couchdb_port = '5984'
+
+self.couchdbauthz_host = 'localhost'
+self.couchdbauthz_port = '5984'
+
+self.authz_host = 'localhost'
+self.authz_port = '5959'
+
+self.cert_host = 'localhost'
+self.cert_port = '5140'
+
+self.superuser_cert = '/tmp/opscode-platform-test/superuser.cert'
+self.superuser_key  = '/tmp/opscode-platform-test/superuser.pem'
