@@ -37,6 +37,7 @@ Opscode::Test.configure do |c|
 end
 
 config = Opscode::Test.config
+include Opscode::Test::DSL
 
 ######################################################################
 # warning, for Tim
@@ -45,98 +46,17 @@ config = Opscode::Test.config
 # TODO: print out a warning with the configuration variables, stating
 # that you are about to do some serious damage
 
-include Opscode::Test::DatabaseHelper
-
 ######################################################################
-# create the credentials dir
+# from this point on, this should be an eval'd script
 ######################################################################
 
-unless Dir.exists?(config.output_directory)
-  Dir.mkdir(config.output_directory)
-end
+create_credentials_dir
 
-######################################################################
-# truncate the sql tables
-######################################################################
+truncate_sql_tables
 
-mysql_db[:users].truncate
+delete_couchdb_databases
 
-######################################################################
-# delete the couchdb databases
-######################################################################
-
-couchdbauthz_databases = %w{
-authorization
-authorization_integration
-}
-
-couchdbauthz_databases.each do |name|
-  begin
-    couchdb_database(:authz, name).delete!
-  rescue RestClient::ResourceNotFound; end
-end
-
-couchdb_databases = %w{
-opscode_account
-opscode_account_integration
-opscode_account_internal
-opscode_account_internal_integration
-test_harness_setup
-jobs
-jobs_spec
-}
-
-couchdb_databases.each do |name|
-  begin
-    couchdb_database(:main, name).delete!
-  rescue RestClient::ResourceNotFound; end
-end
-
-######################################################################
-# clean up after naughty run
-######################################################################
-
-# hmmm... unlinking files? for what?
-
-######################################################################
-# create the couchdb databases
-######################################################################
-
-# create the authz databases
-couchdbauthz_databases = %w{
-authorization
-}
-
-couchdbauthz_databases.each do |name|
-  couchdb_database(:authz, name).create!
-end
-
-# replicate the authz design docs
-authz_db = couchdb_database(:authz, 'authorization')
-replication_body = {
-  :target => authz_db.uri,
-  :source => 'authorization_design_documents'
-}.to_json
-replication_headers = {
-  'Content-Type' => 'application/json'
-}
-RestClient.post("#{couchdb_server(:authz).uri}/_replicate",
-                replication_body,
-                replication_headers)
-
-# create the account databases
-couchdb_databases = %w{
-opscode_account
-opscode_account_internal
-}
-
-couchdb_databases.each do |name|
-  couchdb_database(:main, name).create!
-end
-
-######################################################################
-# create the superuser
-######################################################################
+create_couchdb_databases
 
 # load the superuser cert and key from a file
 cert_file = File.read(config.superuser_cert)
@@ -144,8 +64,6 @@ user_cert = OpenSSL::X509::Certificate.new(cert_file)
 
 key_file = File.read(config.superuser_key)
 user_key = OpenSSL::PKey::RSA.new(key_file)
-
-include Opscode::Test::DSL
 
 su_authz_id = superuser do |u|
   u.name = 'platform-superuser'
@@ -157,20 +75,5 @@ su_authz_id = superuser do |u|
   u.certificate = user_cert.to_s
 end
 
-######################################################################
-# create the global containers
-######################################################################
-
-auth_database = couchdb_database(:authz, 'authorization')
-acct_database = couchdb_database(:main, 'opscode_account')
-
-containersets = auth_database.get('containersets')['global_containerset']
-containersets.each do |name, path|
-  container = {
-    :containername => name,
-    :containerpath => path,
-    :requester_id  => su_authz_id
-  }
-  Mixlib::Authorization::Models::Container.on(acct_database).new(container).save
-end
+create_global_containers(su_authz_id)
 
