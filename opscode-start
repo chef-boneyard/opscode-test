@@ -71,7 +71,7 @@ class OpscodeStart
     end
 
     tasks = {}
-    tasks['platform'] = %w{redis couchdb rabbitmq parkplace chef_solr cert_erlang opscode_authz opscode_account opscode_org_creator opscode_expander opscode_job_worker chef_server opscode_webui nginx}
+    tasks['platform'] = %w{community:mysql redis couchdb rabbitmq parkplace chef_solr cert_erlang opscode_authz opscode_account opscode_org_creator opscode_expander opscode_job_worker chef_server opscode_webui nginx}
     tasks['community']= tasks['platform'] + %w{community:mysql community:solr community:webui}
 
     services = config[:community] ? 'community' : 'platform'
