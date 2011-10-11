@@ -14,7 +14,6 @@ gem "rake"
 gem "rest-client", "~> 1.6.0"
 gem "json", '1.4.6'
 gem "coderay"
-gem "rb-appscript"
 
 gem "mixlib-cli"
 
@@ -35,3 +34,7 @@ gem "aws-s3", :git => 'git@github.com:opscode/aws-s3.git', :require => 'aws/s3'
 gem "libxml-ruby", "1.1.3"
 
 gem "rspec", "1.3.0", :require => "spec"
+
+group(:dev) do
+  gem "rb-appscript"
+end
