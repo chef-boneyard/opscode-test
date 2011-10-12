@@ -50,11 +50,29 @@ module Opscode::Test
     attr_accessor :authz_host
     attr_accessor :authz_port
 
-    # config for cert
-    attr_accessor :cert_host
-    attr_accessor :cert_port
-
     attr_accessor :superuser_cert
     attr_accessor :superuser_key
+
+    def to_s
+      return <<-EOS
+  output_directory:  #{output_directory}
+
+  mysql_host:        #{mysql_host}
+  mysql_user:        #{mysql_user}
+  mysql_password:    #{mysql_password}
+
+  couchdb_host:      #{couchdb_host}
+  couchdb_port:      #{couchdb_port}
+
+  couchdbauthz_host: #{couchdbauthz_host}
+  couchdbauthz_port: #{couchdbauthz_port}
+
+  authz_host:        #{authz_host}
+  authz_port:        #{authz_port}
+
+  superuser_cert:    #{superuser_cert}
+  superuser_key:     #{superuser_key}
+EOS
+    end
   end
 end
