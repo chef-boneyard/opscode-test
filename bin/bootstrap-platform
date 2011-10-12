@@ -6,6 +6,7 @@ $:.unshift(File.expand_path('../../lib', __FILE__))
 require 'mixlib/cli'
 require 'opscode/test'
 require 'opscode/test/bootstrapper'
+require 'highline/import'
 
 class BootstrapPlatform
   include Mixlib::CLI
@@ -23,7 +24,7 @@ class BootstrapPlatform
   def run
     validate_options!
     configure
-    confirm
+    confirm!
     bootstrap
   end
 
@@ -33,13 +34,38 @@ class BootstrapPlatform
     end
   end
 
-  def confirm
-    ######################################################################
-    # warning, for Tim
-    ######################################################################
+  def confirm!
+    # fancy note: the quotes around the heredoc identifier disables
+    # escaping
+    puts <<-'LOLTIM'
+######################################################################
+                                      _
+            __      ____ _ _ __ _ __ (_)_ __   __ _
+            \ \ /\ / / _` | '__| '_ \| | '_ \ / _` |
+             \ V  V / (_| | |  | | | | | | | | (_| |
+              \_/\_/ \__,_|_|  |_| |_|_|_| |_|\__, |
+                                              |___/
 
-    # TODO: print out a warning with the configuration variables, stating
-    # that you are about to do some serious damage
+You are about to delete _ALL_ data from this Hosted Chef environment,
+please review the configuration parameters below before proceeding.
+
+######################################################################
+
+LOLTIM
+
+    puts Opscode::Test.config.to_s
+
+    puts <<-FOOTER
+
+######################################################################
+
+FOOTER
+
+    answer = ask("Are you sure you would like to proceed? (y/n):")
+    if answer.strip.downcase != 'y'
+      puts 'Aborting. Goodbye!'
+      exit
+    end
   end
 
   def bootstrap
