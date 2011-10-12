@@ -17,8 +17,5 @@ self.couchdbauthz_port = '5984'
 self.authz_host = 'localhost'
 self.authz_port = '5959'
 
-self.cert_host = 'localhost'
-self.cert_port = '5140'
-
 self.superuser_cert = '/tmp/opscode-platform-test/superuser.cert'
 self.superuser_key  = '/tmp/opscode-platform-test/superuser.pem'
