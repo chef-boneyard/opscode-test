@@ -406,13 +406,6 @@ namespace :dev do
 
     namespace :start do
       namespace :community do
-        task :mysql do
-          ## :TODO: BUGBUG ##
-          # does not reliably kill mysqld when ctrl-C is received
-          start_mysqld_safe
-          wait_for_ctrlc
-        end
-
         task :solr do
           start_community_solr
           wait_for_ctrlc
@@ -422,6 +415,14 @@ namespace :dev do
           start_community_webui("features")
           wait_for_ctrlc
         end
+      end
+
+      desc "Start MySQL for testing"
+      task :mysql do
+        ## :TODO: BUGBUG ##
+        # does not reliably kill mysqld when ctrl-C is received
+        start_mysqld_safe
+        wait_for_ctrlc
       end
 
       desc "Start Redis for testing"
@@ -526,13 +527,6 @@ namespace :dev do
 
   namespace :start do
     namespace :community do
-      task :mysql do
-        ## :TODO: BUGBUG ##
-        # does not reliably kill mysqld when ctrl-C is received
-        start_mysqld_safe
-        wait_for_ctrlc
-      end
-
       task :solr do
         start_community_solr
         wait_for_ctrlc
@@ -542,6 +536,14 @@ namespace :dev do
         start_community_webui
         wait_for_ctrlc
       end
+    end
+
+    desc "Start MySQL"
+    task :mysql do
+      ## :TODO: BUGBUG ##
+      # does not reliably kill mysqld when ctrl-C is received
+      start_mysqld_safe
+      wait_for_ctrlc
     end
 
     desc "Start CouchDB"
