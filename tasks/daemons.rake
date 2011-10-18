@@ -4,9 +4,13 @@ def set_rails_env_for_type(type)
 end
 
 def start_mysqld_safe
-  @mysqld_pid = fork do
-    exec "mysqld_safe"
+  require 'socket'
+  server_start = Process.fork do
+    exec("mysql.server", "start")
   end
+  Process.waitpid2(server_start)
+  mysql_pidfile = "/usr/local/var/mysql/#{Socket.gethostname}.pid"
+  @mysqld_pid = File.open(mysql_pidfile, 'r') { |f| f.read }.chomp.to_i
 end
 
 def start_redis
@@ -127,7 +131,7 @@ def start_chef_solr(type="normal")
       when "normal"
         exec("bin/chef-solr -l debug")
       when "features"
-        p = fork { exec("bin/chef-solr-installer -p /tmp/opscode-platform-test --force") }
+        p = fork { exec("bin/chef-solr-installer -p #{PLATFORM_TEST_DIR} --force") }
         Process.wait(p)
         exec("bin/chef-solr -c #{File.join(OPSCODE_PROJECT_DIR, "opscode-chef", "features", "data", "config", "server.rb")} -l debug")
       end
@@ -272,7 +276,7 @@ def start_nginx(type="normal")
   if not File.exists? path
     path = File.join(OPSCODE_PROJECT_DIR, "opscode-test", "nginx")
   end
-  nginx_pid_file = "/var/run/nginx.pid"
+  nginx_pid_file = "/tmp/nginx.pid"
   @nginx_pid = nil
   cid = fork
   if cid # parent
@@ -290,7 +294,7 @@ def start_nginx(type="normal")
       else
         nginx_path = "nginx"
       end
-      exec("sudo", nginx_path, "-c", "#{path}/conf/platform.conf")
+      exec(nginx_path, "-c", "#{path}/conf/platform.conf")
     end
   end
 end
@@ -374,6 +378,10 @@ def stop_dev_environment
     puts "Stopping Redis"
     Process.kill("INT", @redis_pid)
   end
+  if @mysqld_pid
+    puts "Stopping MySQL"
+    system("mysql.server stop")
+  end
   puts "Have a nice day!"
 end
 
@@ -406,6 +414,13 @@ namespace :dev do
 
     namespace :start do
       namespace :community do
+        task :mysql do
+          ## :TODO: BUGBUG ##
+          # does not reliably kill mysqld when ctrl-C is received
+          Rake::Task['dev:features:start:mysql'].execute
+          wait_for_ctrlc
+        end
+
         task :solr do
           start_community_solr
           wait_for_ctrlc

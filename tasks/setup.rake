@@ -1,11 +1,9 @@
 require 'tmpdir'
 
-PLATFORM_TEST_DIR = "/tmp/opscode-platform-test"
-OPEN_SOURCE_TEST_DIR =  File.join(Dir.tmpdir, "chef_integration")
 SUPERUSER = "platform-superuser"
 ACCOUNT_URI = "http://localhost:4042"
 AUTHORIZATION_URI = 'http://localhost:5959'
-CHEF_API_URI = 'http://localhost'
+CHEF_API_URI = 'http://localhost:9021'
 
 def create_credentials_dir(setup_test = true)
   [PLATFORM_TEST_DIR, OPEN_SOURCE_TEST_DIR].each do |dir|
@@ -24,7 +22,7 @@ def create_local_test
     shell_out!("./global-containers #{SUPERUSER}")
     output = create_public_user('local-test-user', 'Local', 'Test', 'User', 'Local Test User', 'local-test-user@opscode.com')
     Chef::Log.debug(output)
-    output = create_public_org("local-test-org", "Local Test Org", SUPERUSER, "#{PLATFORM_TEST_DIR}/superuser.pem", "local-test-user", "#{PLATFORM_TEST_DIR}/local-test-org-validator.pem")
+    output = create_public_org("local-test-org", "Local Test Org", SUPERUSER, "#{PLATFORM_TEST_DIR}/superuser.pem", "local-test-user", "#{PLATFORM_def_DIR}/local-test-org-validator.pem")
     Chef::Log.debug(output)
   end
   FileUtils.copy("local-test-client.rb","/etc/chef/client.rb")
@@ -87,7 +85,7 @@ def cleanup_chefs
 end
 
 def cleanup_cookbooks
-  c = Chef::REST.new("http://localhost/organizations/clownco", "clownco", "#{PLATFORM_TEST_DIR}/clownco.pem")
+  c = Chef::REST.new("#{CHEF_API_URI}/organizations/clownco", "clownco", "#{PLATFORM_TEST_DIR}/clownco.pem")
   cookbooks = c.get_rest("cookbooks").keys
   cookbooks.each do |cookbook|
     STDERR.puts c.delete_rest("cookbooks/#{cookbook}").inspect
@@ -255,7 +253,7 @@ def prepare_feature_cookbooks
     log_location             STDOUT
     node_name                'clownco-org-admin'
     client_key               "#{PLATFORM_TEST_DIR}/clownco-org-admin.pem"
-    chef_server_url          '#{CHEF_API_URI}/organizations/clownco'
+    chef_server_url          "#{CHEF_API_URI}/organizations/clownco"
     cache_type               'BasicFile'
     cache_options( :path => '#{ENV['HOME']}/.chef/checksums' )
     cookbook_path            ["#{fcpath}"]
