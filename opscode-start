@@ -123,7 +123,7 @@ class OpscodeStart
   end
 
   def start_services(services)
-    auth_up
+    #auth_up
     create_term_window
 
     tab_index = 1 # applescript indexes from 1 instead of 0
