@@ -183,19 +183,6 @@ def start_opscode_webui(type="normal")
   end
 end
 
-def start_certificate(type="normal")
-  path = File.join(OPSCODE_PROJECT_DIR, "opscode-certificate")
-  @certificate_pid = nil
-  cid = fork
-  if cid # parent
-    @certificate_pid = cid
-  else # child
-    Dir.chdir(path) do
-      exec("slice -N -a thin -p 5140")
-    end
-  end
-end
-
 def start_cert_erlang(type="normal")
   path = File.join(OPSCODE_PROJECT_DIR, "opscode-cert-erlang")
   @cert_erlang_pid = nil
