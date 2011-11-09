@@ -24,13 +24,13 @@ class OpscodeStart
   option :rvm_version,
     :short => '-r VERSION',
     :long => '--rvm VERSION',
-    :default => nil,
+    :default => "1.9.2@oc",
     :description => 'Use the specified RVM version when launching things'
 
   option :parkplace_rvm_version,
     :short => '-p VERSION',
     :long => '--parkplace-rvm VERSION',
-    :default => nil,
+    :default => "1.8.7@oc",
     :description => 'Use the specified RVM version when launching parkplace'
 
   option :community_rvm_version,
