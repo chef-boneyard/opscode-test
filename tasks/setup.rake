@@ -60,14 +60,6 @@ def replace_platform_client
   FileUtils.copy("platform-client.rb", "/etc/chef/client.rb")
 end
 
-def backup_platform_client
-  if File.exists?("platform-client.rb")
-    STDERR.puts "platform-client.rb already exists.  Doing nothing"
-  else
-    FileUtils.copy("/etc/chef/client.rb", "platform-client.rb")
-  end
-end
-
 def cleanup_replicas
   chef_rest.get_rest('_all_dbs').each { |db| chef_rest.delete_rest("#{db}/") if db =~ /replica/ }
 end
@@ -281,13 +273,6 @@ def cleanup_unassigned_orgs
   end
 end
 
-def check_platform_files
-  if !File.exists?("platform-client.rb")
-    STDERR.puts "Please run the 'setup:from_platform' task once before testing to backup platform client files"
-    exit -1
-  end
-end
-
 task :load_deps do
   require 'opscode/dark_launch'
   require 'pp'
@@ -343,12 +328,12 @@ end
 
 namespace :setup do
   desc "Setup the test environment, including creating the organization, users, and uploading the fixture cookbooks"
-  task :test =>[:load_deps, :check_platform_files] do
+  task :test =>[:load_deps] do
     setup_test_harness
   end
 
   desc "Setup the test environment, including creating the organization, users (no feature cookbooks)"
-  task :test_nocb =>[:load_deps, :check_platform_files] do
+  task :test_nocb =>[:load_deps] do
     setup_test_harness_no_cookbooks
   end
 
@@ -357,18 +342,8 @@ namespace :setup do
     prepare_feature_cookbooks
   end
 
-  desc "Backup production platform files so we can safely test locally"
-  task :from_platform do
-    backup_platform_client
-  end
-
-  desc "Return production platform files to their places"
-  task :to_platform =>[:check_platform_files] do
-    replace_platform_client
-  end
-
   desc "Setup for local platform testing"
-  task :local_platform=>[:check_platform_files] do
+  task :local_platform do
     cleanup_replicas
     cleanup_chefs
     delete_databases
@@ -377,10 +352,6 @@ namespace :setup do
     create_local_test
   end
 
-end
-
-task :check_platform_files do
-  check_platform_files
 end
 
 desc "Charge like a cowboy into the battlefield"
