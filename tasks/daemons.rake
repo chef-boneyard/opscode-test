@@ -119,7 +119,7 @@ def start_parkplace(type="normal")
   end
 end
 
-def start_chef_solr(type="normal")
+def start_chef_solr(type)
   path = File.join(OPSCODE_PROJECT_DIR, "chef/chef-solr")
   @chef_solr_pid = nil
   cid = fork
@@ -129,9 +129,10 @@ def start_chef_solr(type="normal")
     Dir.chdir(path) do
       case type
       when "normal"
-        exec("bin/chef-solr -l debug")
+        raise "I'm no longer normal, try 'features'"
       when "features"
-        p = fork { exec("bin/chef-solr-installer -p #{PLATFORM_TEST_DIR} --force") }
+        cmd = "rake tar_solr && bin/chef-solr-installer -p #{PLATFORM_TEST_DIR} --force"
+        p = fork { exec(cmd) }
         Process.wait(p)
         exec("bin/chef-solr -c #{File.join(OPSCODE_PROJECT_DIR, "opscode-chef", "features", "data", "config", "server.rb")} -l debug")
       end
