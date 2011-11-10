@@ -260,10 +260,7 @@ end
 
 
 def start_nginx(type="normal")
-  path = File.join(OPSCODE_PROJECT_DIR, "nginx-sysoev")
-  if not File.exists? path
-    path = File.join(OPSCODE_PROJECT_DIR, "opscode-test", "nginx")
-  end
+  nginx_config_dir = File.join(OPSCODE_PROJECT_DIR, "opscode-test", "nginx")
   nginx_pid_file = "/tmp/nginx.pid"
   @nginx_pid = nil
   cid = fork
@@ -276,13 +273,8 @@ def start_nginx(type="normal")
     end
     exit(-1) unless @nginx_pid
   else # child
-    Dir.chdir(path) do
-      if File.exists? "./objs/nginx"
-        nginx_path = "./objs/nginx"
-      else
-        nginx_path = "nginx"
-      end
-      exec(nginx_path, "-c", "#{path}/conf/platform.conf")
+    Dir.chdir(nginx_config_dir) do
+      exec("nginx", "-c", "#{nginx_config_dir}/conf/platform.conf")
     end
   end
 end
