@@ -188,7 +188,8 @@ end
 
 def truncate_sql_tables
   return false if !Opscode::DarkLaunch.is_feature_enabled?("sql_users", :GLOBALLY)
-  db = Sequel.connect("mysql2://root@localhost/#{Chef::Config[:sql_db_name]}")
+  # db = Sequel.connect("mysql2://root@localhost/#{Chef::Config[:sql_db_name]}")
+  db = Sequel.connect("postgres://tim@localhost/#{Chef::Config[:sql_db_name]}")
   Chef::Log.info "Truncating users table"
   db[:users].truncate
 end
@@ -200,7 +201,8 @@ def dump_sql_database
 
   Chef::Log.info "Creating SQL DB Dump"
 
-  shell_out!("mysqldump -u root --databases opscode_chef > #{target}")
+  #shell_out!("mysqldump -u root --databases opscode_chef > #{target}")
+  shell_out!("pg_dump opscode_chef > #{target}")
 end
 
 
@@ -306,7 +308,8 @@ task :load_deps do
 
   if Opscode::DarkLaunch.is_feature_enabled?("sql_users", :GLOBALLY)
     require 'sequel'
-    require 'mysql2'
+    #require 'mysql2'
+    require 'pg'
   end
 
   include Chef::Mixin::ShellOut
