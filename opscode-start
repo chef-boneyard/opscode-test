@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+require 'yaml'
 require 'rubygems'
 require 'pp'
 require 'appscript'
@@ -8,6 +9,8 @@ require 'mixlib/cli'
 class OpscodeStart
   include Mixlib::CLI
   include Appscript
+
+  DEFAULT_CONFIG = {:rvm_version => "1.9.2@oc", :parkplace_rvm_version => "1.8.7@oc"}
 
   option :community,
     :short => '-c',
@@ -24,22 +27,33 @@ class OpscodeStart
   option :rvm_version,
     :short => '-r VERSION',
     :long => '--rvm VERSION',
-    :default => "1.9.2@oc",
     :description => 'Use the specified RVM version when launching things'
 
   option :parkplace_rvm_version,
     :short => '-p VERSION',
     :long => '--parkplace-rvm VERSION',
-    :default => "1.8.7@oc",
     :description => 'Use the specified RVM version when launching parkplace'
 
   option :community_rvm_version,
     :long => '--community-rvm VERSION',
-    :default => nil,
+    #:default => nil,
     :description => 'Use the specified RVM version when launching the community site'
 
   def run
     @srcdir = File.expand_path(File.dirname(__FILE__))
+
+
+    # load local config
+    yaml_config_file = File.expand_path('../opscode-start.yml', __FILE__)
+    local_config = if File.exist?(yaml_config_file)
+      YAML.load_file(yaml_config_file)
+    else
+      {}
+    end
+
+    cli_config = config
+    config = DEFAULT_CONFIG.merge(local_config)
+    config = config.merge(cli_config)
 
     @base_cmd = case config[:environment]
       when 'test'
