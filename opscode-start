@@ -42,7 +42,6 @@ class OpscodeStart
   def run
     @srcdir = File.expand_path(File.dirname(__FILE__))
 
-
     # load local config
     yaml_config_file = File.expand_path('../opscode-start.yml', __FILE__)
     local_config = if File.exist?(yaml_config_file)
