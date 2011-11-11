@@ -171,6 +171,15 @@ def start_chef_server(type="normal")
   end
 end
 
+def start_erchef(type="first_they_ignore_you")
+  path = File.join(OPSCODE_PROJECT_DIR, "erchef", "rel", "erchef")
+  Dir.chdir(path)
+  # not totally sure we need this, but I think erchef expects rabbit
+  # to be alive
+  sleep @expander_startup_sleep
+  exec("bin/erchef console")
+end
+
 def start_opscode_webui(type="normal")
   path = File.join(OPSCODE_PROJECT_DIR, "opscode-webui")
   @opscode_webui_pid = nil
@@ -286,13 +295,13 @@ def start_dev_environment(type="normal")
   start_parkplace(type)
   start_chef_solr(type)
   start_chef_solr_indexer(type)
-  #start_certificate(type)
   start_cert_erlang(type)
   start_redis
   start_opscode_authz(type)
   start_opscode_account(type)
   start_opscode_job_worker(type)
   start_chef_server(type)
+  start_erchef(type)
   start_opscode_webui(type)
   start_nginx(type)
   puts "Running CouchDB at #{@couchdb_server_pid}"
@@ -300,12 +309,12 @@ def start_dev_environment(type="normal")
   puts "Running ParkPlace at #{@parkplace_pid}"
   puts "Running Chef Solr at #{@chef_solr_pid}"
   puts "Running Chef Solr Indexer at #{@chef_solr_indexer_pid}"
-  #puts "Running Certificate at #{@certificate_pid}"
   puts "Running Cert(Erlang) at #{@cert_erlang_pid}"
   puts "Running Opscode Authz at #{@opscode_authz_pid}"
   puts "Running Opscode Account at #{@opscode_account_pid}"
   puts "Running Opscode Job Worker at #{@opscode_job_worker_pid}"
   puts "Running Chef at #{@chef_server_pid}"
+  puts "Running erchef at #{@erchef_pid}"
   puts "Running nginx at #{@nginx_pid}"
 end
 
@@ -469,6 +478,11 @@ namespace :dev do
         wait_for_ctrlc
       end
 
+      desc "Start erchef for testing"
+      task :erchef do
+        start_erchef("features")
+      end
+
       desc "Start Chef Server Webui for testing"
       task :opscode_webui do
         start_opscode_webui("features")
@@ -582,6 +596,11 @@ namespace :dev do
     task :chef_server do
       start_chef_server
       wait_for_ctrlc
+    end
+
+    desc "Start erchef"
+    task :erchef do
+      start_erchef
     end
 
     desc "Start Chef Server Webui"
