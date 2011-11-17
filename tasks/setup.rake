@@ -195,7 +195,7 @@ def dump_sql_database
   when /mysql/
     "mysqldump -u root --databases"
   when /postgres/
-    "pg_dump"
+    "pg_dump -Fc"
   else
     raise "Cannot determine database from connection string: #{Opscode::Mappers.connection_string}"
   end
