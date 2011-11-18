@@ -16,12 +16,12 @@ module Opscode::Test
 
     include Configurable
 
-    attr_reader :mysql_db
+    attr_reader :db
     attr_reader :couchdb_server
     attr_reader :couchdbauthz_server
 
     def initialize
-      @mysql_db = Sequel.connect("mysql2://#{config.mysql_user}:#{config.mysql_password}@#{config.mysql_host}/opscode_chef")
+      @db = Sequel.connect("#{config.db_driver}://#{config.db_user}:#{config.db_password}@#{config.db_host}/opscode_chef")
       @couchdbauthz_server = CouchRest::Server.new("http://#{config.couchdbauthz_host}:#{config.couchdbauthz_port}")
       @couchdb_server = CouchRest::Server.new("http://#{config.couchdb_host}:#{config.couchdb_port}")
     end

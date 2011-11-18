@@ -26,6 +26,17 @@ module Opscode::Test
       su.create
     end
 
+    def fetch_superuser_cert
+      common_name = "URI:http://opscode.com/GUIDS/fu"
+      response = JSON.parse(RestClient.post "http://localhost:5140/certificates", :common_name => common_name)
+
+      cert = OpenSSL::X509::Certificate.new(response["cert"])
+      key = OpenSSL::PKey::RSA.new(response["keypair"])
+
+      File.open(config.superuser_cert, "w") {|f| f.print(cert)}
+      File.open(config.superuser_key, "w") {|f| f.print(key)}
+    end
+
     def superuser_cert
       cert_file = File.read(config.superuser_cert)
       OpenSSL::X509::Certificate.new(cert_file)
@@ -50,7 +61,7 @@ module Opscode::Test
 
     def truncate_sql_tables
       log "Truncating the sql tables..."
-      mysql_db[:users].truncate
+      db[:users].truncate
     end
 
     def delete_couchdb_databases

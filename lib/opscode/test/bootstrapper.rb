@@ -6,7 +6,7 @@ module Opscode::Test
     include Opscode::Test::DSL
 
     def bootstrap(filename)
-      instance_eval(File.read(filename))
+      instance_eval(File.read(filename), filename, 1)
     end
   end
 end
