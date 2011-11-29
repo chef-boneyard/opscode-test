@@ -29,7 +29,7 @@ gem "mixlib-cli"
 gem "mixlib-authentication", :git => "git@github.com:opscode/mixlib-authentication.git", :branch => 'master', :require => 'mixlib/authentication'
 # no gemspec yet :(
 #gem 'mixlib-config', :git => "git@github.com:opscode/mixlib-config.git", :branch => 'master', :require => 'mixlib/config'
-gem "mixlib-authorization", :git => 'git@github.com:opscode/mixlib-authorization.git', :branch => 'pgsql-swag', :require => 'mixlib/authorization'
+gem "mixlib-authorization", :git => 'git@github.com:opscode/mixlib-authorization.git', :branch => 'master', :require => 'mixlib/authorization'
 gem "mixlib-localization", :git => 'git@github.com:opscode/mixlib-localization.git', :require => ['mixlib/localization', 'mixlib/localization/messages']
 gem "opscode-billing", :git => 'git@github.com:opscode/opscode-billing', :require => 'opscode/billing'
 gem "opscode-dark-launch", :git => "git@github.com:opscode/opscode-shared", :branch => "master"
