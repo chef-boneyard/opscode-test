@@ -179,20 +179,29 @@ def create_chef_databases
 end
 
 def truncate_sql_tables
-  return false if !Opscode::DarkLaunch.is_feature_enabled?("sql_users", :GLOBALLY)
-  db = Sequel.connect("mysql2://root@localhost/#{Chef::Config[:sql_db_name]}")
+  Opscode::Mappers.use_dev_config
+
+  db = Sequel.connect(Opscode::Mappers.connection_string)
   Chef::Log.info "Truncating users table"
   db[:users].truncate
 end
 
 def dump_sql_database
-  return false if !Opscode::DarkLaunch.is_feature_enabled?("sql_users", :GLOBALLY)
   db_name = Chef::Config[:sql_db_name]
   target = "#{PLATFORM_TEST_DIR}/#{db_name}.sql"
 
   Chef::Log.info "Creating SQL DB Dump"
+  dump_cmd = case Opscode::Mappers.connection_string
+  when /mysql/
+    "mysqldump -u root --databases"
+  when /postgres/
+    "pg_dump -Fc"
+  else
+    raise "Cannot determine database from connection string: #{Opscode::Mappers.connection_string}"
+  end
 
-  shell_out!("mysqldump -u root --databases opscode_chef > #{target}")
+
+  shell_out!("#{dump_cmd} opscode_chef > #{target}")
 end
 
 
@@ -274,6 +283,8 @@ def cleanup_unassigned_orgs
 end
 
 task :load_deps do
+  require 'bundler'
+  Bundler.setup
   require 'opscode/dark_launch'
   require 'pp'
   require 'tmpdir'
@@ -289,10 +300,9 @@ task :load_deps do
   require 'chef/mixin/shell_out'
   Chef::Config[:dark_launch_config_filename] = "/etc/opscode/dark_launch_features.json"
 
-  if Opscode::DarkLaunch.is_feature_enabled?("sql_users", :GLOBALLY)
-    require 'sequel'
-    require 'mysql2'
-  end
+  require 'sequel'
+  #require 'mysql2'
+  require 'opscode/mappers/base'
 
   include Chef::Mixin::ShellOut
 

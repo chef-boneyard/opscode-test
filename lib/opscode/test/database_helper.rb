@@ -6,8 +6,8 @@ require 'opscode/test/database_config'
 
 module Opscode::Test
   module DatabaseHelper
-    def mysql_db
-      Opscode::Test.database_config.mysql_db
+    def db
+      Opscode::Test.database_config.db
     end
 
     def couchdb_database(server, name)

@@ -11,6 +11,9 @@ delete_couchdb_databases
 
 create_couchdb_databases
 
+# For "dev mode" only--fetches a cert from cert service.
+fetch_superuser_cert
+
 su_authz_id = superuser do |u|
   u.name = 'platform-superuser'
   u.first_name = 'Clark'

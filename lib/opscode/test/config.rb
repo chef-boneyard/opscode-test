@@ -33,10 +33,11 @@ module Opscode::Test
     # config for writable data
     attr_accessor :output_directory
 
-    # config for mysql
-    attr_accessor :mysql_host
-    attr_accessor :mysql_user
-    attr_accessor :mysql_password
+    # config for db
+    attr_accessor :db_driver
+    attr_accessor :db_host
+    attr_accessor :db_user
+    attr_accessor :db_password
 
     # config for couchdb
     attr_accessor :couchdb_host
@@ -57,9 +58,10 @@ module Opscode::Test
       return <<-EOS
   output_directory:  #{output_directory}
 
-  mysql_host:        #{mysql_host}
-  mysql_user:        #{mysql_user}
-  mysql_password:    #{mysql_password}
+  db_driver:         #{db_driver}
+  db_host:           #{db_host}
+  db_user:           #{db_user}
+  db_password:       #{db_password}
 
   couchdb_host:      #{couchdb_host}
   couchdb_port:      #{couchdb_port}

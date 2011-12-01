@@ -2,7 +2,15 @@
 source "http://rubygems.org"
 
 gem "sequel"
-gem "mysql2"
+
+group(:mysql) do
+  gem "mysql2"
+end
+
+group(:pg) do
+  gem "pg"
+end
+
 gem "activemodel"
 
 #gem "mixlib-log", :git => "git://github.com/opscode/mixlib-log.git", :branch => "master"
