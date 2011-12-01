@@ -3,6 +3,37 @@ def set_rails_env_for_type(type)
   ENV['RAILS_ENV'] = rails_env
 end
 
+# Figure out what database we're going to connect to, based on the DATABASE_URI
+def database_platform
+
+  uri_file = File.expand_path("DATABASE_URI", OPSCODE_PROJECT_DIR)
+  unless File.exist?(uri_file)
+    raise "Cannot find DATABASE_URI file in #{OPSCODE_PROJECT_DIR}!"
+  end
+  conn = IO.read(uri_file).strip
+
+  case conn
+  when /mysql/
+    "mysql"
+  when /postgres/
+    "postgres"
+  else
+    raise "Cannot determine database from connection string: #{conn}"
+  end
+end
+
+def start_postgres
+  server_start = Process.fork do
+    exec("pg_ctl -D /usr/local/var/postgres start -l /tmp/opscode-test-pg.log")
+  end
+  Process.waitpid2(server_start)
+  sleep 5 # Apparently it takes a while before the PID file is written when invoking pg_ctl
+  postgres_pidfile = "/usr/local/var/postgres/postmaster.pid"
+  @postgres_pid = File.open(postgres_pidfile, 'r') { |f| f.read }.chomp.to_i
+
+  puts @postgres_pid
+end
+
 def start_mysqld_safe
   require 'socket'
   server_start = Process.fork do
@@ -371,6 +402,10 @@ def stop_dev_environment
     puts "Stopping MySQL"
     system("mysql.server stop")
   end
+  if @postgres_pid
+    puts "Stopping Postgres"
+    system("pg_ctl -D /usr/local/var/postgres stop -s -m fast")
+  end
   puts "Have a nice day!"
 end
 
@@ -403,10 +438,10 @@ namespace :dev do
 
     namespace :start do
       namespace :community do
-        task :mysql do
+        task :database do
           ## :TODO: BUGBUG ##
           # does not reliably kill mysqld when ctrl-C is received
-          Rake::Task['dev:features:start:mysql'].execute
+          Rake::Task['dev:features:start:database'].execute
           wait_for_ctrlc
         end
 
@@ -421,11 +456,16 @@ namespace :dev do
         end
       end
 
-      desc "Start MySQL for testing"
-      task :mysql do
-        ## :TODO: BUGBUG ##
-        # does not reliably kill mysqld when ctrl-C is received
-        start_mysqld_safe
+      desc "Start relational database (MySQL or Postgres) for testing"
+      task :database do
+        case database_platform
+        when "mysql"
+          ## :TODO: BUGBUG ##
+          # does not reliably kill mysqld when ctrl-C is received
+          start_mysqld_safe
+        when "postgres"
+          start_postgres
+        end
         wait_for_ctrlc
       end
 
