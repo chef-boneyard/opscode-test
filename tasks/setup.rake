@@ -1,4 +1,5 @@
 require 'tmpdir'
+require 'uri'
 
 SUPERUSER = "platform-superuser"
 ACCOUNT_URI = "http://localhost:4042"
@@ -191,17 +192,22 @@ def dump_sql_database
   target = "#{PLATFORM_TEST_DIR}/#{db_name}.sql"
 
   Chef::Log.info "Creating SQL DB Dump"
-  dump_cmd = case Opscode::Mappers.connection_string
-  when /mysql/
-    "mysqldump -u root --databases"
-  when /postgres/
-    "pg_dump -Fc"
-  else
-    raise "Cannot determine database from connection string: #{Opscode::Mappers.connection_string}"
-  end
+  uri = URI.parse(Opscode::Mappers.connection_string)
+  db = uri.path.split('/')[1]
+  puts "Type password '#{uri.password}' if prompted"
+  dump_cmd = 
+    case uri.scheme
+    when /mysql/	  
+      "mysqldump -u #{uri.user} -p#{uri.password} -h #{uri.host} -P #{uri.port} --protocol=TCP --databases #{db}"
+    when /postgres/
+      # ugh, no way to give password on command line for pg_dump?
+      "pg_dump -Fc -u #{uri.user} -h #{uri.host} -p #{uri.port} #{db}"
+    else
+      raise "Cannot determine database from connection string: #{Opscode::Mappers.connection_string}"
+    end
+  puts "Command: #{dump_cmd}"
 
-
-  shell_out!("#{dump_cmd} opscode_chef > #{target}")
+  shell_out!("#{dump_cmd} > #{target}")
 end
 
 
