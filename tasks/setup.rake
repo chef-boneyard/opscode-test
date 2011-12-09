@@ -201,7 +201,7 @@ def dump_sql_database
       "mysqldump -u #{uri.user} -p#{uri.password} -h #{uri.host} -P #{uri.port} --protocol=TCP --databases #{db}"
     when /postgres/
       # ugh, no way to give password on command line for pg_dump?
-      "pg_dump -Fc -u #{uri.user} -h #{uri.host} -p #{uri.port} #{db}"
+      "pg_dump -Fc -U #{uri.user} -h #{uri.host} -p #{uri.port} #{db}"
     else
       raise "Cannot determine database from connection string: #{Opscode::Mappers.connection_string}"
     end
