@@ -194,17 +194,24 @@ def dump_sql_database
   Chef::Log.info "Creating SQL DB Dump"
   uri = URI.parse(Opscode::Mappers.connection_string)
   db = uri.path.split('/')[1]
-  puts "Type password '#{uri.password}' if prompted"
-  dump_cmd = 
-    case uri.scheme
-    when /mysql/	  
-      "mysqldump -u #{uri.user} -p#{uri.password} -h #{uri.host} -P #{uri.port} --protocol=TCP --databases #{db}"
-    when /postgres/
-      # ugh, no way to give password on command line for pg_dump?
-      "pg_dump -Fc -U #{uri.user} -h #{uri.host} -p #{uri.port} #{db}"
-    else
-      raise "Cannot determine database from connection string: #{Opscode::Mappers.connection_string}"
-    end
+  puts "Type password '#{uri.password}' if prompted" if uri.password
+  case uri.scheme
+  when /mysql/
+    dump_cmd = "mysqldump --databases #{db}"
+    dump_cmd << " -u #{uri.user}" if uri.user
+    dump_cmd << " -p#{uri.password}" if uri.password
+    dump_cmd << " -h #{uri.host}" if uri.host
+    dump_cmd << " -P #{uri.port} --protocol=TCP" if uri.port
+  when /postgres/
+    # ugh, no way to give password on command line for pg_dump?
+    dump_cmd = "pg_dump -Fc"
+    dump_cmd << " -U #{uri.user}" if uri.user
+    dump_cmd << " -h #{uri.host}" if uri.host
+    dump_cmd << " -p #{uri.port}" if uri.port
+    dump_cmd << " #{db}"
+  else
+    raise "Cannot determine database from connection string: #{Opscode::Mappers.connection_string}"
+  end
   puts "Command: #{dump_cmd}"
 
   shell_out!("#{dump_cmd} > #{target}")
