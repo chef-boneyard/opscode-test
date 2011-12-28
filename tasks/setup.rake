@@ -23,7 +23,7 @@ def create_local_test
     shell_out!("./global-containers #{SUPERUSER}")
     output = create_public_user('local-test-user', 'Local', 'Test', 'User', 'Local Test User', 'local-test-user@opscode.com')
     Chef::Log.debug(output)
-    output = create_public_org("local-test-org", "Local Test Org", SUPERUSER, "#{PLATFORM_TEST_DIR}/superuser.pem", "local-test-user", "#{PLATFORM_def_DIR}/local-test-org-validator.pem")
+    output = create_public_org("local-test-org", "Local Test Org", SUPERUSER, "#{PLATFORM_TEST_DIR}/superuser.pem", "local-test-user", "#{PLATFORM_TEST_DIR}/local-test-org-validator.pem")
     Chef::Log.debug(output)
   end
   FileUtils.copy("local-test-client.rb","/etc/chef/client.rb")
