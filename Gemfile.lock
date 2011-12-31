@@ -48,7 +48,7 @@ GIT
 
 GIT
   remote: git@github.com:opscode/mixlib-authorization.git
-  revision: 6b9ff236761ee82ce466ab630aedaf232b90e196
+  revision: 28b69382ecdf2b7197a89ac6ff4a02748f4056bc
   branch: master
   specs:
     mixlib-authorization (1.3.0)
