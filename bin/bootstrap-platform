@@ -22,6 +22,11 @@ class BootstrapPlatform
          :long => '--script SCRIPT',
          :description => 'Path to the bootstrap script [REQUIRED]')
 
+  option(:yes,
+         :short => '-y',
+         :long => '--yes',
+         :description => 'Say yes to all prompts for confirmation')
+
   def run
     validate_options!
     configure
@@ -62,10 +67,12 @@ LOLTIM
 
 FOOTER
 
-    answer = ask("Are you sure you would like to proceed? (y/n):")
-    if answer.strip.downcase != 'y'
-      puts 'Aborting. Goodbye!'
-      exit
+    if !config[:yes]
+      answer = ask("Are you sure you would like to proceed? (y/n):")
+      if answer.strip.downcase != 'y'
+        puts 'Aborting. Goodbye!'
+        exit
+      end
     end
   end
 
