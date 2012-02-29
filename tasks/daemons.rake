@@ -238,16 +238,12 @@ def start_cert_erlang(type="normal")
 end
 
 def start_opscode_authz(type="normal")
-  path = File.join(OPSCODE_PROJECT_DIR, "opscode-authz")
-  @opscode_authz_pid = nil
-  cid = fork
-  if cid # parent
-    @opscode_authz_pid = cid
-  else # child
-    Dir.chdir(path) do
-      exec("./start.sh")
-    end
-  end
+
+  path = File.join(OPSCODE_PROJECT_DIR, "opscode-authz", "rel", "authz")
+  Dir.chdir(path)
+  sleep 10 # Need to allow Redis to come up
+  exec("bin/authz console")
+
 end
 
 def start_opscode_account(type="normal")
