@@ -48,15 +48,15 @@ GIT
 
 GIT
   remote: git@github.com:opscode/mixlib-authorization.git
-  revision: 00bfd6bd543f61ea2f0af1a9c762d43c427d7827
+  revision: c440e1403c71b40af05fe2c42cbca08bc15473b4
   branch: master
   specs:
-    mixlib-authorization (1.2.1)
+    mixlib-authorization (1.3.0)
       activemodel
       mixlib-authentication
       mixlib-config
       mixlib-log
-      mysql2
+      rest-client
       sequel
 
 GIT
@@ -83,24 +83,25 @@ GIT
 GEM
   remote: http://rubygems.org/
   specs:
-    activemodel (3.0.9)
-      activesupport (= 3.0.9)
-      builder (~> 2.1.2)
-      i18n (~> 0.5.0)
-    activesupport (3.0.9)
-    builder (2.1.2)
+    activemodel (3.2.2)
+      activesupport (= 3.2.2)
+      builder (~> 3.0.0)
+    activesupport (3.2.2)
+      i18n (~> 0.6)
+      multi_json (~> 1.0)
+    builder (3.0.0)
     bunny (0.6.0)
     coderay (0.9.7)
     erubis (2.7.0)
     highline (1.6.2)
-    i18n (0.5.0)
+    i18n (0.6.0)
     json (1.4.6)
-    libxml-ruby (1.1.3)
-    mime-types (1.16)
+    mime-types (1.17.2)
     mixlib-cli (1.2.0)
     mixlib-config (1.1.2)
     mixlib-log (1.3.0)
     moneta (0.6.0)
+    multi_json (1.1.0)
     mysql2 (0.3.6)
     net-ssh (2.1.4)
     net-ssh-gateway (1.1.0)
@@ -114,13 +115,14 @@ GEM
       mixlib-log
       systemu
       yajl-ruby
+    pg (0.11.0)
     polyglot (0.3.1)
     rake (0.8.7)
     rb-appscript (0.6.1)
-    rest-client (1.6.3)
+    rest-client (1.6.7)
       mime-types (>= 1.16)
     rspec (1.3.0)
-    sequel (3.25.0)
+    sequel (3.33.0)
     systemu (2.2.0)
     treetop (1.4.9)
       polyglot (>= 0.3.1)
@@ -138,7 +140,6 @@ DEPENDENCIES
   coderay
   couchrest!
   json (= 1.4.6)
-  libxml-ruby (= 1.1.3)
   mixlib-authentication!
   mixlib-authorization!
   mixlib-cli
@@ -146,6 +147,7 @@ DEPENDENCIES
   mysql2
   opscode-billing!
   opscode-dark-launch!
+  pg
   rake
   rb-appscript
   rest-client (~> 1.6.0)

@@ -1,11 +1,10 @@
 require 'tmpdir'
+require 'uri'
 
-PLATFORM_TEST_DIR = "/tmp/opscode-platform-test"
-OPEN_SOURCE_TEST_DIR =  File.join(Dir.tmpdir, "chef_integration")
 SUPERUSER = "platform-superuser"
 ACCOUNT_URI = "http://localhost:4042"
 AUTHORIZATION_URI = 'http://localhost:5959'
-CHEF_API_URI = 'http://localhost'
+CHEF_API_URI = 'http://localhost:9021'
 
 def create_credentials_dir(setup_test = true)
   [PLATFORM_TEST_DIR, OPEN_SOURCE_TEST_DIR].each do |dir|
@@ -62,14 +61,6 @@ def replace_platform_client
   FileUtils.copy("platform-client.rb", "/etc/chef/client.rb")
 end
 
-def backup_platform_client
-  if File.exists?("platform-client.rb")
-    STDERR.puts "platform-client.rb already exists.  Doing nothing"
-  else
-    FileUtils.copy("/etc/chef/client.rb", "platform-client.rb")
-  end
-end
-
 def cleanup_replicas
   chef_rest.get_rest('_all_dbs').each { |db| chef_rest.delete_rest("#{db}/") if db =~ /replica/ }
 end
@@ -87,7 +78,7 @@ def cleanup_chefs
 end
 
 def cleanup_cookbooks
-  c = Chef::REST.new("http://localhost/organizations/clownco", "clownco", "#{PLATFORM_TEST_DIR}/clownco.pem")
+  c = Chef::REST.new("#{CHEF_API_URI}/organizations/clownco", "clownco", "#{PLATFORM_TEST_DIR}/clownco.pem")
   cookbooks = c.get_rest("cookbooks").keys
   cookbooks.each do |cookbook|
     STDERR.puts c.delete_rest("cookbooks/#{cookbook}").inspect
@@ -189,20 +180,41 @@ def create_chef_databases
 end
 
 def truncate_sql_tables
-  return false if !Opscode::DarkLaunch.is_feature_enabled?("sql_users", :GLOBALLY)
-  db = Sequel.connect("mysql2://root@localhost/#{Chef::Config[:sql_db_name]}")
+  Opscode::Mappers.use_dev_config
+
+  db = Sequel.connect(Opscode::Mappers.connection_string)
   Chef::Log.info "Truncating users table"
   db[:users].truncate
 end
 
 def dump_sql_database
-  return false if !Opscode::DarkLaunch.is_feature_enabled?("sql_users", :GLOBALLY)
   db_name = Chef::Config[:sql_db_name]
   target = "#{PLATFORM_TEST_DIR}/#{db_name}.sql"
 
   Chef::Log.info "Creating SQL DB Dump"
+  uri = URI.parse(Opscode::Mappers.connection_string)
+  db = uri.path.split('/')[1]
+  puts "Type password '#{uri.password}' if prompted" if uri.password
+  case uri.scheme
+  when /mysql/
+    dump_cmd = "mysqldump --databases #{db}"
+    dump_cmd << " -u #{uri.user}" if uri.user
+    dump_cmd << " -p#{uri.password}" if uri.password
+    dump_cmd << " -h #{uri.host}" if uri.host
+    dump_cmd << " -P #{uri.port} --protocol=TCP" if uri.port
+  when /postgres/
+    # ugh, no way to give password on command line for pg_dump?
+    dump_cmd = "pg_dump -Fc"
+    dump_cmd << " -U #{uri.user}" if uri.user
+    dump_cmd << " -h #{uri.host}" if uri.host
+    dump_cmd << " -p #{uri.port}" if uri.port
+    dump_cmd << " #{db}"
+  else
+    raise "Cannot determine database from connection string: #{Opscode::Mappers.connection_string}"
+  end
+  puts "Command: #{dump_cmd}"
 
-  shell_out!("mysqldump -u root --databases opscode_chef > #{target}")
+  shell_out!("#{dump_cmd} > #{target}")
 end
 
 
@@ -255,7 +267,7 @@ def prepare_feature_cookbooks
     log_location             STDOUT
     node_name                'clownco-org-admin'
     client_key               "#{PLATFORM_TEST_DIR}/clownco-org-admin.pem"
-    chef_server_url          '#{CHEF_API_URI}/organizations/clownco'
+    chef_server_url          "#{CHEF_API_URI}/organizations/clownco"
     cache_type               'BasicFile'
     cache_options( :path => '#{ENV['HOME']}/.chef/checksums' )
     cookbook_path            ["#{fcpath}"]
@@ -283,14 +295,9 @@ def cleanup_unassigned_orgs
   end
 end
 
-def check_platform_files
-  if !File.exists?("platform-client.rb")
-    STDERR.puts "Please run the 'setup:from_platform' task once before testing to backup platform client files"
-    exit -1
-  end
-end
-
 task :load_deps do
+  require 'bundler'
+  Bundler.setup
   require 'opscode/dark_launch'
   require 'pp'
   require 'tmpdir'
@@ -306,10 +313,9 @@ task :load_deps do
   require 'chef/mixin/shell_out'
   Chef::Config[:dark_launch_config_filename] = "/etc/opscode/dark_launch_features.json"
 
-  if Opscode::DarkLaunch.is_feature_enabled?("sql_users", :GLOBALLY)
-    require 'sequel'
-    require 'mysql2'
-  end
+  require 'sequel'
+  #require 'mysql2'
+  require 'opscode/mappers/base'
 
   include Chef::Mixin::ShellOut
 
@@ -345,12 +351,12 @@ end
 
 namespace :setup do
   desc "Setup the test environment, including creating the organization, users, and uploading the fixture cookbooks"
-  task :test =>[:load_deps, :check_platform_files] do
+  task :test =>[:load_deps] do
     setup_test_harness
   end
 
   desc "Setup the test environment, including creating the organization, users (no feature cookbooks)"
-  task :test_nocb =>[:load_deps, :check_platform_files] do
+  task :test_nocb =>[:load_deps] do
     setup_test_harness_no_cookbooks
   end
 
@@ -359,18 +365,8 @@ namespace :setup do
     prepare_feature_cookbooks
   end
 
-  desc "Backup production platform files so we can safely test locally"
-  task :from_platform do
-    backup_platform_client
-  end
-
-  desc "Return production platform files to their places"
-  task :to_platform =>[:check_platform_files] do
-    replace_platform_client
-  end
-
   desc "Setup for local platform testing"
-  task :local_platform=>[:check_platform_files] do
+  task :local_platform do
     cleanup_replicas
     cleanup_chefs
     delete_databases
@@ -379,10 +375,6 @@ namespace :setup do
     create_local_test
   end
 
-end
-
-task :check_platform_files do
-  check_platform_files
 end
 
 desc "Charge like a cowboy into the battlefield"

@@ -33,14 +33,14 @@ piab_pids_set.each do |pid, x|
   `#{cmd}`
 end
 
-all_pids.each do |process|
-  if process[:command] =~ /nginx: master process/ then
-    `sudo kill #{process[:pid]}`
-  end
-end
+# all_pids.each do |process|
+#   if process[:command] =~ /nginx: master process/ then
+#     `sudo kill #{process[:pid]}`
+#   end
+# end
 
 all_pids.each do |process|
-  if ( process[:command] =~ /merb :/ ) && ( process[:parent].to_i == 1 ) then 
+  if ( process[:command] =~ /merb :/ ) && ( process[:parent].to_i == 1 ) then
     `kill -9 #{process[:pid]}`
   end
 end

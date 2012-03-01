@@ -3,9 +3,51 @@ def set_rails_env_for_type(type)
   ENV['RAILS_ENV'] = rails_env
 end
 
+# Figure out what database we're going to connect to, based on the DATABASE_URI
+def database_platform
+
+  uri_file = File.expand_path("DATABASE_URI", OPSCODE_PROJECT_DIR)
+  unless File.exist?(uri_file)
+    raise "Cannot find DATABASE_URI file in #{OPSCODE_PROJECT_DIR}!"
+  end
+  conn = IO.read(uri_file).strip
+
+  case conn
+  when /mysql/
+    "mysql"
+  when /postgres/
+    "postgres"
+  else
+    raise "Cannot determine database from connection string: #{conn}"
+  end
+end
+
+def start_postgres
+  server_start = Process.fork do
+    exec("pg_ctl -D /usr/local/var/postgres start -l /tmp/opscode-test-pg.log")
+  end
+  Process.waitpid2(server_start)
+  sleep 5 # Apparently it takes a while before the PID file is written when invoking pg_ctl
+  postgres_pidfile = "/usr/local/var/postgres/postmaster.pid"
+  @postgres_pid = File.open(postgres_pidfile, 'r') { |f| f.read }.chomp.to_i
+
+  puts @postgres_pid
+end
+
 def start_mysqld_safe
-  @mysqld_pid = fork do
-    exec "mysqld_safe"
+  require 'socket'
+  server_start = Process.fork do
+    exec("mysql.server", "start")
+  end
+  Process.waitpid2(server_start)
+  mysql_pidfile = "/usr/local/var/mysql/#{Socket.gethostname}.pid"
+  @mysqld_pid = File.open(mysql_pidfile, 'r') { |f| f.read }.chomp.to_i
+end
+
+def start_redis
+  @redis_pid = fork do
+    # This is for a basic Homebrew install of Redis
+    exec "redis-server /usr/local/etc/redis.conf"
   end
 end
 
@@ -36,6 +78,31 @@ def start_couchdb(type="normal")
   end
 end
 
+# Using `opscode-start` to fire up the entire Opscode Platform
+# places a huge load on the machine; you're starting a bajillion
+# servers all at once.  As a result it takes a while for everything
+# to be up and running.  This causes problems for `opscode-expander`
+# and RabbitMQ (on which the former depends).
+#
+# Briefly, RabbitMQ must start, then must be properly configured
+# (proper users and queues added, etc.); only at this point should
+# `opscode-expander` connect to RabbitMQ.  Here we set up some sleep
+# times to try and properly space this sequence of events apart.
+# The configuration of RabbitMQ should take place after
+# `@rabbitmq_startup_sleep` seconds have elapsed, and `opscode-expander`
+# should follow after allowing sufficient time for the configuration
+# to take place (`@expander_startup_sleep`).
+#
+# Without this, we were basically trying to configure RabbitMQ before
+# it was running.  `opscode-expander` would also give up after a handful
+# of attempts to connect to a RabbitMQ server that hadn't even been
+# brought up yet.
+#
+# These values are a conservative heuristic; "it works for me".
+
+@rabbitmq_startup_sleep = 40
+@expander_startup_sleep = @rabbitmq_startup_sleep + 20
+
 def start_rabbitmq(type="normal")
   @rabbitmq_server_pid = nil
   cid = fork
@@ -44,6 +111,30 @@ def start_rabbitmq(type="normal")
   else
     exec("rabbitmq-server")
   end
+end
+
+def configure_rabbitmq(type="normal")
+  sleep @rabbitmq_startup_sleep
+
+  puts `rabbitmqctl add_vhost /chef`
+
+  # quick start jobs queue
+  puts `rabbitmqctl add_vhost /jobs`
+
+  # create 'chef' user, give it the password 'testing'
+  puts `rabbitmqctl add_user chef testing`
+
+  # create 'jobs' user, give it the password 'testing'
+  puts `rabbitmqctl add_user jobs testing`
+
+  # the three regexes map to config, write, read permissions respectively
+  puts `rabbitmqctl set_permissions -p /chef chef ".*" ".*" ".*"`
+  puts `rabbitmqctl set_permissions -p /jobs jobs ".*" ".*" ".*"`
+
+  puts `rabbitmqctl list_users`
+  puts `rabbitmqctl list_vhosts`
+  puts `rabbitmqctl list_permissions -p /chef`
+  puts `rabbitmqctl list_permissions -p /jobs`
 end
 
 def start_parkplace(type="normal")
@@ -59,7 +150,7 @@ def start_parkplace(type="normal")
   end
 end
 
-def start_chef_solr(type="normal")
+def start_chef_solr(type)
   path = File.join(OPSCODE_PROJECT_DIR, "chef/chef-solr")
   @chef_solr_pid = nil
   cid = fork
@@ -69,9 +160,10 @@ def start_chef_solr(type="normal")
     Dir.chdir(path) do
       case type
       when "normal"
-        exec("bin/chef-solr -l debug")
+        raise "I'm no longer normal, try 'features'"
       when "features"
-        p = fork { exec("bin/chef-solr-installer -p /tmp/opscode-platform-test --force") }
+        cmd = "rake tar_solr && bin/chef-solr-installer -p #{PLATFORM_TEST_DIR} --force"
+        p = fork { exec(cmd) }
         Process.wait(p)
         exec("bin/chef-solr -c #{File.join(OPSCODE_PROJECT_DIR, "opscode-chef", "features", "data", "config", "server.rb")} -l debug")
       end
@@ -87,6 +179,7 @@ def start_opscode_expander(type="normal")
     @opscode_expander = cid
   else
     Dir.chdir(path)
+    sleep @expander_startup_sleep
     exec("./bin/opscode-expander -n 1 -i 1")
   end
 end
@@ -109,6 +202,15 @@ def start_chef_server(type="normal")
   end
 end
 
+def start_erchef(type="first_they_ignore_you")
+  path = File.join(OPSCODE_PROJECT_DIR, "erchef", "rel", "erchef")
+  Dir.chdir(path)
+  # not totally sure we need this, but I think erchef expects rabbit
+  # to be alive
+  sleep @expander_startup_sleep
+  exec("bin/erchef console")
+end
+
 def start_opscode_webui(type="normal")
   path = File.join(OPSCODE_PROJECT_DIR, "opscode-webui")
   @opscode_webui_pid = nil
@@ -118,19 +220,6 @@ def start_opscode_webui(type="normal")
   else # child
     Dir.chdir(path) do
       exec ("bundle exec rails server thin -p 4500")
-    end
-  end
-end
-
-def start_certificate(type="normal")
-  path = File.join(OPSCODE_PROJECT_DIR, "opscode-certificate")
-  @certificate_pid = nil
-  cid = fork
-  if cid # parent
-    @certificate_pid = cid
-  else # child
-    Dir.chdir(path) do
-      exec("slice -N -a thin -p 5140")
     end
   end
 end
@@ -211,11 +300,8 @@ end
 
 
 def start_nginx(type="normal")
-  path = File.join(OPSCODE_PROJECT_DIR, "nginx-sysoev")
-  if not File.exists? path
-    path = File.join(OPSCODE_PROJECT_DIR, "opscode-test", "nginx")
-  end
-  nginx_pid_file = "/var/run/nginx.pid"
+  nginx_config_dir = File.join(OPSCODE_PROJECT_DIR, "opscode-test", "nginx")
+  nginx_pid_file = "/tmp/nginx.pid"
   @nginx_pid = nil
   cid = fork
   if cid # parent
@@ -227,40 +313,10 @@ def start_nginx(type="normal")
     end
     exit(-1) unless @nginx_pid
   else # child
-    Dir.chdir(path) do
-      if File.exists? "./objs/nginx"
-        nginx_path = "./objs/nginx"
-      else
-        nginx_path = "nginx"
-      end
-      exec("sudo", nginx_path, "-c", "#{path}/conf/platform.conf")
+    Dir.chdir(nginx_config_dir) do
+      exec("nginx", "-c", "#{nginx_config_dir}/conf/platform.conf")
     end
   end
-end
-
-def configure_rabbitmq(type="normal")
-  # hack. wait for rabbit to come up.
-  sleep 5
-
-  puts `rabbitmqctl add_vhost /chef`
-
-  # quick start jobs queue
-  puts `rabbitmqctl add_vhost /jobs`
-
-  # create 'chef' user, give it the password 'testing'
-  puts `rabbitmqctl add_user chef testing`
-
-  # create 'jobs' user, give it the password 'testing'
-  puts `rabbitmqctl add_user jobs testing`
-
-  # the three regexes map to config, write, read permissions respectively
-  puts `rabbitmqctl set_permissions -p /chef chef ".*" ".*" ".*"`
-  puts `rabbitmqctl set_permissions -p /jobs jobs ".*" ".*" ".*"`
-
-  puts `rabbitmqctl list_users`
-  puts `rabbitmqctl list_vhosts`
-  puts `rabbitmqctl list_permissions -p /chef`
-  puts `rabbitmqctl list_permissions -p /jobs`
 end
 
 def start_dev_environment(type="normal")
@@ -270,12 +326,13 @@ def start_dev_environment(type="normal")
   start_parkplace(type)
   start_chef_solr(type)
   start_chef_solr_indexer(type)
-  #start_certificate(type)
   start_cert_erlang(type)
+  start_redis
   start_opscode_authz(type)
   start_opscode_account(type)
   start_opscode_job_worker(type)
   start_chef_server(type)
+  start_erchef(type)
   start_opscode_webui(type)
   start_nginx(type)
   puts "Running CouchDB at #{@couchdb_server_pid}"
@@ -283,12 +340,12 @@ def start_dev_environment(type="normal")
   puts "Running ParkPlace at #{@parkplace_pid}"
   puts "Running Chef Solr at #{@chef_solr_pid}"
   puts "Running Chef Solr Indexer at #{@chef_solr_indexer_pid}"
-  #puts "Running Certificate at #{@certificate_pid}"
   puts "Running Cert(Erlang) at #{@cert_erlang_pid}"
   puts "Running Opscode Authz at #{@opscode_authz_pid}"
   puts "Running Opscode Account at #{@opscode_account_pid}"
   puts "Running Opscode Job Worker at #{@opscode_job_worker_pid}"
   puts "Running Chef at #{@chef_server_pid}"
+  puts "Running erchef at #{@erchef_pid}"
   puts "Running nginx at #{@nginx_pid}"
 end
 
@@ -337,6 +394,18 @@ def stop_dev_environment
     puts "Stopping Opscode Job Worker"
     Process.kill("INT", @opscode_job_worker_pid)
   end
+  if @redis_pid
+    puts "Stopping Redis"
+    Process.kill("INT", @redis_pid)
+  end
+  if @mysqld_pid
+    puts "Stopping MySQL"
+    system("mysql.server stop")
+  end
+  if @postgres_pid
+    puts "Stopping Postgres"
+    system("pg_ctl -D /usr/local/var/postgres stop -s -m fast")
+  end
   puts "Have a nice day!"
 end
 
@@ -369,10 +438,10 @@ namespace :dev do
 
     namespace :start do
       namespace :community do
-        task :mysql do
+        task :database do
           ## :TODO: BUGBUG ##
           # does not reliably kill mysqld when ctrl-C is received
-          start_mysqld_safe
+          Rake::Task['dev:features:start:database'].execute
           wait_for_ctrlc
         end
 
@@ -385,6 +454,25 @@ namespace :dev do
           start_community_webui("features")
           wait_for_ctrlc
         end
+      end
+
+      desc "Start relational database (MySQL or Postgres) for testing"
+      task :database do
+        case database_platform
+        when "mysql"
+          ## :TODO: BUGBUG ##
+          # does not reliably kill mysqld when ctrl-C is received
+          start_mysqld_safe
+        when "postgres"
+          start_postgres
+        end
+        wait_for_ctrlc
+      end
+
+      desc "Start Redis for testing"
+      task :redis do
+        start_redis
+        wait_for_ctrlc
       end
 
       desc "Start CouchDB for testing"
@@ -428,6 +516,11 @@ namespace :dev do
       task :chef_server do
         start_chef_server("features")
         wait_for_ctrlc
+      end
+
+      desc "Start erchef for testing"
+      task :erchef do
+        start_erchef("features")
       end
 
       desc "Start Chef Server Webui for testing"
@@ -483,13 +576,6 @@ namespace :dev do
 
   namespace :start do
     namespace :community do
-      task :mysql do
-        ## :TODO: BUGBUG ##
-        # does not reliably kill mysqld when ctrl-C is received
-        start_mysqld_safe
-        wait_for_ctrlc
-      end
-
       task :solr do
         start_community_solr
         wait_for_ctrlc
@@ -499,6 +585,14 @@ namespace :dev do
         start_community_webui
         wait_for_ctrlc
       end
+    end
+
+    desc "Start MySQL"
+    task :mysql do
+      ## :TODO: BUGBUG ##
+      # does not reliably kill mysqld when ctrl-C is received
+      start_mysqld_safe
+      wait_for_ctrlc
     end
 
     desc "Start CouchDB"
@@ -542,6 +636,11 @@ namespace :dev do
     task :chef_server do
       start_chef_server
       wait_for_ctrlc
+    end
+
+    desc "Start erchef"
+    task :erchef do
+      start_erchef
     end
 
     desc "Start Chef Server Webui"

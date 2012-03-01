@@ -2,7 +2,15 @@
 source "http://rubygems.org"
 
 gem "sequel"
-gem "mysql2"
+
+group(:mysql) do
+  gem "mysql2"
+end
+
+group(:pg) do
+  gem "pg"
+end
+
 gem "activemodel"
 
 #gem "mixlib-log", :git => "git://github.com/opscode/mixlib-log.git", :branch => "master"
@@ -29,9 +37,6 @@ gem "opscode-dark-launch", :git => "git@github.com:opscode/opscode-shared", :bra
 # OPSCODE PATCHED GEMS
 gem "couchrest", :git => "git://github.com/opscode/couchrest.git"
 gem "aws-s3", :git => 'git@github.com:opscode/aws-s3.git', :require => 'aws/s3'
-
-# Work around bug in libxml-ruby causing invalid ELF header
-gem "libxml-ruby", "1.1.3"
 
 gem "rspec", "1.3.0", :require => "spec"
 

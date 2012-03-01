@@ -1,4 +1,4 @@
-
+require 'tmpdir'
 
 $: << File.join(File.dirname(__FILE__), '..', 'opscode-chef', 'chef', 'lib')
 
@@ -6,6 +6,9 @@ OPSCODE_COMMUNITY_PATH = File.expand_path(File.join(File.dirname(__FILE__), ".."
 
 if File.exists?(File.dirname(__FILE__) + "/../opscode-test")
   # local dev environment
+  PLATFORM_TEST_DIR = "/tmp/opscode-platform-test"
+  OPEN_SOURCE_TEST_DIR =  File.join(Dir.tmpdir, "chef_integration")
+
   OPSCODE_PROJECT_DIR = File.expand_path(File.dirname(__FILE__) + '/../')
   OPSCODE_PROJECT_DIR_RELATIVE = '../'
   OPSCODE_PROJECT_SUFFIX = ""

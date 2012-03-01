@@ -4,9 +4,17 @@
 
 self.output_directory = '/tmp/opscode-platform-test'
 
-self.mysql_host = 'localhost'
-self.mysql_user = 'root'
-self.mysql_password = ''
+# PostgreSQL in Dev Mode:
+self.db_driver = "postgres"
+self.db_host = 'localhost'
+self.db_user = ENV['USER']
+self.db_password = ''
+
+# MySQL in Dev Mode:
+#self.db_driver = "mysql2"
+#self.db_host = 'localhost'
+#self.db_user = 'root'
+#self.db_password = ''
 
 self.couchdb_host = 'localhost'
 self.couchdb_port = '5984'
