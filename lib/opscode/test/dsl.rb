@@ -137,14 +137,12 @@ module Opscode::Test
 
     def create_global_containers(superuser_authz_id)
       log "Creating the global containers..."
-      auth_database = couchdb_database(:authz, 'authorization')
       acct_database = couchdb_database(:main, 'opscode_account')
 
-      containersets = auth_database.get('containersets')['global_containerset']
-      containersets.each do |name, path|
+      %w(organizations users).each do |name|
         container = {
           :containername => name,
-          :containerpath => path,
+          :containerpath => name,
           :requester_id  => superuser_authz_id
         }
         Mixlib::Authorization::Models::Container.on(acct_database).new(container).save
