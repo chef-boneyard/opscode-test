@@ -46,6 +46,7 @@ module Opscode::Test
     # config for authz
     attr_accessor :bifrost_host
     attr_accessor :bifrost_port
+    attr_accessor :bifrost_superuser_id
 
     attr_accessor :superuser_cert
     attr_accessor :superuser_key
@@ -64,6 +65,7 @@ module Opscode::Test
 
   bifrost_host:        #{bifrost_host}
   bifrost_port:        #{bifrost_port}
+  bifrost_superuser:   #{bifrost_superuser_id}
 
   superuser_cert:    #{superuser_cert}
   superuser_key:     #{superuser_key}
