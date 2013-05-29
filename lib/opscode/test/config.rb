@@ -43,10 +43,6 @@ module Opscode::Test
     attr_accessor :couchdb_host
     attr_accessor :couchdb_port
 
-    # config for couchdbauthz
-    attr_accessor :couchdbauthz_host
-    attr_accessor :couchdbauthz_port
-
     # config for authz
     attr_accessor :bifrost_host
     attr_accessor :bifrost_port
@@ -65,9 +61,6 @@ module Opscode::Test
 
   couchdb_host:      #{couchdb_host}
   couchdb_port:      #{couchdb_port}
-
-  couchdbauthz_host: #{couchdbauthz_host}
-  couchdbauthz_port: #{couchdbauthz_port}
 
   bifrost_host:        #{bifrost_host}
   bifrost_port:        #{bifrost_port}

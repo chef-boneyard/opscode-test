@@ -22,23 +22,11 @@ module Opscode::Test
 
     def initialize
       @db = Sequel.connect("#{config.db_driver}://#{config.db_user}:#{config.db_password}@#{config.db_host}/opscode_chef")
-      @couchdbauthz_server = CouchRest::Server.new("http://#{config.couchdbauthz_host}:#{config.couchdbauthz_port}")
       @couchdb_server = CouchRest::Server.new("http://#{config.couchdb_host}:#{config.couchdb_port}")
     end
 
-    def couchdb_database(server, name)
-      couchdb_server = case server
-                       when :authz; @couchdbauthz_server
-                       when :main; @couchdb_server
-                       end
+    def couchdb_database(name)
       CouchRest::Database.new(couchdb_server, name)
-    end
-
-    def couchdb_server(server)
-      case server
-      when :authz; @couchdbauthz_server
-      when :main; @couchdb_server
-      end
     end
 
   end
