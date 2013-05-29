@@ -22,8 +22,9 @@ self.couchdb_port = '5984'
 self.couchdbauthz_host = 'localhost'
 self.couchdbauthz_port = '5984'
 
-self.authz_host = 'localhost'
-self.authz_port = '5959'
+self.bifrost_host = 'localhost'
+self.bifrost_port = '5959'
+self.bifrost_superuser_id = '0000000000000000'
 
 self.superuser_cert = '/tmp/opscode-platform-test/superuser.cert'
 self.superuser_key  = '/tmp/opscode-platform-test/superuser.pem'
