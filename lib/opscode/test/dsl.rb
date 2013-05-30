@@ -65,19 +65,6 @@ module Opscode::Test
     end
 
     def delete_couchdb_databases
-      log "Deleting the couchdb databases..."
-      log "authorization databases", :detail
-      couchdbauthz_databases = %w{
-        authorization
-        authorization_integration
-      }
-
-      couchdbauthz_databases.each do |name|
-        begin
-          couchdb_database(:authz, name).delete!
-        rescue RestClient::ResourceNotFound; end
-      end
-
       log "main couchdb databases", :detail
       couchdb_databases = %w{
         opscode_account
@@ -91,37 +78,13 @@ module Opscode::Test
 
       couchdb_databases.each do |name|
         begin
-          couchdb_database(:main, name).delete!
+          couchdb_database(name).delete!
         rescue RestClient::ResourceNotFound; end
       end
     end
 
     def create_couchdb_databases
       log "Creating the coudhdb databases..."
-
-      # create the authz databases
-      log "creating authz databases", :detail
-      couchdbauthz_databases = %w{
-        authorization
-      }
-
-      couchdbauthz_databases.each do |name|
-        couchdb_database(:authz, name).create!
-      end
-
-      # replicate the authz design docs
-      log "replicationg authz design documents", :detail
-      authz_db = couchdb_database(:authz, 'authorization')
-      replication_body = {
-        :target => authz_db.uri,
-        :source => 'authorization_design_documents'
-      }.to_json
-      replication_headers = {
-        'Content-Type' => 'application/json'
-      }
-      RestClient.post("#{couchdb_server(:authz).uri}/_replicate",
-                      replication_body,
-                      replication_headers)
 
       # create the account databases
       log "creating main couchdb databases", :detail
@@ -131,20 +94,18 @@ module Opscode::Test
       }
 
       couchdb_databases.each do |name|
-        couchdb_database(:main, name).create!
+        couchdb_database(name).create!
       end
     end
 
     def create_global_containers(superuser_authz_id)
       log "Creating the global containers..."
-      auth_database = couchdb_database(:authz, 'authorization')
-      acct_database = couchdb_database(:main, 'opscode_account')
+      acct_database = couchdb_database('opscode_account')
 
-      containersets = auth_database.get('containersets')['global_containerset']
-      containersets.each do |name, path|
+      %w(organizations users).each do |name|
         container = {
           :containername => name,
-          :containerpath => path,
+          :containerpath => name,
           :requester_id  => superuser_authz_id
         }
         Mixlib::Authorization::Models::Container.on(acct_database).new(container).save

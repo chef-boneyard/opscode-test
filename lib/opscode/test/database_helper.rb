@@ -10,12 +10,12 @@ module Opscode::Test
       Opscode::Test.database_config.db
     end
 
-    def couchdb_database(server, name)
-      Opscode::Test.database_config.couchdb_database(server, name)
+    def couchdb_database(name)
+      Opscode::Test.database_config.couchdb_database(name)
     end
 
-    def couchdb_server(server)
-      Opscode::Test.database_config.couchdb_server(server)
+    def couchdb_server
+      Opscode::Test.database_config.couchdb_server
     end
   end
 end
