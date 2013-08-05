@@ -1,11 +1,7 @@
 # A sample Gemfile
-source "http://rubygems.org"
+source "https://rubygems.org"
 
-gem "sequel"
-
-group(:mysql) do
-  gem "mysql2"
-end
+gem "sequel", "~> 3.34.1"
 
 group(:pg) do
   gem "pg"
