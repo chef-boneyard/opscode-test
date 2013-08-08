@@ -3,7 +3,7 @@ source "https://rubygems.org"
 
 gem "sequel", "~> 3.34.1"
 
-gem "pg"
+gem "pg", "~> 0.16.0"
 
 gem "activemodel"
 
