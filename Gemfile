@@ -3,15 +3,13 @@ source "https://rubygems.org"
 
 gem "sequel", "~> 3.34.1"
 
-group(:pg) do
-  gem "pg"
-end
+gem "pg"
 
 gem "activemodel"
 
 #gem "mixlib-log", :git => "git://github.com/opscode/mixlib-log.git", :branch => "master"
 gem "chef", :git => "git://github.com/opscode/chef.git", :branch => "master"
-#gem "chef-solr", :git => "git://github.com/opscode/chef.git", :branch => "pl-master", :require => "chef/solr" 
+#gem "chef-solr", :git => "git://github.com/opscode/chef.git", :branch => "pl-master", :require => "chef/solr"
 
 gem "rake"
 
