@@ -1,21 +1,15 @@
 # A sample Gemfile
-source "http://rubygems.org"
+source "https://rubygems.org"
 
-gem "sequel"
+gem "sequel", "~> 3.34.1"
 
-group(:mysql) do
-  gem "mysql2"
-end
-
-group(:pg) do
-  gem "pg"
-end
+gem "pg", "~> 0.16.0"
 
 gem "activemodel"
 
 #gem "mixlib-log", :git => "git://github.com/opscode/mixlib-log.git", :branch => "master"
 gem "chef", :git => "git://github.com/opscode/chef.git", :branch => "master"
-#gem "chef-solr", :git => "git://github.com/opscode/chef.git", :branch => "pl-master", :require => "chef/solr" 
+#gem "chef-solr", :git => "git://github.com/opscode/chef.git", :branch => "pl-master", :require => "chef/solr"
 
 gem "rake"
 
