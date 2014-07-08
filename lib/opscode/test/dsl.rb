@@ -16,6 +16,8 @@ module Opscode::Test
     include Opscode::Test::DatabaseHelper
     include Opscode::Test::Loggable
 
+    GLOBAL_PLACEHOLDER_ORG_ID = "00000000000000000000000000000000"
+
     #
     # user-related dsl
     #
@@ -108,7 +110,21 @@ module Opscode::Test
           :containerpath => name,
           :requester_id  => superuser_authz_id
         }
-        Mixlib::Authorization::Models::Container.on(acct_database).new(container).save
+
+        # create model and create container in couchDB
+        model = Mixlib::Authorization::Models::Container.on(acct_database).new(container)
+        model.save
+
+        # TODO
+        # IMPORTANT: We are relying on Mixlib:Auth to make the ACL magic happen, when we replace
+        # that library, we need to make sure that we create the proper ACLs here (since we are just
+        # throwing it into SQL below).
+        #
+        # Create container in SQL also (since the contents will never change
+        # we can create in both places while we migrate off of couchDB. Once
+        # we have finished migrations we can get rid of the couch insert).
+        created_time = Time.now.utc
+        db[:containers].insert(:name => name, :id => model.id, :org_id => GLOBAL_PLACEHOLDER_ORG_ID, :last_updated_by => model.requester_id, :authz_id => model.authz_id, :created_at => created_time.to_s[0..18], :updated_at => created_time.to_s[0..18])
       end
     end
   end
