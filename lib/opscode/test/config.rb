@@ -13,11 +13,6 @@ module Opscode::Test
   def self.configure
     yield config
 
-    # TODO: this is fucking ugly.
-    cdb_server = CouchRest::Server.new("http://#{config.couchdb_host}:#{config.couchdb_port}")
-    account_db = CouchRest::Database.new(cdb_server, 'opscode_account')
-
-    Mixlib::Authorization::Config.default_database          = account_db
     Mixlib::Authorization::Config.authorization_service_uri = "http://#{config.bifrost_host}:#{config.bifrost_port}"
     require 'mixlib/authorization/models'
   end
@@ -39,10 +34,6 @@ module Opscode::Test
     attr_accessor :db_user
     attr_accessor :db_password
 
-    # config for couchdb
-    attr_accessor :couchdb_host
-    attr_accessor :couchdb_port
-
     # config for authz
     attr_accessor :bifrost_host
     attr_accessor :bifrost_port
@@ -59,9 +50,6 @@ module Opscode::Test
   db_host:           #{db_host}
   db_user:           #{db_user}
   db_password:       #{db_password}
-
-  couchdb_host:      #{couchdb_host}
-  couchdb_port:      #{couchdb_port}
 
   bifrost_host:        #{bifrost_host}
   bifrost_port:        #{bifrost_port}
