@@ -1,4 +1,6 @@
-opscode-test
+## IMPORTANT NOTE
+
+Deprecated in favor of [chef-server-bootstrap](https://github.com/opscode/chef-server-bootstrap)! No longer under active development.
 
 ## License
 
